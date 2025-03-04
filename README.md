@@ -3,6 +3,7 @@
 Go to project directory and run (make sure you have node installed first)
 
   npm install
+  //
   npm start
     
 ## Core Libraries Used
