@@ -6,7 +6,7 @@ export const getCategoriesContent = createAsyncThunk(
     'category/getCategoriesContent',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/category/get-all', {
+            const response = await fetch('http://103.162.15.61:8080/api/v1/category/get-all', {
                 method: 'GET',
                 headers: {
                     'accept': '*/*',
@@ -17,10 +17,8 @@ export const getCategoriesContent = createAsyncThunk(
                 throw new Error('Failed to fetch categories and subcategories.');
             }
             const data = await response.json();
-            console.log('Fetched categories and subcategories:', data);
             return data.data;  // Dữ liệu bao gồm cả categories và subcategories
         } catch (error) {
-            console.error('Error fetching categories:', error);
             return rejectWithValue(error.message);  // Xử lý lỗi
         }
     }
@@ -33,7 +31,7 @@ export const deleteCategory = createAsyncThunk(
     'category/deleteCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/category/delete/${categoryId}`, {
+            const response = await fetch(`http://103.162.15.61:8080/api/v1/category/delete/${categoryId}`, {
                 method: 'DELETE',
                 headers: {
                     'accept': '*/*',
@@ -55,14 +53,25 @@ export const createCategory = createAsyncThunk(
     'category/createCategory',
     async (newCategory, { rejectWithValue }) => {
         try {
-            const response = await fetch('http://localhost:8080/api/v1/category/create', {
+            // Đảm bảo không có `id` khi gửi request
+            const formattedCategory = {
+                categoryName: newCategory.categoryName,
+                categoryDescription: newCategory.categoryDescription || "",
+                subCategories: newCategory.subCategories.map(sub => ({
+                    subCategoryName: sub.subCategoryName,
+                    subCategoryDescription: sub.subCategoryDescription || ""
+                }))
+            };
+
+            const response = await fetch('http://103.162.15.61:8080/api/v1/category/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
-                body: JSON.stringify(newCategory),
+                body: JSON.stringify(formattedCategory),
             });
+
             if (!response.ok) {
                 throw new Error('Failed to create category.');
             }
@@ -80,24 +89,36 @@ export const updateCategory = createAsyncThunk(
     'category/updateCategory',
     async (updatedCategory, { rejectWithValue }) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/v1/category/update/${updatedCategory.id}`, {
+            // Xóa `id` khỏi request body
+            const formattedCategory = {
+                categoryName: updatedCategory.categoryName,
+                categoryDescription: updatedCategory.categoryDescription || "",
+                subCategories: updatedCategory.subCategories?.map(sub => ({
+                    subCategoryName: sub.subCategoryName,
+                    subCategoryDescription: sub.subCategoryDescription || ""
+                })) || []
+            };
+
+            const response = await fetch(`http://103.162.15.61:8080/api/v1/category/update/${updatedCategory.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
-                body: JSON.stringify(updatedCategory),
+                body: JSON.stringify(formattedCategory),
             });
+
             if (!response.ok) {
                 throw new Error('Failed to update category.');
             }
             const data = await response.json();
-            return data.data; // Trả về category đã cập nhật
+            return data.data;
         } catch (error) {
             return rejectWithValue(error.message);
         }
     }
 );
+
 
 const categorySlice = createSlice({
     name: 'category',

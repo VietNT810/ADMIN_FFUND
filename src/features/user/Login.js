@@ -9,7 +9,7 @@ function Login() {
 
     const INITIAL_LOGIN_OBJ = {
         username: "",
-        password: ""
+        password: "",
     };
 
     const [loading, setLoading] = useState(false);
@@ -47,7 +47,7 @@ function Login() {
         setLoading(true);
 
         try {
-            const response = await fetch("http://localhost:8080/api/v1/auth/login", {
+            const response = await fetch("http://103.162.15.61:8080/api/v1/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -62,7 +62,7 @@ function Login() {
             }
 
             const data = await response.json();
-            const { accessToken, refreshToken, role } = data.data;
+            const { accessToken, refreshToken, role, userId } = data.data || data;
 
             if (!accessToken) {
                 throw new Error("No access token received. Login failed!");
@@ -72,10 +72,12 @@ function Login() {
                 throw new Error("Access denied! Only ADMIN users are allowed.");
             }
 
+            // ✅ Lưu thông tin vào localStorage để duy trì đăng nhập
             localStorage.setItem("accessToken", accessToken);
             localStorage.setItem("refreshToken", refreshToken);
             localStorage.setItem("role", role);
-            
+            localStorage.setItem("userId", userId);
+
             toast.success("Login successful!", {
                 position: "top-right",
                 autoClose: 2000,
@@ -86,6 +88,7 @@ function Login() {
                 progress: undefined,
                 theme: "colored"
             });
+
             setTimeout(() => navigate('/app/welcome'));
         } catch (error) {
             toast.error(error.message || "An error occurred. Please try again.", {
@@ -118,7 +121,7 @@ function Login() {
                         <img src="/signin.gif" alt="Sign In Animation" className="mx-auto mb-4 w-24 border-4 border-white rounded-full shadow-lg" />
                         <p className="text-center text-gray-600 mb-6">Welcome back! Please enter your credentials.</p>
                     </div>
-                    <form onSubmit={submitForm}>
+                    <form onSubmit={submitForm} autoComplete="on"> {/* Bật tự động điền tài khoản */}
                         <div className="mb-5">
                             <InputText 
                                 type="text" 
@@ -126,7 +129,9 @@ function Login() {
                                 updateType="username" 
                                 containerStyle="mt-4" 
                                 labelTitle="Username" 
+                                placeholder="abc@example.com" 
                                 updateFormValue={updateFormValue} 
+                                autoComplete="username" 
                             />
                             <div className="relative mt-4">
                                 <InputText 
@@ -134,7 +139,9 @@ function Login() {
                                     defaultValue={loginObj.password} 
                                     updateType="password" 
                                     labelTitle="Password" 
+                                    placeholder="*******"
                                     updateFormValue={updateFormValue} 
+                                    autoComplete="current-password"
                                 />
                                 <span 
                                     className="absolute right-3 top-1/2 my-4 transform -translate-y-1/2 flex items-center cursor-pointer text-gray-600 hover:text-gray-800 transition-colors"
@@ -144,6 +151,7 @@ function Login() {
                                 </span>
                             </div>
                         </div>
+
                         <div className="text-right text-orange-600">
                             <Link to="/forgot-password">
                                 <span className="text-sm hover:underline cursor-pointer transition duration-200">
@@ -151,6 +159,7 @@ function Login() {
                                 </span>
                             </Link>
                         </div>
+
                         <button 
                             type="submit" 
                             className={`btn mt-5 w-full bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-lg font-semibold transition duration-200 ${loading ? "loading" : ""}`}
