@@ -27,7 +27,7 @@ function ForgotPassword() {
 
         try {
             // Gửi yêu cầu API để gửi liên kết reset mật khẩu
-            const response = await fetch('http://localhost:8080/api/v1/auth/forgot-password', {
+            const response = await fetch('http://103.162.15.61:8080/api/v1/auth/forgot-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

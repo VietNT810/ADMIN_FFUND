@@ -8,6 +8,7 @@ const UserManager = () => {
   const dispatch = useDispatch();
   const { users, error, status, totalPages } = useSelector(state => state.user || { users: [], error: null, status: 'idle' });
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [name, setName] = useState('');
   const [sortField, setSortField] = useState('id');
   const [sortOrder, setSortOrder] = useState('asc');
@@ -70,16 +71,22 @@ const UserManager = () => {
 
   // Giữ lại giá trị name và chỉ gửi yêu cầu khi nhấn Enter hoặc khi nhấn nút search
   const handleSearch = () => {
-    setCurrentPage(0);
-    dispatch(getUsersContent({ name, page: 0, sortField, sortOrder }));
+    setName(searchTerm);
   };
-
-  // Giữ lại giá trị name và chỉ gửi yêu cầu khi nhấn Enter
+  
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
-      handleSearch();
+      handleSearch();  // Chỉ tìm kiếm khi nhấn Enter
     }
   };
+  
+  useEffect(() => {
+    if (name.trim() !== '') {
+      dispatch(getUsersContent({ name, page: 0, sortField, sortOrder }));
+      setCurrentPage(0);
+    }
+  }, [dispatch, name, sortField, sortOrder]);
+  
 
   if (status === 'loading') {
     return <div>Loading...</div>;
@@ -102,15 +109,15 @@ const UserManager = () => {
         <div className="mb-6 flex items-center space-x-4">
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}  // Chỉ thay đổi giá trị name, không gọi API
-            onKeyPress={handleKeyPress}  // Chỉ gọi API khi nhấn Enter
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}  // Không gọi API ngay lập tức
+            onKeyPress={handleKeyPress}  // Chỉ tìm kiếm khi nhấn Enter
             placeholder="Search by name"
             className="px-4 py-2 border rounded-lg w-64"
           />
           <select
             value={sortField}
-            onChange={(e) => setSortField(e.target.value)}  // Chọn trường sắp xếp
+            onChange={(e) => setSortField(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="id">ID</option>
