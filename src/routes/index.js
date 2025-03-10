@@ -18,6 +18,9 @@ const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
 const Category = lazy(() => import('../pages/protected/Category'))
 const UserManger = lazy(() => import('../pages/protected/UserManager'))
+const ProjectList = lazy(() => import('../pages/protected/ProjectList'))
+const ProjectRequests = lazy(() => import('../pages/protected/ProjectRequests'))
+const ProjectSettings = lazy(() => import('../pages/protected/ProjectSettings'))
 
 const routes = [
   {
@@ -31,6 +34,18 @@ const routes = [
   {
     path: '/user-management',
     component: UserManger,
+  },
+  {
+    path: '/project-list',
+    component: ProjectList,
+  },
+  {
+    path: '/project-requests',
+    component: ProjectRequests,
+  },
+  {
+    path: '/project-settings',
+    component: ProjectSettings,
   },
   {
     path: '/settings-team',

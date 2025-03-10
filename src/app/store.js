@@ -5,6 +5,8 @@ import rightDrawerSlice from '../features/common/rightDrawerSlice'
 import leadsSlice from '../features/leads/leadSlice'
 import categorySlice from '../features/category/categorySlice'
 import userSlice from '../features/userManger/userSlice'
+import projectSlice from '../features/projectmanager/components/projectSlice'
+import profileSlice from '../features/settings/profilesettings/profileSlice';
 
 const combinedReducer = {
   header: headerSlice,
@@ -13,7 +15,8 @@ const combinedReducer = {
   lead: leadsSlice,
   category: categorySlice,
   user: userSlice,
-
+  project: projectSlice,
+  profile: profileSlice,
 }
 
 export default configureStore({

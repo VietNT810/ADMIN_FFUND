@@ -31,6 +31,28 @@ const routes = [
     name: 'User',
   },
   {
+    path: '', 
+    icon: <BoltIcon className={`${iconClasses} inline`}/>, 
+    name: 'Project', 
+    submenu: [
+      {
+        path: '/app/project-list',
+        icon: <Squares2X2Icon className={submenuIconClasses}/>,
+        name: 'Project List',
+      },
+      {
+        path: '/app/project-requests',
+        icon: <CurrencyDollarIcon className={submenuIconClasses}/>, 
+        name: 'Project Requests', 
+      },
+      {
+        path: '/app/project-settings',
+        icon: <Cog6ToothIcon className={submenuIconClasses}/>,
+        name: 'Project Settings',
+      },
+    ]
+  },  
+  {
     path: '/app/category',
     icon: <DocumentDuplicateIcon className={iconClasses}/>,
     name: 'Category',
@@ -44,11 +66,6 @@ const routes = [
     path: '/app/charts', 
     icon: <ChartBarIcon className={iconClasses}/>, 
     name: 'Analytics',
-  },
-  {
-    path: '/app/integration', 
-    icon: <BoltIcon className={iconClasses}/>, 
-    name: 'Integration',
   },
   {
     path: '/app/calendar', 
