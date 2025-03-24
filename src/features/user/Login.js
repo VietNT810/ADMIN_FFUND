@@ -47,7 +47,7 @@ function Login() {
         setLoading(true);
 
         try {
-            const response = await fetch("https://quanbeo.duckdns.org:8080/api/v1/auth/login", {
+            const response = await fetch("https://quanbeo.duckdns.org/api/v1/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
