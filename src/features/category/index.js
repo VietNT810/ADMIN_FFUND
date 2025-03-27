@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesContent, deleteCategory, updateCategory, createCategory } from './categorySlice';
-import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; // Thêm EllipsisHorizontalIcon
-import { toast } from 'react-toastify'; // Import toast
+import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; 
+import { toast } from 'react-toastify'; 
 
 function Categories() {
   const dispatch = useDispatch();
@@ -12,13 +12,13 @@ function Categories() {
   const [isEdit, setIsEdit] = useState(false);
   const [categoryForm, setCategoryForm] = useState({
     id: '',
-    categoryName: '',
-    categoryDescription: '',
-    subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
+    name: '',
+    description: '',
+    subCategories: [{ name: '', description: '' }]
   });
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
-  const [openDropdown, setOpenDropdown] = useState(null); // Trạng thái để mở/đóng dropdown
+  const [openDropdown, setOpenDropdown] = useState(null); 
 
   useEffect(() => {
     dispatch(getCategoriesContent());
@@ -42,7 +42,7 @@ function Categories() {
     const action = isEdit ? updateCategory : createCategory;
 
     if (!isEdit) {
-      const categoryExists = categories.some(category => category.categoryName.toLowerCase() === categoryForm.categoryName.toLowerCase());
+      const categoryExists = categories.some(category => category.name.toLowerCase() === categoryForm.name.toLowerCase());
 
       if (categoryExists) {
         toast.error("Category already exists.");
@@ -67,9 +67,9 @@ function Categories() {
   const resetForm = () => {
     setCategoryForm({
       id: '',
-      categoryName: '',
-      categoryDescription: '',
-      subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
+      name: '',
+      description: '',
+      subCategories: [{ name: '', description: '' }]
     });
     setIsEdit(false);
     setIsCreateModalOpen(false);
@@ -96,7 +96,7 @@ function Categories() {
   const handleAddSubCategory = () => {
     setCategoryForm({
       ...categoryForm,
-      subCategories: [...categoryForm.subCategories, { subCategoryName: '', subCategoryDescription: '' }]
+      subCategories: [...categoryForm.subCategories, { name: '', description: '' }]
     });
   };
 
@@ -111,9 +111,9 @@ function Categories() {
   const handleEditCategory = (category) => {
     setCategoryForm({
       id: category.id,
-      categoryName: category.categoryName,
-      categoryDescription: category.categoryDescription,
-      subCategories: category.subCategories || [{ subCategoryName: '', subCategoryDescription: '' }]
+      name: category.name,
+      description: category.description,
+      subCategories: category.subCategories || [{ name: '', description: '' }]
     });
     setIsEdit(true);
     setIsCreateModalOpen(true);
@@ -161,14 +161,14 @@ function Categories() {
                 categories.length > 0 ? categories.map((category, index) => (
                   <tr key={category.id} className="border-t">
                     <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{category.categoryName}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{category.categoryDescription}</td>
+                    <td className="px-4 py-2 text-sm text-gray-700">{category.name}</td>
+                    <td className="px-4 py-2 text-sm text-gray-600">{category.description}</td>
                     <td className="px-4 py-2 text-sm text-gray-600">
                       <ul>
                         {
                           category.subCategories.length > 0 ? category.subCategories.map((subCategory, subIndex) => (
                             <li key={subCategory.id} className="text-sm text-gray-600">
-                              {subIndex + 1}. {subCategory.subCategoryName}
+                              {subIndex + 1}. {subCategory.name}
                             </li>
                           )) : (
                             <li className="text-sm text-gray-600">No subcategories</li>
@@ -178,19 +178,18 @@ function Categories() {
                     </td>
                     <td className="px-4 py-2 text-sm text-center">
                       <button
-                        onClick={() => toggleDropdown(category.id)} // Mở dropdown
+                        onClick={() => toggleDropdown(category.id)} 
                         className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
                       >
                         <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
                       </button>
 
-                      {/* Dropdown menu */}
                       {openDropdown === category.id && (
                         <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
                           <ul className="py-1">
                             <li>
                               <button
-                                onClick={() => handleEditCategory(category)} // Sửa category
+                                onClick={() => handleEditCategory(category)} 
                                 className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
                               >
                                 Edit Category
@@ -198,7 +197,7 @@ function Categories() {
                             </li>
                             <li>
                               <button
-                                onClick={() => handleDeleteCategory(category)} // Xóa category
+                                onClick={() => handleDeleteCategory(category)} 
                                 className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                               >
                                 Delete Category
@@ -226,12 +225,12 @@ function Categories() {
             <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-center">{isEdit ? 'Edit Category' : 'Create New Category'}</h3>
 
             <div className="mb-4">
-              <label htmlFor="categoryName" className="block text-sm text-gray-700">Category Name</label>
+              <label htmlFor="name" className="block text-sm text-gray-700">Category Name</label>
               <input
-                id="categoryName"
+                id="name"
                 type="text"
-                name="categoryName"
-                value={categoryForm.categoryName}
+                name="name"
+                value={categoryForm.name}
                 onChange={handleCategoryChange}
                 className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                 placeholder="Enter Category Name"
@@ -239,11 +238,11 @@ function Categories() {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="categoryDescription" className="block text-sm text-gray-700">Category Description</label>
+              <label htmlFor="description" className="block text-sm text-gray-700">Category Description</label>
               <textarea
-                id="categoryDescription"
-                name="categoryDescription"
-                value={categoryForm.categoryDescription}
+                id="description"
+                name="description"
+                value={categoryForm.description}
                 onChange={handleCategoryChange}
                 className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                 placeholder="Enter Category Description"
@@ -257,15 +256,15 @@ function Categories() {
                 <div key={index} className="flex space-x-4 mt-4">
                   <input
                     type="text"
-                    name="subCategoryName"
-                    value={subCategory.subCategoryName}
+                    name="name"
+                    value={subCategory.name}
                     onChange={(e) => handleSubCategoryChange(index, e)}
                     placeholder="Sub Category Name"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                   />
                   <textarea
-                    name="subCategoryDescription"
-                    value={subCategory.subCategoryDescription}
+                    name="description"
+                    value={subCategory.description}
                     onChange={(e) => handleSubCategoryChange(index, e)}
                     placeholder="Sub Category Description"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"

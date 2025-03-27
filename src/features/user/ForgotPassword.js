@@ -27,7 +27,7 @@ function ForgotPassword() {
 
         try {
             // Gửi yêu cầu API để gửi liên kết reset mật khẩu
-            const response = await fetch('http://103.162.15.61:8080/api/v1/auth/forgot-password', {
+            const response = await fetch('https://quanbeo.duckdns.org/api/v1/auth/forgot-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'

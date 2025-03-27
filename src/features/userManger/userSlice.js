@@ -7,7 +7,7 @@ export const getUsersContent = createAsyncThunk(
   async ({ name, page = 0, size = 10, sortField = "id", sortOrder = "asc" }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get("http://103.162.15.61:8080/api/v1/user", {
+      const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
         params: { name, page, size, sort: sortOrderSymbol },
       });
 
@@ -26,7 +26,7 @@ export const banUser = createAsyncThunk(
   "user/banUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`http://103.162.15.61:8080/api/v1/user/ban/${userId}`);
+      const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/ban/${userId}`);
 
       return response.data.message; // Trả về thông điệp từ server
     } catch (error) {
@@ -40,7 +40,7 @@ export const unbanUser = createAsyncThunk(
   "user/unbanUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`http://103.162.15.61:8080/api/v1/user/unban/${userId}`);
+      const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/unban/${userId}`);
 
       return response.data.message; // Trả về thông điệp từ server
     } catch (error) {

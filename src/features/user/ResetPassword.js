@@ -64,7 +64,7 @@ function ResetPassword() {
         }
         setLoading(true);
         try {
-            const response = await fetch('http://103.162.15.61:8080/api/v1/auth/reset-password', {
+            const response = await fetch('https://quanbeo.duckdns.org/api/v1/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, newPassword, confirmPassword }),

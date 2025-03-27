@@ -1,29 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProjects } from './components/projectSlice';
+import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 
 const ProjectList = () => {
   const dispatch = useDispatch();
   const { projects, status, error, totalPages } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
+  const { categories } = useSelector(state => state.category || { categories: [] });
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [query, setQuery] = useState('');
-  const [sortField, setSortField] = useState('id');
+  const [selectedMainCategory, setSelectedMainCategory] = useState('All');
+  const [sortField, setSortField] = useState('createdAt');  // Default sort by createdAt
   const [sortOrder, setSortOrder] = useState('asc');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [page, setPage] = useState(0);
 
   useEffect(() => {
+    // Fetch categories when component mounts
+    dispatch(getCategoriesContent());
     // Fetch projects when component mounts or parameters change
-    dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
-  }, [dispatch, query, page, sortField, sortOrder]);
+    dispatch(getProjects({ query: '', page, size: 10, sortField, sortOrder }));
+  }, [dispatch, page, sortField, sortOrder]);
 
-  // Giữ lại giá trị name và chỉ gửi yêu cầu khi nhấn Enter hoặc khi nhấn nút search
   const handleSearch = () => {
-    setQuery(searchTerm);
+    const queryParts = [];
+
+    // Add the search term for title, if provided
+    if (searchTerm) {
+      queryParts.push(`title:eq:${searchTerm}`);
+    }
+
+    // Add the selected category filter, if not "All"
+    if (selectedMainCategory !== "All") {
+      queryParts.push(`category.name:eq:${selectedMainCategory}`);
+    }
+
+    // Ensure at least one search criterion is provided
+    if (queryParts.length === 0) {
+      console.error("No search criteria provided.");
+      return;
+    }
+
+    // Join the query parts with a comma to form the final query string
+    const query = queryParts.join(",");
+    console.log("Constructed Query:", query);
+
+    // Set the sorting options
+    const sort = `${sortOrder === 'asc' ? '+' : '-'}${sortField}`;
+    
+    // Dispatch the action to fetch projects based on the query and sorting
+    dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
   };
- 
+
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSearch();
@@ -56,18 +85,22 @@ const ProjectList = () => {
           <input
             type="text"
             placeholder="Search projects"
-            value={query}
+            value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={handleKeyPress}
             className="px-4 py-2 border rounded-lg w-64"
           />
           <select
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value)}
+            value={selectedMainCategory}
+            onChange={(e) => setSelectedMainCategory(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
-            <option value="id">Project ID</option>
-            <option value="projectTitle">Project Title</option>
+            <option value="All">All Categories</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.name}>
+                {category.name}
+              </option>
+            ))}
           </select>
           <select
             value={sortOrder}
@@ -96,28 +129,30 @@ const ProjectList = () => {
                 <th className="px-4 py-2">No</th>
                 <th className="px-4 py-2">Project Title</th>
                 <th className="px-4 py-2">Team</th>
-                <th className="px-4 py-2">Project Status</th>
+                <th className="px-4 py-2">Status</th>
+                <th className="px-4 py-2">Location</th> {/* New column for location */}
                 <th className="px-4 py-2">Created At</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
               {Array.isArray(projects) && projects.length > 0 ? projects.map((project, index) => (
-                <tr key={project.projectId} className="border-t">
+                <tr key={project.id} className="border-t">
                   <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                  <td className="px-4 py-2 text-sm text-gray-700">{project.projectTitle}</td>
+                  <td className="px-4 py-2 text-sm text-gray-700">{project.title}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{project.team?.teamName || "No Team"}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{project.projectStatus}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{project.status}</td>
+                  <td className="px-4 py-2 text-sm text-gray-600">{project.location}</td> {/* Display location */}
                   <td className="px-4 py-2 text-sm text-gray-600">{new Date(project.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 text-sm text-center">
                     <button
-                      onClick={() => toggleDropdown(project.projectId)}
+                      onClick={() => toggleDropdown(project.id)}
                       className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
                     >
                       <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
                     </button>
                     {/* Dropdown menu */}
-                    {openDropdown === project.projectId && (
+                    {openDropdown === project.id && (
                       <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
                         <ul className="py-1">
                           <li>
@@ -143,7 +178,7 @@ const ProjectList = () => {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="6" className="text-center text-gray-600 py-4">No projects available</td>
+                  <td colSpan="7" className="text-center text-gray-600 py-4">No projects available</td>
                 </tr>
               )}
             </tbody>

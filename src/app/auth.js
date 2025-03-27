@@ -47,7 +47,7 @@ const checkAuth = async () => {
         }
 
         try {
-          const { data } = await axios.post('http://103.162.15.61:8080/api/v1/auth/refresh-token', { refreshToken });
+          const { data } = await axios.post('https://quanbeo.duckdns.org/api/v1/auth/refresh-token', { refreshToken });
 
           localStorage.setItem('accessToken', data.accessToken);
 

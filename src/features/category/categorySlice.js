@@ -6,7 +6,7 @@ export const getCategoriesContent = createAsyncThunk(
     'category/getCategoriesContent',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch('http://103.162.15.61:8080/api/v1/category/get-all', {
+            const response = await fetch('https://quanbeo.duckdns.org/api/v1/category/get-all', {
                 method: 'GET',
                 headers: {
                     'accept': '*/*',
@@ -31,7 +31,7 @@ export const deleteCategory = createAsyncThunk(
     'category/deleteCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await fetch(`http://103.162.15.61:8080/api/v1/category/delete/${categoryId}`, {
+            const response = await fetch(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`, {
                 method: 'DELETE',
                 headers: {
                     'accept': '*/*',
@@ -63,7 +63,7 @@ export const createCategory = createAsyncThunk(
                 }))
             };
 
-            const response = await fetch('http://103.162.15.61:8080/api/v1/category/create', {
+            const response = await fetch('https://quanbeo.duckdns.org/api/v1/category/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -99,7 +99,7 @@ export const updateCategory = createAsyncThunk(
                 })) || []
             };
 
-            const response = await fetch(`http://103.162.15.61:8080/api/v1/category/update/${updatedCategory.id}`, {
+            const response = await fetch(`https://quanbeo.duckdns.org/api/v1/category/update/${updatedCategory.id}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',

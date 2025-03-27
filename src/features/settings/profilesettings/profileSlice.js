@@ -21,7 +21,7 @@ export const fetchUserProfile = createAsyncThunk('profile/fetchUserProfile', asy
   }
 
   try {
-    const response = await axios.get(`http://103.162.15.61:8080/api/v1/user/${userId}`, {
+    const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${userId}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         Accept: '*/*',
