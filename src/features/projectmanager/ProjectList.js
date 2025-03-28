@@ -11,45 +11,42 @@ const ProjectList = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMainCategory, setSelectedMainCategory] = useState('All');
-  const [sortField, setSortField] = useState('createdAt');  // Default sort by createdAt
+  const [selectedStatus, setSelectedStatus] = useState('APPROVED');
+  const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('asc');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [page, setPage] = useState(0);
 
   useEffect(() => {
-    // Fetch categories when component mounts
     dispatch(getCategoriesContent());
-    // Fetch projects when component mounts or parameters change
-    dispatch(getProjects({ query: '', page, size: 10, sortField, sortOrder }));
-  }, [dispatch, page, sortField, sortOrder]);
+
+    const defaultQuery = `status:eq:${selectedStatus}`;
+    dispatch(getProjects({ query: defaultQuery, page, size: 10, sortField, sortOrder }));
+  }, [dispatch, page, sortField, sortOrder, selectedStatus]);
 
   const handleSearch = () => {
     const queryParts = [];
 
-    // Add the search term for title, if provided
     if (searchTerm) {
       queryParts.push(`title:eq:${searchTerm}`);
     }
 
-    // Add the selected category filter, if not "All"
     if (selectedMainCategory !== "All") {
       queryParts.push(`category.name:eq:${selectedMainCategory}`);
     }
 
-    // Ensure at least one search criterion is provided
+    if (selectedStatus) {
+      queryParts.push(`status:eq:${selectedStatus}`);
+    }
+
     if (queryParts.length === 0) {
       console.error("No search criteria provided.");
       return;
     }
 
-    // Join the query parts with a comma to form the final query string
     const query = queryParts.join(",");
     console.log("Constructed Query:", query);
 
-    // Set the sorting options
-    const sort = `${sortOrder === 'asc' ? '+' : '-'}${sortField}`;
-    
-    // Dispatch the action to fetch projects based on the query and sorting
     dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
   };
 
@@ -102,6 +99,18 @@ const ProjectList = () => {
               </option>
             ))}
           </select>
+          {/* ✅ New Dropdown for Status */}
+          <select
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="px-4 py-2 border rounded-lg"
+          >
+            <option value="APPROVED">Approved</option>
+            <option value="SUSPENDED">Suspended</option>
+            <option value="DRAFT">Draft</option>
+            <option value="PENDING_APPROVAL">Pending Approval</option>
+          </select>
+
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}

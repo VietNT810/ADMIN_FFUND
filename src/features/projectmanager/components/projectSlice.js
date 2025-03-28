@@ -7,7 +7,7 @@ export const getProjects = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/search', {
+      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/get-all', {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 

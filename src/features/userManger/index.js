@@ -110,8 +110,8 @@ const UserManager = () => {
           <input
             type="text"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}  // Không gọi API ngay lập tức
-            onKeyPress={handleKeyPress}  // Chỉ tìm kiếm khi nhấn Enter
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyPress={handleKeyPress}
             placeholder="Search by name"
             className="px-4 py-2 border rounded-lg w-64"
           />
@@ -125,7 +125,7 @@ const UserManager = () => {
           </select>
           <select
             value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}  // Chọn chiều sắp xếp
+            onChange={(e) => setSortOrder(e.target.value)}
             className="px-4 py-2 border rounded-lg"
           >
             <option value="asc">Ascending</option>
@@ -165,7 +165,7 @@ const UserManager = () => {
                   <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
                   <td className="px-4 py-2 text-sm text-gray-700">
                     <img 
-                      src={user.userAvatar ? `path/to/avatars/${user.userAvatar}` : 'https://img.pikbest.com/png-images/qianku/default-avatar_2405039.png!w700wp'} 
+                      src={user.userAvatar ? user.userAvatar : 'https://img.pikbest.com/png-images/qianku/default-avatar_2405039.png!w700wp'} 
                       alt={user.fullName} 
                       className="w-12 h-12 rounded-full"
                     />
