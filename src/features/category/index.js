@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 
 function Categories() {
   const dispatch = useDispatch();
-  const { categories } = useSelector(state => state.category);
+  const { categories, status, error } = useSelector(state => state.category);
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);

@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects } from './components/projectSlice';
+import { getProjects, suspendProject } from './components/projectSlice'; // Import suspendProject
 import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify'; // Import toast for notifications
 
 const ProjectList = () => {
   const dispatch = useDispatch();
@@ -16,6 +18,11 @@ const ProjectList = () => {
   const [sortOrder, setSortOrder] = useState('asc');
   const [openDropdown, setOpenDropdown] = useState(null);
   const [page, setPage] = useState(0);
+
+  // Modal state for Suspend Project
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   useEffect(() => {
     dispatch(getCategoriesContent());
@@ -66,6 +73,49 @@ const ProjectList = () => {
     }
   };
 
+  // Handle Suspend action
+  const handleSuspend = (projectId) => {
+    setSelectedProjectId(projectId);
+    setIsModalOpen(true);
+    setOpenDropdown(false); // Close the dropdown when modal is opened
+  };
+
+  const confirmSuspend = () => {
+    if (suspendReason) {
+      const reason = suspendReason;
+      dispatch(suspendProject({ projectId: selectedProjectId, reason }))
+        .then(() => {
+          toast.success('Project suspended successfully!', {
+            position: "top-right", // Position on the screen
+            autoClose: 2000, // Time to auto close the toast
+            hideProgressBar: false, // Show the progress bar
+            closeOnClick: true, // Close toast on click
+            pauseOnHover: true, // Pause on hover
+            draggable: true, // Allow dragging of the toast
+            progress: undefined, // No progress display
+            theme: "colored", // Themed toast (colored)
+          });
+          setIsModalOpen(false); // Close the modal
+          setSuspendReason(''); // Clear reason
+          window.location.reload(); // Reload the page after success
+        })
+        .catch((error) => {
+          toast.error('Error suspending project.', {
+            position: "top-right", 
+            autoClose: 2000, 
+            hideProgressBar: false, 
+            closeOnClick: true, 
+            pauseOnHover: true, 
+            draggable: true, 
+            progress: undefined, 
+            theme: "colored",
+          });
+        });
+    } else {
+      alert("Please enter a reason for suspending the project.");
+    }
+  };
+
   if (status === 'loading') {
     return <div>Loading...</div>;
   }
@@ -99,7 +149,7 @@ const ProjectList = () => {
               </option>
             ))}
           </select>
-          {/* ✅ New Dropdown for Status */}
+          {/* Dropdown for Status */}
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
@@ -139,7 +189,7 @@ const ProjectList = () => {
                 <th className="px-4 py-2">Project Title</th>
                 <th className="px-4 py-2">Team</th>
                 <th className="px-4 py-2">Status</th>
-                <th className="px-4 py-2">Location</th> {/* New column for location */}
+                <th className="px-4 py-2">Location</th>
                 <th className="px-4 py-2">Created At</th>
                 <th className="px-4 py-2"></th>
               </tr>
@@ -151,7 +201,7 @@ const ProjectList = () => {
                   <td className="px-4 py-2 text-sm text-gray-700">{project.title}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{project.team?.teamName || "No Team"}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{project.status}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{project.location}</td> {/* Display location */}
+                  <td className="px-4 py-2 text-sm text-gray-600">{project.location}</td>
                   <td className="px-4 py-2 text-sm text-gray-600">{new Date(project.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 text-sm text-center">
                     <button
@@ -165,21 +215,25 @@ const ProjectList = () => {
                       <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
                         <ul className="py-1">
                           <li>
-                            <a
-                              href={project.projectUrl}
+                            {/* Link to Project Details page */}
+                            <Link
+                              to={`/app/project-details/${project.id}`}
                               className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
                             >
                               View Project
-                            </a>
+                            </Link>
                           </li>
-                          <li>
-                            <a
-                              href={project.projectVideoDemo}
-                              className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                            >
-                              View Demo Video
-                            </a>
-                          </li>
+                          {/* Only show suspend action if status is 'APPROVED' */}
+                          {project.status === 'APPROVED' && (
+                            <li>
+                              <button
+                                onClick={() => handleSuspend(project.id)}
+                                className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                              >
+                                Suspend Project
+                              </button>
+                            </li>
+                          )}
                         </ul>
                       </div>
                     )}
@@ -201,6 +255,35 @@ const ProjectList = () => {
           <button onClick={() => handlePageChange(page + 1)} disabled={page >= totalPages - 1} className="px-4 py-2 bg-gray-300 rounded-lg">Next</button>
         </div>
       </div>
+
+      {/* Modal for Suspend Project */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">Suspend Project</h3>
+            <textarea
+              value={suspendReason}
+              onChange={(e) => setSuspendReason(e.target.value)}
+              className="w-full p-2 border rounded-lg mb-4"
+              placeholder="Enter reason for suspending the project..."
+            />
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSuspend}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg"
+              >
+                Confirm Suspend
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

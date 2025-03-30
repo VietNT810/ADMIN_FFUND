@@ -114,14 +114,14 @@ function Login() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-500 to-yellow-400">
             <div className="card w-full max-w-4xl shadow-xl rounded-xl bg-white flex md:flex-row flex-col">
                 <div className="md:w-1/2 hidden md:flex items-center justify-center bg-orange-100 rounded-l-xl overflow-hidden">
-                    <video src="/login.mp4" autoPlay muted loop className="w-full h-full object-cover" />
+                    <img src="/logo-login.jpg" alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <div className="md:w-1/2 w-full py-12 px-8">
                     <div className="text-center mb-4">
                         <img src="/signin.gif" alt="Sign In Animation" className="mx-auto mb-4 w-24 border-4 border-white rounded-full shadow-lg" />
                         <p className="text-center text-gray-600 mb-6">Welcome back! Please enter your credentials.</p>
                     </div>
-                    <form onSubmit={submitForm} autoComplete="on"> {/* Bật tự động điền tài khoản */}
+                    <form onSubmit={submitForm} autoComplete="on">
                         <div className="mb-5">
                             <InputText 
                                 type="text" 

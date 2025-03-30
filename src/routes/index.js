@@ -21,6 +21,7 @@ const UserManger = lazy(() => import('../pages/protected/UserManager'))
 const ProjectList = lazy(() => import('../pages/protected/ProjectList'))
 const ProjectRequests = lazy(() => import('../pages/protected/ProjectRequests'))
 const ProjectSettings = lazy(() => import('../pages/protected/ProjectSettings'))
+const ProjectDetails = lazy(() => import('../pages/protected/ProjectDetails'))
 
 const routes = [
   {
@@ -46,6 +47,10 @@ const routes = [
   {
     path: '/project-settings',
     component: ProjectSettings,
+  },
+  {
+    path: '/project-details/:projectId',
+    component: ProjectDetails,
   },
   {
     path: '/settings-team',

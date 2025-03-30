@@ -1,4 +1,3 @@
-// categorySlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
 // GET Categories with Subcategories from API
@@ -23,8 +22,6 @@ export const getCategoriesContent = createAsyncThunk(
         }
     }
 );
-
-
 
 // DELETE Category
 export const deleteCategory = createAsyncThunk(
@@ -53,13 +50,12 @@ export const createCategory = createAsyncThunk(
     'category/createCategory',
     async (newCategory, { rejectWithValue }) => {
         try {
-            // Đảm bảo không có `id` khi gửi request
             const formattedCategory = {
-                categoryName: newCategory.categoryName,
-                categoryDescription: newCategory.categoryDescription || "",
+                name: newCategory.name,  // Changed from 'categoryName'
+                description: newCategory.description || "",  // Changed from 'categoryDescription'
                 subCategories: newCategory.subCategories.map(sub => ({
-                    subCategoryName: sub.subCategoryName,
-                    subCategoryDescription: sub.subCategoryDescription || ""
+                    name: sub.name,  // Changed from 'subCategoryName'
+                    description: sub.description || ""  // Changed from 'subCategoryDescription'
                 }))
             };
 
@@ -83,7 +79,6 @@ export const createCategory = createAsyncThunk(
     }
 );
 
-
 // PUT Update Category
 export const updateCategory = createAsyncThunk(
     'category/updateCategory',
@@ -91,11 +86,11 @@ export const updateCategory = createAsyncThunk(
         try {
             // Xóa `id` khỏi request body
             const formattedCategory = {
-                categoryName: updatedCategory.categoryName,
-                categoryDescription: updatedCategory.categoryDescription || "",
+                name: updatedCategory.name,  // Changed from 'categoryName'
+                description: updatedCategory.description || "",  // Changed from 'categoryDescription'
                 subCategories: updatedCategory.subCategories?.map(sub => ({
-                    subCategoryName: sub.subCategoryName,
-                    subCategoryDescription: sub.subCategoryDescription || ""
+                    name: sub.name,  // Changed from 'subCategoryName'
+                    description: sub.description || ""  // Changed from 'subCategoryDescription'
                 })) || []
             };
 
@@ -119,12 +114,10 @@ export const updateCategory = createAsyncThunk(
     }
 );
 
-
 const categorySlice = createSlice({
     name: 'category',
     initialState: {
-        categories: [],
-        subCategories: [],
+        categories: [],  // This now stores the category data
         status: 'idle',
         error: null,
     },
@@ -136,7 +129,7 @@ const categorySlice = createSlice({
             })
             .addCase(getCategoriesContent.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.categories = action.payload;
+                state.categories = action.payload;  // Store categories from the API response
             })
             .addCase(getCategoriesContent.rejected, (state, action) => {
                 state.status = 'failed';
