@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getUsersContent, banUser, unbanUser, setUsers } from './userSlice'; // Import setUsers
+import { getUsersContent, banUser, unbanUser, setUsers } from './userSlice';
 import { MagnifyingGlassIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
+import { Link } from 'react-router-dom';
+import Loading from '../../components/Loading';
+import useTheme from '../../hooks/useTheme';
 
 const UserManager = () => {
+  useTheme();
+
   const dispatch = useDispatch();
   const { users, error, status, totalPages } = useSelector(state => state.user || { users: [], error: null, status: 'idle' });
 
@@ -17,234 +22,155 @@ const UserManager = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [userToConfirm, setUserToConfirm] = useState(null);
 
-  // Fetch dữ liệu khi component mount hoặc khi currentPage thay đổi
   useEffect(() => {
     dispatch(getUsersContent({ name, page: currentPage, sortField, sortOrder }));
   }, [dispatch, name, currentPage, sortField, sortOrder]);
 
-  // Hàm ban user
   const handleBanUser = (userId) => {
     setUserToConfirm(userId);
     setIsConfirmOpen(true);
     setOpenDropdown(null);
   };
 
-  // Hàm unban user
   const handleUnbanUser = (userId) => {
     setUserToConfirm(userId);
     setIsConfirmOpen(true);
     setOpenDropdown(null);
   };
 
-  // Xử lý xác nhận ban/unban
   const confirmBanUnban = () => {
     if (userToConfirm) {
       const user = users.find(u => u.id === userToConfirm);
-      if (user.isBanned) {
-        dispatch(unbanUser(userToConfirm)).then((result) => {
-          if (!result.error) {
-            toast.success('User unbanned successfully!');
-            // Cập nhật trạng thái ngay lập tức
-            const updatedUsers = users.map(u => u.id === userToConfirm ? { ...u, isBanned: false } : u);
-            dispatch(setUsers(updatedUsers));  // Cập nhật danh sách người dùng
-            setIsConfirmOpen(false);
-          }
-        });
-      } else {
-        dispatch(banUser(userToConfirm)).then((result) => {
-          if (!result.error) {
-            toast.success('User banned successfully!');
-            // Cập nhật trạng thái ngay lập tức
-            const updatedUsers = users.map(u => u.id === userToConfirm ? { ...u, isBanned: true } : u);
-            dispatch(setUsers(updatedUsers));  // Cập nhật danh sách người dùng
-            setIsConfirmOpen(false);
-          }
-        });
-      }
+      const action = user.isBanned ? unbanUser : banUser;
+
+      dispatch(action(userToConfirm)).then((result) => {
+        if (!result.error) {
+          toast.success(`User ${user.isBanned ? 'unbanned' : 'banned'} successfully!`);
+          const updatedUsers = users.map(u =>
+            u.id === userToConfirm ? { ...u, isBanned: !user.isBanned } : u
+          );
+          dispatch(setUsers(updatedUsers));
+          setIsConfirmOpen(false);
+        }
+      });
     }
   };
 
-  // Mở hoặc đóng dropdown
   const toggleDropdown = (userId) => {
     setOpenDropdown(openDropdown === userId ? null : userId);
   };
 
-  // Giữ lại giá trị name và chỉ gửi yêu cầu khi nhấn Enter hoặc khi nhấn nút search
-  const handleSearch = () => {
-    setName(searchTerm);
-  };
-  
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();  // Chỉ tìm kiếm khi nhấn Enter
-    }
-  };
-  
-  useEffect(() => {
-    if (name.trim() !== '') {
-      dispatch(getUsersContent({ name, page: 0, sortField, sortOrder }));
-      setCurrentPage(0);
-    }
-  }, [dispatch, name, sortField, sortOrder]);
-  
+  const handleSearch = () => setName(searchTerm);
+  const handleKeyPress = (e) => e.key === 'Enter' && handleSearch();
+  const handlePageChange = (newPage) => newPage >= 0 && newPage < totalPages && setCurrentPage(newPage);
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
-
-  const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  if (status === 'failed') {
-    return <div>Error: {error}</div>;
-  }
+  if (status === 'loading') return <Loading />;
+  if (status === 'failed') return <div className="alert alert-error">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4">
-      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        {/* Tìm kiếm và Sắp xếp */}
-        <div className="mb-6 flex items-center space-x-4">
+    <div className="min-h-screen bg-base-200 text-base-content py-6 px-4">
+      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
+
+        {/* Search & Sort */}
+        <div className="mb-6 flex flex-wrap items-center gap-4">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Search by name"
-            className="px-4 py-2 border rounded-lg w-64"
+            className="input input-bordered w-64"
           />
-          <select
-            value={sortField}
-            onChange={(e) => setSortField(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
+          <select value={sortField} onChange={(e) => setSortField(e.target.value)} className="select select-bordered">
             <option value="id">ID</option>
             <option value="fullName">Full Name</option>
           </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
-          >
+          <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="select select-bordered">
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
-          <button
-            onClick={handleSearch} // Gọi hàm search khi nhấn nút
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-700 transition duration-200 relative group"
-          >
-            <MagnifyingGlassIcon className="w-5 h-5 inline-block" />
-            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Search
-            </span>
+          <button onClick={handleSearch} className="btn btn-primary">
+            <MagnifyingGlassIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Hiển thị thông báo lỗi hoặc thành công */}
-        {error && <div className="p-4 mb-4 bg-red-200 text-red-800 rounded-lg text-center">{error}</div>}
+        {error && <div className="alert alert-error">{error}</div>}
 
-        {/* Hiển thị bảng Users */}
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full bg-white shadow-md rounded-lg">
-            <thead>
-              <tr className="bg-gray-200 text-left text-sm font-semibold text-gray-700">
-                <th className="px-4 py-2">No</th>
-                <th className="px-4 py-2">Avatar</th>
-                <th className="px-4 py-2">Full Name</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Telephone Number</th>
-                <th className="px-4 py-2">Role</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {Array.isArray(users) && users.length > 0 ? users.map((user, index) => (
-                <tr key={user.id} className="border-t">
-                  <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                  <td className="px-4 py-2 text-sm text-gray-700">
-                    <img 
-                      src={user.userAvatar ? user.userAvatar : 'https://img.pikbest.com/png-images/qianku/default-avatar_2405039.png!w700wp'} 
-                      alt={user.fullName} 
-                      className="w-12 h-12 rounded-full"
-                    />
-                  </td>
-                  <td className="px-4 py-2 text-sm text-gray-700">{user.fullName}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{user.email}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{user.telephoneNumber}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{user.roles}</td>
-                  <td className="px-4 py-2 text-sm text-center">
-                    <button
-                      onClick={() => toggleDropdown(user.id)} // Mở dropdown
-                      className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
-                    >
-                      <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
-                    </button>
+        {/* User Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {users?.length > 0 ? users.map((user) => (
+            <div key={user.id} className="card bg-base-100 shadow-md">
+              <div className="card-body p-5 relative group">
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={user.userAvatar || 'https://img.pikbest.com/png-images/qianku/default-avatar_2405039.png!w700wp'}
+                    alt={user.fullName}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
+                  <div>
+                    <h4 className="text-lg font-semibold">
+                      <Link to={`/app/user-detail/${user.id}`} className="link link-primary">
+                        {user.fullName}
+                      </Link>
+                    </h4>
+                    <p className="text-sm opacity-80">{user.email}</p>
+                    <p className="text-sm opacity-60">{user.telephoneNumber}</p>
+                    <span className={`badge mt-2 ${user.isBanned ? 'badge-error' : 'badge-success'}`}>
+                      {user.isBanned ? 'Banned' : 'Active'}
+                    </span>
+                  </div>
+                </div>
 
-                    {/* Dropdown menu */}
-                    {openDropdown === user.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
-                        <ul className="py-1">
-                          <li>
-                            {user.isBanned ? (
-                              <button
-                                onClick={() => handleUnbanUser(user.id)}
-                                className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                              >
-                                Unban User
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handleBanUser(user.id)}
-                                className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                Ban User
-                              </button>
-                            )}
-                          </li>
-                        </ul>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="7" className="text-center text-gray-600 py-4">No users available</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                {/* Dropdown menu */}
+                <div className="absolute top-3 right-3 dropdown dropdown-end">
+                  <label tabIndex={0} className="btn btn-sm btn-ghost rounded-full" onClick={() => toggleDropdown(user.id)}>
+                    <EllipsisHorizontalIcon className="w-5 h-5" />
+                  </label>
+                  {openDropdown === user.id && (
+                    <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
+                      <li>
+                        {user.isBanned ? (
+                          <button onClick={() => handleUnbanUser(user.id)} className="text-green-500">
+                            Unban User
+                          </button>
+                        ) : (
+                          <button onClick={() => handleBanUser(user.id)} className="text-red-500">
+                            Ban User
+                          </button>
+                        )}
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )) : (
+            <div className="text-center text-base-content col-span-full">No users available</div>
+          )}
         </div>
-        
-        {/* Phân trang */}
-        <div className="mt-4 flex justify-center space-x-4">
-          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="px-4 py-2 bg-gray-300 rounded-lg">Previous</button>
-          <span className="px-4 py-2">{currentPage + 1} / {totalPages}</span>
-          <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} className="px-4 py-2 bg-gray-300 rounded-lg">Next</button>
+
+        {/* Pagination */}
+        <div className="mt-8 flex justify-center items-center gap-2">
+          <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 0} className="btn btn-sm btn-outline">
+            Prev
+          </button>
+          <span className="text-sm">{currentPage + 1} / {totalPages}</span>
+          <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1} className="btn btn-sm btn-outline">
+            Next
+          </button>
         </div>
       </div>
 
-      {/* Modal xác nhận ban/unban */}
+      {/* Confirm Modal */}
       {isConfirmOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 w-full sm:w-96 shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+          <div className="modal-box bg-base-100">
+            <h3 className="font-bold text-lg text-center">
               Are you sure you want to {users.find(user => user.id === userToConfirm)?.isBanned ? 'unban' : 'ban'} this user?
             </h3>
-            <div className="flex justify-around mt-4">
-              <button
-                onClick={confirmBanUnban}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-200 w-24"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setIsConfirmOpen(false)}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-200 w-24"
-              >
-                No
-              </button>
+            <div className="modal-action flex justify-center mt-4 gap-4">
+              <button onClick={confirmBanUnban} className="btn btn-error text-white">Yes</button>
+              <button onClick={() => setIsConfirmOpen(false)} className="btn">No</button>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesContent, deleteCategory, updateCategory, createCategory } from './categorySlice';
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; 
 import { toast } from 'react-toastify'; 
+import Loading from '../../components/Loading';
 
 function Categories() {
   const dispatch = useDispatch();

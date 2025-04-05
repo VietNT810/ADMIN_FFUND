@@ -1,70 +1,43 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Lấy userId từ localStorage
-const getUserId = () => {
-  return localStorage.getItem('userId') || null;
-};
+export const getAdminProfile = createAsyncThunk(
+  'profile/getAdminProfile', 
+  async (_, { rejectWithValue }) => {
+    const userId = localStorage.getItem('userId');
 
-// Lấy accessToken từ localStorage
-const getAccessToken = () => {
-  return localStorage.getItem('accessToken') || null;
-};
-
-// Tạo action bất đồng bộ để fetch profile
-export const fetchUserProfile = createAsyncThunk('profile/fetchUserProfile', async (_, { rejectWithValue }) => {
-  const userId = getUserId();
-  const token = getAccessToken();
-
-  if (!userId || !token) {
-    return rejectWithValue('User ID or Token not found');
-  }
-
-  try {
-    const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        Accept: '*/*',
-      },
-    });
-
-    if (response.data.status === 200) {
-      return response.data.data;
-    } else {
-      return rejectWithValue(response.data.message);
+    if (!userId) {
+      return rejectWithValue('User ID is not available');
     }
-  } catch (error) {
-    return rejectWithValue(error.message);
+
+    try {
+      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${userId}`);
+      return response.data; // Trả về dữ liệu người dùng
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch Admin Account.');
+    }
   }
-});
+);
 
 const profileSlice = createSlice({
   name: 'profile',
   initialState: {
-    user: {
-      id: '',
-      fullName: '',
-      email: '',
-      telephoneNumber: '',
-      identifyNumber: '',
-      userInformation: '',
-      roles: '',
-    },
+    user: [],
     loading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchUserProfile.pending, (state) => {
+      .addCase(getAdminProfile.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchUserProfile.fulfilled, (state, action) => {
+      .addCase(getAdminProfile.fulfilled, (state, action) => {
         state.user = action.payload;
         state.loading = false;
       })
-      .addCase(fetchUserProfile.rejected, (state, action) => {
+      .addCase(getAdminProfile.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

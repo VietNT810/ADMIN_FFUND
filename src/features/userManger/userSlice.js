@@ -4,11 +4,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // ✅ Fetch users from API with search and sort parameters
 export const getUsersContent = createAsyncThunk(
   "user/getUsersContent",
-  async ({ name, page = 0, size = 10, sortField = "id", sortOrder = "asc" }, { rejectWithValue }) => {
+  async ({ name, page = 0, size = 9, sortField = "id", sortOrder = "asc", role, isBanned }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
       const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
-        params: { name, page, size, sort: sortOrderSymbol },
+        params: { name, page, size, sort: sortOrderSymbol, role, isBanned },
       });
 
       return {
@@ -21,14 +21,26 @@ export const getUsersContent = createAsyncThunk(
   }
 );
 
+// Get User by ID
+export const getUserById = createAsyncThunk(
+  'user/getUserById',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${id}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user by ID.');
+    }
+  }
+);
+
 // ✅ Ban user
 export const banUser = createAsyncThunk(
   "user/banUser",
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/ban/${userId}`);
-
-      return response.data.message; // Trả về thông điệp từ server
+      return response.data.message;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to ban user.");
     }
@@ -41,8 +53,7 @@ export const unbanUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/unban/${userId}`);
-
-      return response.data.message; // Trả về thông điệp từ server
+      return response.data.message;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to unban user.");
     }
@@ -59,17 +70,22 @@ const userSlice = createSlice({
     status: "idle",
     banStatus: "",
     unbanStatus: "",
+    user: null,
   },
   reducers: {
-    // Reset ban/unban status
     resetBanUnbanStatus: (state) => {
       state.banStatus = "";
       state.unbanStatus = "";
     },
-    // Set users directly (useful after ban/unban to immediately update the state)
     setUsers: (state, action) => {
       state.users = action.payload;
     },
+    resetState: (state) => {
+      state.users = [];
+      state.totalPages = 1;
+      state.error = null;
+      state.status = 'idle';
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -82,6 +98,17 @@ const userSlice = createSlice({
         state.totalPages = action.payload.totalPages;
       })
       .addCase(getUsersContent.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getUserById.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getUserById.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload;
+      })
+      .addCase(getUserById.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
@@ -106,8 +133,6 @@ const userSlice = createSlice({
   },
 });
 
-// ✅ Export Actions
-export const { resetBanUnbanStatus, setUsers } = userSlice.actions;
+export const { resetBanUnbanStatus, setUsers, resetState } = userSlice.actions;
 
-// ✅ Export Reducer
 export default userSlice.reducer;

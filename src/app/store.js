@@ -7,6 +7,7 @@ import categorySlice from '../features/category/categorySlice'
 import userSlice from '../features/userManger/userSlice'
 import projectSlice from '../features/projectmanager/components/projectSlice'
 import profileSlice from '../features/settings/profilesettings/profileSlice';
+import teamSlice from '../features/team/teamSlice'
 
 const combinedReducer = {
   header: headerSlice,
@@ -17,6 +18,7 @@ const combinedReducer = {
   user: userSlice,
   project: projectSlice,
   profile: profileSlice,
+  team: teamSlice,
 }
 
 export default configureStore({

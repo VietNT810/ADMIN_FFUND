@@ -10,6 +10,7 @@ const Charts = lazy(() => import('../pages/protected/Charts'))
 const Integration = lazy(() => import('../pages/protected/Integration'))
 const Calendar = lazy(() => import('../pages/protected/Calendar'))
 const Team = lazy(() => import('../pages/protected/Team'))
+const TeamDetail = lazy(() => import('../pages/protected/TeamDetail'))
 const Transactions = lazy(() => import('../pages/protected/Transactions'))
 const Bills = lazy(() => import('../pages/protected/Bills'))
 const ProfileSettings = lazy(() => import('../pages/protected/ProfileSettings'))
@@ -18,6 +19,7 @@ const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
 const Category = lazy(() => import('../pages/protected/Category'))
 const UserManger = lazy(() => import('../pages/protected/UserManager'))
+const UserDetail = lazy(() => import('../pages/protected/UserDetail'))
 const ProjectList = lazy(() => import('../pages/protected/ProjectList'))
 const ProjectRequests = lazy(() => import('../pages/protected/ProjectRequests'))
 const ProjectSettings = lazy(() => import('../pages/protected/ProjectSettings'))
@@ -31,6 +33,10 @@ const routes = [
   {
     path: '/welcome',
     component: Welcome,
+  },
+  {
+    path: '/user-detail/:id',
+    component: UserDetail,
   },
   {
     path: '/user-management',
@@ -53,8 +59,12 @@ const routes = [
     component: ProjectDetails,
   },
   {
-    path: '/settings-team',
+    path: '/team',
     component: Team,
+  },
+  {
+    path: '/team-detail/:teamId',
+    component: TeamDetail,
   },
   {
     path: '/calendar',

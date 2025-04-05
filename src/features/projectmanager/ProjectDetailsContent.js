@@ -31,7 +31,7 @@ const ProjectDetailsContent = () => {
           <li key={section.id}>
             <button
               className={`w-full px-4 py-2 text-lg font-semibold text-left rounded-md transition duration-300 
-                ${expandedTab === section.id ? 'bg-orange-500 text-white' : 'bg-gray-100 text-gray-800 hover:bg-orange-200'}`}
+                ${expandedTab === section.id ? 'bg-orange-500 text-white' : 'bg-base-200 dark:bg-base-700 text-base-content dark:text-gray-300 hover:bg-orange-200 dark:hover:bg-orange-600'}`}
               onClick={() => handleToggle(section.id)}
             >
               {section.name}
@@ -39,7 +39,7 @@ const ProjectDetailsContent = () => {
 
             {/* Render content when the section is expanded */}
             {expandedTab === section.id && (
-              <div id={section.id} className="p-4 mt-2 bg-white rounded-lg shadow-md">
+              <div id={section.id} className="p-4 mt-2 dark:bg-base-800 rounded-lg shadow-md">
                 {/* Dynamically render the correct component */}
                 {section.id === "pills-story" && <ProjectDetailsStory />}
                 {section.id === "pills-update" && <ProjectDetailsUpdate />}

@@ -31,6 +31,11 @@ const routes = [
     name: 'User',
   },
   {
+    path: '/app/team',
+    icon: <UsersIcon className={submenuIconClasses}/>,
+    name: 'Team',
+  },
+  {
     path: '', 
     icon: <BoltIcon className={`${iconClasses} inline`}/>, 
     name: 'Project', 
@@ -71,28 +76,6 @@ const routes = [
     path: '/app/calendar', 
     icon: <CalendarDaysIcon className={iconClasses}/>, 
     name: 'Calendar',
-  },
-  {
-    path: '', 
-    icon: <DocumentDuplicateIcon className={`${iconClasses} inline` }/>, 
-    name: 'Pages', 
-    submenu : [
-      {
-        path: '/login',
-        icon: <ArrowRightOnRectangleIcon className={submenuIconClasses}/>,
-        name: 'Login',
-      },
-      {
-        path: '/app/blank',
-        icon: <DocumentTextIcon className={submenuIconClasses}/>,
-        name: 'Blank Page',
-      },
-      {
-        path: '/app/404',
-        icon: <ExclamationTriangleIcon className={submenuIconClasses}/>,
-        name: '404',
-      },
-    ]
   },
   {
     path: '', 

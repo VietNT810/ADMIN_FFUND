@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects, suspendProject } from './components/projectSlice'; // Import suspendProject
+import { getProjects, suspendProject } from './components/projectSlice';
 import { getCategoriesContent } from '../category/categorySlice';
-import { MagnifyingGlassIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { MagnifyingGlassIcon, EyeIcon, PauseIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify'; // Import toast for notifications
+import { toast } from 'react-toastify';
+import Loading from '../../components/Loading';
 
 const ProjectList = () => {
   const dispatch = useDispatch();
@@ -16,117 +17,76 @@ const ProjectList = () => {
   const [selectedStatus, setSelectedStatus] = useState('APPROVED');
   const [sortField, setSortField] = useState('createdAt');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [openDropdown, setOpenDropdown] = useState(null);
   const [page, setPage] = useState(0);
 
-  // Modal state for Suspend Project
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
 
   useEffect(() => {
     dispatch(getCategoriesContent());
-
     const defaultQuery = `status:eq:${selectedStatus}`;
     dispatch(getProjects({ query: defaultQuery, page, size: 10, sortField, sortOrder }));
   }, [dispatch, page, sortField, sortOrder, selectedStatus]);
 
   const handleSearch = () => {
     const queryParts = [];
-
-    if (searchTerm) {
-      queryParts.push(`title:eq:${searchTerm}`);
-    }
-
-    if (selectedMainCategory !== "All") {
-      queryParts.push(`category.name:eq:${selectedMainCategory}`);
-    }
-
-    if (selectedStatus) {
-      queryParts.push(`status:eq:${selectedStatus}`);
-    }
-
-    if (queryParts.length === 0) {
-      console.error("No search criteria provided.");
-      return;
-    }
-
+    if (searchTerm) queryParts.push(`title:eq:${searchTerm}`);
+    if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
+    if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
+    if (queryParts.length === 0) return;
     const query = queryParts.join(",");
-    console.log("Constructed Query:", query);
-
     dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
-  };
-
-  const toggleDropdown = (projectId) => {
-    setOpenDropdown(openDropdown === projectId ? null : projectId);
+    if (e.key === 'Enter') handleSearch();
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage >= 0 && newPage < totalPages) {
-      setPage(newPage);
-    }
+    if (newPage >= 0 && newPage < totalPages) setPage(newPage);
   };
 
-  // Handle Suspend action
   const handleSuspend = (projectId) => {
     setSelectedProjectId(projectId);
     setIsModalOpen(true);
-    setOpenDropdown(false); // Close the dropdown when modal is opened
   };
 
   const confirmSuspend = () => {
     if (suspendReason) {
-      const reason = suspendReason;
-      dispatch(suspendProject({ projectId: selectedProjectId, reason }))
+      dispatch(suspendProject({ projectId: selectedProjectId, reason: suspendReason }))
         .then(() => {
-          toast.success('Project suspended successfully!', {
-            position: "top-right", // Position on the screen
-            autoClose: 2000, // Time to auto close the toast
-            hideProgressBar: false, // Show the progress bar
-            closeOnClick: true, // Close toast on click
-            pauseOnHover: true, // Pause on hover
-            draggable: true, // Allow dragging of the toast
-            progress: undefined, // No progress display
-            theme: "colored", // Themed toast (colored)
-          });
-          setIsModalOpen(false); // Close the modal
-          setSuspendReason(''); // Clear reason
-          window.location.reload(); // Reload the page after success
+          toast.success('Project suspended successfully!');
+          setIsModalOpen(false);
+          setSuspendReason('');
+          window.location.reload();
         })
-        .catch((error) => {
-          toast.error('Error suspending project.', {
-            position: "top-right", 
-            autoClose: 2000, 
-            hideProgressBar: false, 
-            closeOnClick: true, 
-            pauseOnHover: true, 
-            draggable: true, 
-            progress: undefined, 
-            theme: "colored",
-          });
+        .catch(() => {
+          toast.error('Error suspending project.');
         });
     } else {
       alert("Please enter a reason for suspending the project.");
     }
   };
 
-  if (status === 'loading') {
-    return <div>Loading...</div>;
-  }
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'APPROVED': return 'badge-success';
+      case 'SUSPENDED': return 'badge-error';
+      case 'DRAFT': return 'badge-secondary';
+      case 'PENDING_APPROVAL': return 'badge-warning';
+      default: return 'badge';
+    }
+  };
 
+  if (status === 'loading') return <Loading />;
   if (status === 'failed') {
-    return <div className="p-4 mb-4 bg-red-200 text-red-800 rounded-lg text-center">{error}</div>;
+    return <div className="alert alert-error">{error}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4">
-      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-8">
+    <div className="min-h-screen bg-base-200 py-6 px-4 text-base-content">
+      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
         {/* Search and Sort Section */}
         <div className="mb-6 flex items-center space-x-4">
           <input
@@ -135,12 +95,12 @@ const ProjectList = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyPress={handleKeyPress}
-            className="px-4 py-2 border rounded-lg w-64"
+            className="input input-bordered w-64"
           />
           <select
             value={selectedMainCategory}
             onChange={(e) => setSelectedMainCategory(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="select select-bordered"
           >
             <option value="All">All Categories</option>
             {categories.map((category) => (
@@ -149,11 +109,11 @@ const ProjectList = () => {
               </option>
             ))}
           </select>
-          {/* Dropdown for Status */}
+
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="select select-bordered"
           >
             <option value="APPROVED">Approved</option>
             <option value="SUSPENDED">Suspended</option>
@@ -164,17 +124,18 @@ const ProjectList = () => {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="select select-bordered"
           >
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
+
           <button
             onClick={handleSearch}
-            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-700 transition duration-200 relative group"
+            className="btn btn-primary relative group"
           >
             <MagnifyingGlassIcon className="w-5 h-5 inline-block" />
-            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-base-content opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               Search
             </span>
           </button>
@@ -182,9 +143,9 @@ const ProjectList = () => {
 
         {/* Project Table */}
         <div className="overflow-x-auto">
-          <table className="table-auto w-full bg-white shadow-md rounded-lg">
+          <table className="table w-full bg-base-100 shadow-md rounded-lg">
             <thead>
-              <tr className="bg-gray-200 text-left text-sm font-semibold text-gray-700">
+              <tr className="bg-base-200 text-left text-sm font-semibold">
                 <th className="px-4 py-2">No</th>
                 <th className="px-4 py-2">Project Title</th>
                 <th className="px-4 py-2">Team</th>
@@ -196,52 +157,35 @@ const ProjectList = () => {
             </thead>
             <tbody>
               {Array.isArray(projects) && projects.length > 0 ? projects.map((project, index) => (
-                <tr key={project.id} className="border-t">
-                  <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                  <td className="px-4 py-2 text-sm text-gray-700">{project.title}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{project.team?.teamName || "No Team"}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{project.status}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{project.location}</td>
-                  <td className="px-4 py-2 text-sm text-gray-600">{new Date(project.createdAt).toLocaleString()}</td>
+                <tr key={project.id}>
+                  <td className="px-4 py-2 text-sm">{index + 1}</td>
+                  <td className="px-4 py-2 text-sm">{project.title}</td>
+                  <td className="px-4 py-2 text-sm">{project.team?.teamName || "No Team"}</td>
+                  <td className={`px-4 py-2 text-sm ${getStatusColor(project.status)}`}>{project.status}</td>
+                  <td className="px-4 py-2 text-sm">{project.location}</td>
+                  <td className="px-4 py-2 text-sm">{new Date(project.createdAt).toLocaleString()}</td>
                   <td className="px-4 py-2 text-sm text-center">
-                    <button
-                      onClick={() => toggleDropdown(project.id)}
-                      className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
-                    >
-                      <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
-                    </button>
-                    {/* Dropdown menu */}
-                    {openDropdown === project.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
-                        <ul className="py-1">
-                          <li>
-                            {/* Link to Project Details page */}
-                            <Link
-                              to={`/app/project-details/${project.id}`}
-                              className="block px-4 py-2 text-sm text-blue-600 hover:bg-gray-100"
-                            >
-                              View Project
-                            </Link>
-                          </li>
-                          {/* Only show suspend action if status is 'APPROVED' */}
-                          {project.status === 'APPROVED' && (
-                            <li>
-                              <button
-                                onClick={() => handleSuspend(project.id)}
-                                className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                Suspend Project
-                              </button>
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    )}
+                    <div className="flex space-x-4">
+                      <Link
+                        to={`/app/project-details/${project.id}`}
+                        className="text-blue-600 hover:text-blue-800"
+                      >
+                        <EyeIcon className="w-5 h-5" />
+                      </Link>
+                      {project.status === 'APPROVED' && (
+                        <button
+                          onClick={() => handleSuspend(project.id)}
+                          className="text-red-600 hover:text-red-800"
+                        >
+                          <PauseIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="7" className="text-center text-gray-600 py-4">No projects available</td>
+                  <td colSpan="7" className="text-center text-base-content py-4">No projects available</td>
                 </tr>
               )}
             </tbody>
@@ -250,33 +194,45 @@ const ProjectList = () => {
 
         {/* Pagination */}
         <div className="mt-4 flex justify-center space-x-4">
-          <button onClick={() => handlePageChange(page - 1)} disabled={page === 0} className="px-4 py-2 bg-gray-300 rounded-lg">Previous</button>
+          <button
+            onClick={() => handlePageChange(page - 1)}
+            disabled={page === 0}
+            className="btn btn-outline"
+          >
+            Previous
+          </button>
           <span className="px-4 py-2">{page + 1} / {totalPages}</span>
-          <button onClick={() => handlePageChange(page + 1)} disabled={page >= totalPages - 1} className="px-4 py-2 bg-gray-300 rounded-lg">Next</button>
+          <button
+            onClick={() => handlePageChange(page + 1)}
+            disabled={page >= totalPages - 1}
+            className="btn btn-outline"
+          >
+            Next
+          </button>
         </div>
       </div>
 
       {/* Modal for Suspend Project */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+          <div className="bg-base-100 p-6 rounded-lg shadow-lg w-96">
             <h3 className="text-lg font-semibold mb-4">Suspend Project</h3>
             <textarea
               value={suspendReason}
               onChange={(e) => setSuspendReason(e.target.value)}
-              className="w-full p-2 border rounded-lg mb-4"
+              className="textarea textarea-bordered w-full mb-4"
               placeholder="Enter reason for suspending the project..."
             />
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-4 py-2 bg-gray-300 rounded-lg"
+                className="btn btn-ghost"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmSuspend}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg"
+                className="btn btn-error"
               >
                 Confirm Suspend
               </button>

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUserProfile } from './profileSlice';
+import { getAdminProfile } from './profileSlice';
 import TitleCard from '../../../components/Cards/TitleCard';
 import InputText from '../../../components/Input/InputText';
 import TextAreaInput from '../../../components/Input/TextAreaInput';
@@ -10,7 +10,7 @@ function ProfileSettings() {
   const { user, loading, error } = useSelector((state) => state.profile);
 
   useEffect(() => {
-    dispatch(fetchUserProfile());
+    dispatch(getAdminProfile());
   }, [dispatch]);
 
   if (loading) {

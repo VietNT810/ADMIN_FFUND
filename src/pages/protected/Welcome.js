@@ -12,11 +12,11 @@ function InternalPage() {
     }, [dispatch]);
 
     return (
-        <div className="min-h-screen flex justify-center items-start mt-6">
-            <div className="w-full max-w-4xl bg-white shadow-lg rounded-lg p-8 flex flex-col items-center text-center">
+        <div className="min-h-screen flex justify-center items-start mt-6 bg-base-200">
+            <div className="w-full max-w-4xl bg-base-100 shadow-xl rounded-lg p-8 flex flex-col items-center text-center">
                 <TemplatePointers />
                 <Link to="/app/dashboard">
-                    <button className="mt-4 px-5 py-2.5 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition duration-300 transform hover:scale-105">
+                    <button className="mt-4 btn btn-primary hover:scale-105 transition duration-300">
                         Get Started 🚀
                     </button>
                 </Link>
