@@ -17,7 +17,6 @@ function Transactions() {
 
     const [currentPage, setCurrentPage] = useState(0)
 
-    // Fetch transactions from the API on component mount
     useEffect(() => {
         dispatch(getTransactions({ page: currentPage, size: 10 }))
     }, [dispatch, currentPage])
@@ -26,9 +25,9 @@ function Transactions() {
     if (status === "loading") return <Loading />
     if (status === "failed") return <div className="alert alert-error">{error}</div>
 
-    // Calculate totals for Amount, Profit, and Transactions
+    // Calculate totals for Amount, platformFee, and Transactions
     const totalAmount = calculateTotal(transactions, "amount")
-    const totalProfit = calculateTotal(transactions, "profit")
+    const totalPlatFormFee = calculateTotal(transactions, "platformFee")
     const totalTransactions = transactions.length
 
     // Handle page change
@@ -51,8 +50,8 @@ function Transactions() {
 
                     {/* Total Profit Card */}
                     <div className="card bg-base-100 dark:bg-base-800 shadow-xl p-6 flex flex-col items-center justify-center">
-                        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Total Profit</h3>
-                        <p className="text-3xl font-bold text-green-600 mt-2">${totalProfit}</p>
+                        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Total Platform Fee</h3>
+                        <p className="text-3xl font-bold text-green-600 mt-2">${totalPlatFormFee}</p>
                     </div>
 
                     {/* Total Transactions Card */}
@@ -70,7 +69,7 @@ function Transactions() {
                                 <th>Investor Name</th>
                                 <th>Project Title</th>
                                 <th>Amount</th>
-                                <th>Profit</th>
+                                <th>Platform Fee</th>
                                 <th>Transaction Date</th>
                             </tr>
                         </thead>
@@ -81,7 +80,7 @@ function Transactions() {
                                         <td className="text-gray-800 font-semibold">{transaction.investorName}</td>
                                         <td>{transaction.projectTitle}</td>
                                         <td className="text-green-600 font-semibold">${transaction.amount}</td>
-                                        <td className="text-green-500">{transaction.profit}</td>
+                                        <td className="text-green-500">{transaction.platformFee}</td>
                                         <td>{transaction.transactionDate ? moment(transaction.transactionDate).format("D MMM YYYY") : 'N/A'}</td>
                                     </tr>
                                 ))
