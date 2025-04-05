@@ -1,128 +1,85 @@
 import moment from "moment"
 import { useEffect, useState } from "react"
 import { useDispatch, useSelector } from "react-redux"
-import { showNotification } from "../common/headerSlice"
+import { getTransactions } from "./transactionSlice"
 import TitleCard from "../../components/Cards/TitleCard"
-import { RECENT_TRANSACTIONS } from "../../utils/dummyData"
-import FunnelIcon from '@heroicons/react/24/outline/FunnelIcon'
-import XMarkIcon from '@heroicons/react/24/outline/XMarkIcon'
-import SearchBar from "../../components/Input/SearchBar"
+import Loading from '../../components/Loading'
 
-const TopSideButtons = ({removeFilter, applyFilter, applySearch}) => {
+function Transactions() {
+    const dispatch = useDispatch()
 
-    const [filterParam, setFilterParam] = useState("")
-    const [searchText, setSearchText] = useState("")
-    const locationFilters = ["Paris", "London", "Canada", "Peru", "Tokyo"]
+    const { transactions, totalPages, status, error } = useSelector(state => state.transaction)
 
-    const showFiltersAndApply = (params) => {
-        applyFilter(params)
-        setFilterParam(params)
-    }
+    const [currentPage, setCurrentPage] = useState(0)
 
-    const removeAppliedFilter = () => {
-        removeFilter()
-        setFilterParam("")
-        setSearchText("")
-    }
-
+    // Fetch transactions from the API on component mount with sorting by transactionDate descending
     useEffect(() => {
-        if(searchText == ""){
-            removeAppliedFilter()
-        }else{
-            applySearch(searchText)
+        dispatch(getTransactions({ page: currentPage, size: 10, sortField: "transactionDate", sortOrder: "desc" }))
+    }, [dispatch, currentPage])
+
+    // Loading state
+    if (status === "loading") return <Loading />
+    if (status === "failed") return <div className="alert alert-error">{error}</div>
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        if (newPage >= 0 && newPage < totalPages) {
+            setCurrentPage(newPage)
         }
-    }, [searchText])
-
-    return(
-        <div className="inline-block float-right">
-            <SearchBar searchText={searchText} styleClass="mr-4" setSearchText={setSearchText}/>
-            {filterParam != "" && <button onClick={() => removeAppliedFilter()} className="btn btn-xs mr-2 btn-active btn-ghost normal-case">{filterParam}<XMarkIcon className="w-4 ml-2"/></button>}
-            <div className="dropdown dropdown-bottom dropdown-end">
-                <label tabIndex={0} className="btn btn-sm btn-outline"><FunnelIcon className="w-5 mr-2"/>Filter</label>
-                <ul tabIndex={0} className="dropdown-content menu p-2 text-sm shadow bg-base-100 rounded-box w-52">
-                    {
-                        locationFilters.map((l, k) => {
-                            return  <li key={k}><a onClick={() => showFiltersAndApply(l)}>{l}</a></li>
-                        })
-                    }
-                    <div className="divider mt-0 mb-0"></div>
-                    <li><a onClick={() => removeAppliedFilter()}>Remove Filter</a></li>
-                </ul>
-            </div>
-        </div>
-    )
-}
-
-
-function Transactions(){
-
-
-    const [trans, setTrans] = useState(RECENT_TRANSACTIONS)
-
-    const removeFilter = () => {
-        setTrans(RECENT_TRANSACTIONS)
     }
 
-    const applyFilter = (params) => {
-        let filteredTransactions = RECENT_TRANSACTIONS.filter((t) => {return t.location == params})
-        setTrans(filteredTransactions)
-    }
-
-    // Search according to name
-    const applySearch = (value) => {
-        let filteredTransactions = RECENT_TRANSACTIONS.filter((t) => {return t.email.toLowerCase().includes(value.toLowerCase()) ||  t.email.toLowerCase().includes(value.toLowerCase())})
-        setTrans(filteredTransactions)
-    }
-
-    return(
+    return (
         <>
-            
-            <TitleCard title="Recent Transactions" topMargin="mt-2" TopSideButtons={<TopSideButtons applySearch={applySearch} applyFilter={applyFilter} removeFilter={removeFilter}/>}>
-
-                {/* Team Member list in table format loaded constant */}
-            <div className="overflow-x-auto w-full">
-                <table className="table w-full">
-                    <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Email Id</th>
-                        <th>Location</th>
-                        <th>Amount</th>
-                        <th>Transaction Date</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        {
-                            trans.map((l, k) => {
-                                return(
-                                    <tr key={k}>
-                                    <td>
-                                        <div className="flex items-center space-x-3">
-                                            <div className="avatar">
-                                                <div className="mask mask-circle w-12 h-12">
-                                                    <img src={l.avatar} alt="Avatar" />
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <div className="font-bold">{l.name}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>{l.email}</td>
-                                    <td>{l.location}</td>
-                                    <td>${l.amount}</td>
-                                    <td>{moment(l.date).format("D MMM")}</td>
+            <TitleCard title="Recent Transactions" topMargin="mt-2">
+                {/* Transactions Table */}
+                <div className="overflow-x-auto w-full">
+                    <table className="table w-full table-striped">
+                        <thead>
+                            <tr>
+                                <th>Investor Name</th>
+                                <th>Project Title</th>
+                                <th>Amount</th>
+                                <th>Profit</th>
+                                <th>Transaction Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {
+                                transactions?.map((transaction, index) => (
+                                    <tr key={index}>
+                                        <td className="text-gray-800 dark:text-gray-200 font-semibold">{transaction.investorName}</td>
+                                        <td>{transaction.projectTitle}</td>
+                                        <td className="text-green-600 font-semibold">${transaction.amount}</td>
+                                        <td className="text-green-500">{transaction.profit}</td>
+                                        <td>{transaction.transactionDate ? moment(transaction.transactionDate).format("D MMM YYYY") : 'N/A'}</td>
                                     </tr>
-                                )
-                            })
-                        }
-                    </tbody>
-                </table>
-            </div>
+                                ))
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                {/* Pagination */}
+                <div className="mt-8 flex justify-center items-center gap-2">
+                    <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 0}
+                        className="btn btn-sm btn-outline"
+                    >
+                        Prev
+                    </button>
+                    <span className="text-sm">{currentPage + 1} / {totalPages}</span>
+                    <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages - 1}
+                        className="btn btn-sm btn-outline"
+                    >
+                        Next
+                    </button>
+                </div>
             </TitleCard>
         </>
     )
 }
-
 
 export default Transactions

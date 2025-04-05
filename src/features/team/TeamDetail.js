@@ -40,7 +40,7 @@ const TeamDetail = () => {
       <div className="max-w-7xl mx-auto bg-base-100 dark:bg-base-800 shadow-xl rounded-xl p-8">
         {/* Back Button at top-left */}
         <button onClick={handleGoBack} className="btn btn-ghost text-lg mb-6">
-          ← Back
+          Back
         </button>
 
         <h2 className="text-3xl font-semibold text-gray-800 dark:text-gray-200 mb-6">{teamById?.teamName}</h2>
@@ -108,7 +108,7 @@ const TeamDetail = () => {
                 <p className="text-sm text-gray-600 dark:text-gray-400">{memberById?.studentClass || 'N/A'}</p>
               </div>
               <div>
-                <p className="font-semibold text-gray-800 dark:text-gray-200">ExE Class:</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">EXE Class:</p>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{memberById?.exeClass || 'N/A'}</p>
               </div>
               <div>

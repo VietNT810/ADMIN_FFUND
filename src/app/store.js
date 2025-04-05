@@ -8,6 +8,7 @@ import userSlice from '../features/userManger/userSlice'
 import projectSlice from '../features/projectmanager/components/projectSlice'
 import profileSlice from '../features/settings/profilesettings/profileSlice';
 import teamSlice from '../features/team/teamSlice'
+import transactionSlice from '../features/transactions/transactionSlice'
 
 const combinedReducer = {
   header: headerSlice,
@@ -19,6 +20,7 @@ const combinedReducer = {
   project: projectSlice,
   profile: profileSlice,
   team: teamSlice,
+  transaction: transactionSlice,
 }
 
 export default configureStore({
