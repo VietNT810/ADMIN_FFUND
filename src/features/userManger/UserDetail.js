@@ -38,7 +38,7 @@ const UserDetail = () => {
     setShowConfirm(false);
   };
 
-  const handleGoBack = () => navigate(-1);
+  const handleGoBack = () => navigate('/app/user-management');
   const handleOpenConfirm = (action) => {
     setActionType(action);
     setShowConfirm(true);
@@ -69,8 +69,8 @@ const UserDetail = () => {
                 <h2 className="text-2xl font-bold">{user.fullName}</h2>
                 <p className="text-sm opacity-80">{user.email}</p>
                 <p className="text-sm opacity-60">{user.telephoneNumber}</p>
-                <span className={`badge mt-2 ${user.isBanned ? 'badge-error' : 'badge-success'}`}>
-                  {user.isBanned ? 'Banned' : 'Active'}
+                <span className={`badge mt-2 ${user.active ? 'badge-error' : 'badge-success'}`}>
+                  {user.active ? 'Banned' : 'Active'}
                 </span>
               </div>
             </div>
@@ -94,11 +94,11 @@ const UserDetail = () => {
             {/* Nút Ban/Unban */}
             <div className="flex justify-end">
               <button
-                onClick={() => handleOpenConfirm(user.isBanned ? 'unban' : 'ban')}
-                className={`btn ${user.isBanned ? 'btn-success' : 'btn-error'} text-white`}
+                onClick={() => handleOpenConfirm(user.active ? 'ban' : 'unban')}
+                className={`btn ${user.active ? 'btn-success' : 'btn-error'} text-white`}
                 disabled={loading}
               >
-                {user.isBanned ? 'Unban User' : 'Ban User'}
+                {user.active ? 'Ban User' : 'Unban User'}
               </button>
             </div>
           </div>

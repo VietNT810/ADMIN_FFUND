@@ -4,11 +4,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // ✅ Fetch users from API with search and sort parameters
 export const getUsersContent = createAsyncThunk(
   "user/getUsersContent",
-  async ({ name, page = 0, size = 9, sortField = "id", sortOrder = "asc", role, isBanned }, { rejectWithValue }) => {
+  async ({ name, page = 0, size = 9, sortField = "id", sortOrder = "asc", role, active }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
       const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
-        params: { name, page, size, sort: sortOrderSymbol, role, isBanned },
+        params: { name, page, size, sort: sortOrderSymbol, role, active },
       });
 
       return {
@@ -115,13 +115,13 @@ const userSlice = createSlice({
       .addCase(banUser.fulfilled, (state, action) => {
         state.banStatus = action.payload;
         state.users = state.users.map((user) =>
-          user.id === action.meta.arg ? { ...user, isBanned: true } : user
+          user.id === action.meta.arg ? { ...user, active: true } : user
         );
       })
       .addCase(unbanUser.fulfilled, (state, action) => {
         state.unbanStatus = action.payload;
         state.users = state.users.map((user) =>
-          user.id === action.meta.arg ? { ...user, isBanned: false } : user
+          user.id === action.meta.arg ? { ...user, active: false } : user
         );
       })
       .addCase(banUser.rejected, (state, action) => {

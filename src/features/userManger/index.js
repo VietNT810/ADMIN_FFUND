@@ -41,13 +41,13 @@ const UserManager = () => {
   const confirmBanUnban = () => {
     if (userToConfirm) {
       const user = users.find(u => u.id === userToConfirm);
-      const action = user.isBanned ? unbanUser : banUser;
+      const action = user.active ? banUser : unbanUser;
 
       dispatch(action(userToConfirm)).then((result) => {
         if (!result.error) {
-          toast.success(`User ${user.isBanned ? 'unbanned' : 'banned'} successfully!`);
+          toast.success(`User ${user.active ? 'banned' : 'unbanned'} successfully!`);
           const updatedUsers = users.map(u =>
-            u.id === userToConfirm ? { ...u, isBanned: !user.isBanned } : u
+            u.id === userToConfirm ? { ...u, active: !user.active } : u
           );
           dispatch(setUsers(updatedUsers));
           setIsConfirmOpen(false);
@@ -115,8 +115,8 @@ const UserManager = () => {
                     </h4>
                     <p className="text-sm opacity-80">{user.email}</p>
                     <p className="text-sm opacity-60">{user.telephoneNumber}</p>
-                    <span className={`badge mt-2 ${user.isBanned ? 'badge-error' : 'badge-success'}`}>
-                      {user.isBanned ? 'Banned' : 'Active'}
+                    <span className={`badge mt-2 ${user.active ? 'badge-success' : 'badge-error'}`}>
+                      {user.active ? 'Active' : 'Banned'}
                     </span>
                   </div>
                 </div>
@@ -128,18 +128,18 @@ const UserManager = () => {
                   </label>
                   {openDropdown === user.id && (
                     <ul tabIndex={0} className="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-40">
-                      <li>
-                        {user.isBanned ? (
-                          <button onClick={() => handleUnbanUser(user.id)} className="text-green-500">
-                            Unban User
-                          </button>
-                        ) : (
-                          <button onClick={() => handleBanUser(user.id)} className="text-red-500">
-                            Ban User
-                          </button>
-                        )}
-                      </li>
-                    </ul>
+                    <li>
+                      {user.active ? (
+                        <button onClick={() => handleBanUser(user.id)} className="text-red-500">
+                          Ban User
+                        </button>
+                      ) : (
+                        <button onClick={() => handleUnbanUser(user.id)} className="text-green-500">
+                          Unban User
+                        </button>
+                      )}
+                    </li>
+                  </ul>                  
                   )}
                 </div>
               </div>
@@ -166,7 +166,7 @@ const UserManager = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
           <div className="modal-box bg-base-100">
             <h3 className="font-bold text-lg text-center">
-              Are you sure you want to {users.find(user => user.id === userToConfirm)?.isBanned ? 'unban' : 'ban'} this user?
+              Are you sure you want to {users.find(user => user.id === userToConfirm)?.active ? 'ban' : 'unban'} this user?
             </h3>
             <div className="modal-action flex justify-center mt-4 gap-4">
               <button onClick={confirmBanUnban} className="btn btn-error text-white">Yes</button>
