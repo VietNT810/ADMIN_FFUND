@@ -12,9 +12,10 @@ import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquare
 import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
 import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
 import ExclamationTriangleIcon from '@heroicons/react/24/outline/ExclamationTriangleIcon'
-import ArrowRightOnRectangleIcon from '@heroicons/react/24/outline/ArrowRightOnRectangleIcon'
+import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
 import UserIcon from '@heroicons/react/24/outline/UserIcon'
 import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
+import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -50,11 +51,6 @@ const routes = [
         icon: <CurrencyDollarIcon className={submenuIconClasses}/>, 
         name: 'Project Requests', 
       },
-      {
-        path: '/app/project-settings',
-        icon: <Cog6ToothIcon className={submenuIconClasses}/>,
-        name: 'Project Settings',
-      },
     ]
   },  
   {
@@ -76,6 +72,23 @@ const routes = [
     path: '/app/calendar', 
     icon: <CalendarDaysIcon className={iconClasses}/>, 
     name: 'Calendar',
+  },
+  {
+    path: '', 
+    icon: <ExclamationTriangleIcon className={`${iconClasses} inline`}/>, 
+    name: 'Requests & Reports', 
+    submenu: [
+      {
+        path: '/app/request',
+        icon: <InboxIcon className={submenuIconClasses}/>,
+        name: 'Requests',
+      },
+      {
+        path: '/app/report-project',
+        icon: <ChartPieIcon className={submenuIconClasses}/>,
+        name: 'Project Reports',
+      }
+    ]
   },
   {
     path: '', 

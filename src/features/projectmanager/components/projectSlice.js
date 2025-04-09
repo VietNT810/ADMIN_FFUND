@@ -148,6 +148,21 @@ export const suspendProject = createAsyncThunk(
   }
 );
 
+// Mark project as completed
+export const completeProject = createAsyncThunk(
+  'project/completeProject',
+  async (projectId, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `https://quanbeo.duckdns.org/api/v1/project/completed/${projectId}`
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to complete project.');
+    }
+  }
+);
+
 const projectSlice = createSlice({
   name: 'project',
   initialState: {
@@ -282,6 +297,21 @@ const projectSlice = createSlice({
         state.error = null;
       })
       .addCase(rejectProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(completeProject.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(completeProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const updatedProject = action.payload;
+        state.projects = state.projects.map(project =>
+          project.id === updatedProject.id ? updatedProject : project
+        );
+        state.currentProject = updatedProject;
+      })
+      .addCase(completeProject.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       });

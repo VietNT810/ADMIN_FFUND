@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { getStoryByProjectId } from './components/projectSlice';
 import Loading from '../../components/Loading';
+import { motion } from 'framer-motion';
 
 const ProjectDetailsStory = ({ getClassName }) => {
   const { projectId } = useParams();
@@ -10,7 +11,6 @@ const ProjectDetailsStory = ({ getClassName }) => {
 
   const { story, status, error } = useSelector(state => state.project);
 
-  // State for managing selected block and scroll position
   const [selectedBlock, setSelectedBlock] = useState(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const ProjectDetailsStory = ({ getClassName }) => {
           setSelectedBlock(blockId); // Set the active block
         }
       });
-    }, { threshold: 0.5 }); // Trigger when 50% of the element is in the viewport
+    }, { threshold: 0.5 });
 
     // Observe each block
     story?.blocks?.forEach((block) => {
@@ -41,14 +41,6 @@ const ProjectDetailsStory = ({ getClassName }) => {
     // Cleanup observer on component unmount
     return () => observer.disconnect();
   }, [story?.blocks]);
-
-  const handleScrollToBlock = (blockId) => {
-    const element = document.getElementById(blockId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-    setSelectedBlock(blockId); // Set the active block
-  };
 
   if (status === 'loading') return <Loading />;
   if (status === 'failed') return <div className="alert alert-error">{error}</div>;
@@ -64,29 +56,53 @@ const ProjectDetailsStory = ({ getClassName }) => {
             // Render Heading Blocks
             if (block.type === 'HEADING') {
               return (
-                <div key={block.storyBlockId} id={block.storyBlockId} className="mb-6">
+                <motion.div
+                  key={block.storyBlockId}
+                  id={block.storyBlockId}
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <h3 className={`text-2xl font-semibold ${selectedBlock === block.storyBlockId ? 'text-orange-600 dark:text-orange-400' : 'text-gray-800 dark:text-gray-200'}`}>
                     {block.content}
                   </h3>
-                </div>
+                </motion.div>
               );
             }
+
             // Render Text Blocks
             if (block.type === 'TEXT') {
               return (
-                <div key={block.storyBlockId} id={block.storyBlockId} className="mb-6">
+                <motion.div
+                  key={block.storyBlockId}
+                  id={block.storyBlockId}
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <p className="text-gray-700 dark:text-gray-100 leading-relaxed" dangerouslySetInnerHTML={{ __html: block.content }}></p>
-                </div>
+                </motion.div>
               );
             }
+
             // Render Image Blocks
             if (block.type === 'IMAGE') {
               return (
-                <div key={block.storyBlockId} id={block.storyBlockId} className="mb-6">
-                  <img src={block.content} alt="Story Image" className="max-w-full h-auto rounded-lg shadow-lg" />
-                </div>
+                <motion.div
+                  key={block.storyBlockId}
+                  id={block.storyBlockId}
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <img src={block.content} alt="Story Image" className="max-w-full h-auto rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300" />
+                </motion.div>
               );
             }
+
             // Render Video Blocks
             if (block.type === 'VIDEO') {
               const metadata = block.metadata ? JSON.parse(block.metadata) : {};
@@ -94,18 +110,26 @@ const ProjectDetailsStory = ({ getClassName }) => {
               const videoHeight = metadata.additionalProp1?.height || '315px';
 
               return (
-                <div key={block.storyBlockId} id={block.storyBlockId} className="mb-6">
+                <motion.div
+                  key={block.storyBlockId}
+                  id={block.storyBlockId}
+                  className="mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <iframe
                     src={block.content}
                     width={videoWidth}
                     height={videoHeight}
-                    className="w-full h-80 rounded-lg shadow-lg"
+                    className="w-full h-80 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
                     title="Project Story Video"
                     allow="autoplay; encrypted-media"
                   ></iframe>
-                </div>
+                </motion.div>
               );
             }
+
             return null;
           })
         ) : (

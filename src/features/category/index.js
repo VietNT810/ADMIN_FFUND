@@ -4,6 +4,7 @@ import { getCategoriesContent, deleteCategory, updateCategory, createCategory } 
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; 
 import { toast } from 'react-toastify'; 
 import Loading from '../../components/Loading';
+import { motion } from 'framer-motion';
 
 function Categories() {
   const dispatch = useDispatch();
@@ -20,6 +21,7 @@ function Categories() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null); 
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     dispatch(getCategoriesContent());
@@ -131,25 +133,47 @@ function Categories() {
     setOpenDropdown(openDropdown === categoryId ? null : categoryId);
   };
 
+  const filteredCategories = categories.filter((category) =>
+    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 py-6 px-4">
-      <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-8">
-        <div className="mb-6 text-right relative group">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-700 transition duration-200"
-          >
-            <PlusIcon className="w-5 h-5 inline-block" />
-          </button>
-          <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            Add new Category
-          </span>
+    <div className="min-h-screen bg-base-200 py-6 px-4">
+      <div className="max-w-7xl mx-auto bg-base-100 shadow-lg rounded-lg p-8">
+        <div className="mb-6 flex justify-between items-center">
+          <div className="relative group"> 
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-700 transition duration-200"
+            >
+              <PlusIcon className="w-5 h-5 inline-block" />
+            </button>
+            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              Add new Category
+            </span>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search Categories"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-4 py-2 border rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="table-auto w-full bg-white shadow-md rounded-lg">
+          <motion.table 
+            className="table-auto w-full bg-base-200 shadow-md rounded-lg"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
             <thead>
-              <tr className="bg-gray-200 text-left text-sm font-semibold text-gray-700">
+              <tr className="bg-base-200 dark:text-orange-400 text-left text-sm font-semibold text-gray-700">
                 <th className="px-4 py-2">No</th>
                 <th className="px-4 py-2">Category Name</th>
                 <th className="px-4 py-2">Description</th>
@@ -158,64 +182,61 @@ function Categories() {
               </tr>
             </thead>
             <tbody>
-              {
-                categories.length > 0 ? categories.map((category, index) => (
-                  <tr key={category.id} className="border-t">
-                    <td className="px-4 py-2 text-sm text-gray-700">{index + 1}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">{category.name}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">{category.description}</td>
-                    <td className="px-4 py-2 text-sm text-gray-600">
-                      <ul>
-                        {
-                          category.subCategories.length > 0 ? category.subCategories.map((subCategory, subIndex) => (
-                            <li key={subCategory.id} className="text-sm text-gray-600">
-                              {subIndex + 1}. {subCategory.name}
-                            </li>
-                          )) : (
-                            <li className="text-sm text-gray-600">No subcategories</li>
-                          )
-                        }
-                      </ul>
-                    </td>
-                    <td className="px-4 py-2 text-sm text-center">
-                      <button
-                        onClick={() => toggleDropdown(category.id)} 
-                        className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
-                      >
-                        <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
-                      </button>
-
-                      {openDropdown === category.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
-                          <ul className="py-1">
-                            <li>
-                              <button
-                                onClick={() => handleEditCategory(category)} 
-                                className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                              >
-                                Edit Category
-                              </button>
-                            </li>
-                            <li>
-                              <button
-                                onClick={() => handleDeleteCategory(category)} 
-                                className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                              >
-                                Delete Category
-                              </button>
-                            </li>
-                          </ul>
-                        </div>
+              {filteredCategories.length > 0 ? filteredCategories.map((category, index) => (
+                <tr key={category.id} className="border-t">
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">{index + 1}</td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.name}</td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.description}</td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">
+                    <ul>
+                      {category.subCategories.length > 0 ? category.subCategories.map((subCategory, subIndex) => (
+                        <li key={subCategory.id} className="text-sm dark:text-gray-200">
+                          {subIndex + 1}. {subCategory.name}
+                        </li>
+                      )) : (
+                        <li className="text-sm dark:text-gray-200">No subcategories</li>
                       )}
-                    </td>
-                  </tr>
-                )) :
+                    </ul>
+                  </td>
+                  <td className="px-4 py-2 text-sm text-center">
+                    <button
+                      onClick={() => toggleDropdown(category.id)} 
+                      className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
+                    >
+                      <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
+                    </button>
+
+                    {openDropdown === category.id && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
+                        <ul className="py-1">
+                          <li>
+                            <button
+                              onClick={() => handleEditCategory(category)} 
+                              className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
+                            >
+                              Edit Category
+                            </button>
+                          </li>
+                          <li>
+                            <button
+                              onClick={() => handleDeleteCategory(category)} 
+                              className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                            >
+                              Delete Category
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                    )}
+                  </td>
+                </tr>
+              )) : (
                 <tr>
                   <td colSpan="5" className="text-center text-gray-600 py-4">No categories available</td>
                 </tr>
-              }
+              )}
             </tbody>
-          </table>
+          </motion.table>
         </div>
       </div>
 

@@ -94,7 +94,7 @@ const TeamDetail = () => {
               <img
                 src={memberById?.userAvatar || 'https://img.pikbest.com/png-images/qianku/default-avatar_2405039.png!w700wp'}
                 alt={memberById?.fullName}
-                className="w-24 h-24 rounded-full object-cover border-4 border-primary"
+                className="w-24 h-24 rounded-full object-cover border-4 border-orange-500"
               />
               <div>
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{memberById?.fullName}</h4>
@@ -118,8 +118,8 @@ const TeamDetail = () => {
             </div>
 
             <div className="flex justify-center">
-              <a href={`https://${memberById?.userFfundLink}`} className="btn btn-primary w-full" target="_blank" rel="noopener noreferrer">
-                View Ffund Link
+              <a href={`https://${memberById?.studentPortfolio}`} className="btn bg-orange-500 hover:bg-orange-600 dark:text-gray-200 w-full" target="_blank" rel="noopener noreferrer">
+                View Student Portfolio
               </a>
             </div>
           </div>

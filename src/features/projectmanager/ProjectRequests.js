@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProjects, approveProject, rejectProject } from './components/projectSlice';
-import { EyeIcon, PauseIcon } from '@heroicons/react/24/outline';
+import { EyeIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'; // Use appropriate icons
 import { Link } from 'react-router-dom';
 import Loading from '../../components/Loading';
 import { toast } from 'react-toastify';
+import { motion } from 'framer-motion';
 
 const ProjectRequests = () => {
   const dispatch = useDispatch();
@@ -20,19 +21,22 @@ const ProjectRequests = () => {
     dispatch(getProjects({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder: 'asc' }));
   }, [dispatch]);
 
-  const handleApprove = () => {
-    dispatch(approveProject(selectedProjectId))
-      .then(() => {
+  const handleApprove = async () => {
+    try {
+      const response = await dispatch(approveProject(selectedProjectId));
+      if (response.meta.requestStatus === 'fulfilled') {
         setShowConfirmation(false);
         toast.success('Project approved successfully!');
         const query = `status:eq:PENDING_APPROVAL`;
         dispatch(getProjects({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder: 'asc' }));
-      })
-      .catch(() => {
-        setShowConfirmation(false);
+      } else {
         toast.error('Failed to approve project.');
-      });
-  };
+      }
+    } catch (error) {
+      setShowConfirmation(false);
+      toast.error('Failed to approve project.');
+    }
+  };  
 
   const handleReject = () => {
     const reason = reasonInputRef.current.value.trim();
@@ -92,7 +96,13 @@ const ProjectRequests = () => {
             <tbody>
               {Array.isArray(projects) && projects.length > 0 ? projects.map((project, index) => (
                 project.status === 'PENDING_APPROVAL' && (
-                  <tr key={project.id} className="border-t">
+                  <motion.tr
+                    key={project.id}
+                    className="border-t hover:bg-base-200 transition"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                  >
                     <td className="px-4 py-2 text-sm text-base-content">{index + 1}</td>
                     <td className="px-4 py-2 text-sm text-base-content">{project.title}</td>
                     <td className="px-4 py-2 text-sm text-base-content">{project.team?.teamName || "No Team"}</td>
@@ -109,16 +119,16 @@ const ProjectRequests = () => {
                         onClick={() => confirmAction('approve', project.id)}
                         className="text-green-600 hover:text-green-800"
                       >
-                        <PauseIcon className="w-5 h-5" />
+                        <CheckCircleIcon className="w-5 h-5" />
                       </button>
                       <button
                         onClick={() => confirmAction('reject', project.id)}
                         className="text-red-600 hover:text-red-800"
                       >
-                        <PauseIcon className="w-5 h-5" />
+                        <XCircleIcon className="w-5 h-5" />
                       </button>
                     </td>
-                  </tr>
+                  </motion.tr>
                 )
               )) : (
                 <tr>

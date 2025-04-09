@@ -89,7 +89,7 @@ const UserManager = () => {
             <option value="asc">Ascending</option>
             <option value="desc">Descending</option>
           </select>
-          <button onClick={handleSearch} className="btn btn-primary">
+          <button onClick={handleSearch} className="btn bg-orange-500 hover:bg-orange-600 dark:text-gray-200">
             <MagnifyingGlassIcon className="w-5 h-5" />
           </button>
         </div>
@@ -109,7 +109,7 @@ const UserManager = () => {
                   />
                   <div>
                     <h4 className="text-lg font-semibold">
-                      <Link to={`/app/user-detail/${user.id}`} className="link link-primary">
+                      <Link to={`/app/user-detail/${user.id}`} className="hover:text-orange-300">
                         {user.fullName}
                       </Link>
                     </h4>

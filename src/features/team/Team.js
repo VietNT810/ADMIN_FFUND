@@ -48,7 +48,7 @@ const Team = () => {
 
                   {/* View Details Button */}
                   <div className="text-center mt-4">
-                    <Link to={`/app/team-detail/${team.teamId}`} className="btn btn-primary btn-sm w-full">
+                    <Link to={`/app/team-detail/${team.teamId}`} className="btn dark:text-base-200 bg-orange-500 hover:bg-orange-600 btn-sm w-full">
                       View Details
                     </Link>
                   </div>

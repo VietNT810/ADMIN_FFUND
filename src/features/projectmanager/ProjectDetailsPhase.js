@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPhaseByProjectId, getMilestoneByPhaseId } from './components/projectSlice';
 import Loading from '../../components/Loading';
+import { motion } from 'framer-motion';
 
 const ProjectDetailsPhase = ({ getClassName }) => {
   const { projectId } = useParams();
@@ -41,6 +42,11 @@ const ProjectDetailsPhase = ({ getClassName }) => {
   if (status === 'loading') return <Loading />;
   if (status === 'failed') return <div className="alert alert-error">{error}</div>;
 
+  // Ensure that phases data exists before rendering
+  if (!phases || phases.length === 0) {
+    return <p>No phases available for this project.</p>;
+  }
+
   return (
     <div className={`${getClassName?.("pills-phase")} p-6 bg-base-100 shadow-xl rounded-lg`} id="pills-phase" role="tabpanel">
       <h2 className="text-2xl font-semibold text-orange-600 mb-4">Project Phases</h2>
@@ -48,30 +54,43 @@ const ProjectDetailsPhase = ({ getClassName }) => {
       {phases?.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {phases.map((phase) => (
-            <div key={phase.id} className="card bg-base-200 shadow-md p-4 rounded-lg transition-transform transform hover:scale-105">
-              <h3 className="font-semibold text-lg text-base-content">Phase {phase.phaseNumber}</h3>
-              <p className="text-sm text-base-content"><strong>Status:</strong> {phase.status}</p>
-              <p className="text-sm text-base-content"><strong>Start Date:</strong> {new Date(phase.startDate.join('-')).toLocaleDateString()}</p>
-              <p className="text-sm text-base-content"><strong>End Date:</strong> {new Date(phase.endDate.join('-')).toLocaleDateString()}</p>
-              <p className="text-sm text-base-content"><strong>Target Amount:</strong> {phase.targetAmount}</p>
-              <p className="text-sm text-base-content"><strong>Raised Amount:</strong> {phase.raiseAmount}</p>
+            <motion.div
+              key={phase.id}
+              className="card bg-base-200 shadow-lg p-6 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 className="font-semibold text-lg text-base-content mb-2">Phase {phase.phaseNumber}</h3>
+              <p className="text-sm text-base-content mb-2"><strong>Status:</strong> {phase.status}</p>
+              <p className="text-sm text-base-content mb-2"><strong>Start Date:</strong> {new Date(phase.startDate).toLocaleDateString()}</p>
+              <p className="text-sm text-base-content mb-2"><strong>End Date:</strong> {new Date(phase.endDate).toLocaleDateString()}</p>
+              <p className="text-sm text-base-content mb-2"><strong>Target Amount:</strong> {phase.targetAmount}</p>
+              <p className="text-sm text-base-content mb-4"><strong>Raised Amount:</strong> {phase.raiseAmount}</p>
 
               {/* Display milestones for this phase */}
-              <div className="mt-4">
-                <h4 className="font-semibold text-md text-base-content">Milestones</h4>
+              <div>
+                <h4 className="font-semibold text-md text-base-content mb-2">Milestones</h4>
                 {milestones[phase.id]?.length > 0 ? (
                   milestones[phase.id].map((milestone) => (
-                    <div key={milestone.id} className="card bg-base-100 shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg" onClick={() => handleMilestoneClick(milestone)}>
+                    <motion.div
+                      key={milestone.id}
+                      className="card bg-base-100 shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg"
+                      onClick={() => handleMilestoneClick(milestone)}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <h5 className="font-semibold text-lg text-base-content">{milestone.title}</h5>
-                      <p className="text-sm text-base-content">{milestone.description}</p>
+                      <p className="text-sm text-base-content mb-2">{milestone.description}</p>
                       <p className="text-sm text-base-content"><strong>Price:</strong> ${milestone.price}</p>
-                    </div>
+                    </motion.div>
                   ))
                 ) : (
                   <p className="text-sm text-base-content">No milestones available for this phase.</p>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       ) : (
@@ -81,7 +100,12 @@ const ProjectDetailsPhase = ({ getClassName }) => {
       {/* Modal for Milestone Details */}
       {showModal && selectedMilestone && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-base-100 p-6 rounded-lg w-full max-w-lg">
+          <motion.div
+            className="bg-base-100 p-6 rounded-lg w-full max-w-lg shadow-2xl"
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <button
               onClick={closeModal}
               className="btn btn-ghost absolute top-4 right-4 text-white"
@@ -110,7 +134,7 @@ const ProjectDetailsPhase = ({ getClassName }) => {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

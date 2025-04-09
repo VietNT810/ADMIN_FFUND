@@ -20,15 +20,34 @@ const DocComponents = lazy(() => import('../pages/DocComponents'))
 const Category = lazy(() => import('../pages/protected/Category'))
 const UserManger = lazy(() => import('../pages/protected/UserManager'))
 const UserDetail = lazy(() => import('../pages/protected/UserDetail'))
-const ProjectList = lazy(() => import('../pages/protected/ProjectList'))
-const ProjectRequests = lazy(() => import('../pages/protected/ProjectRequests'))
-const ProjectSettings = lazy(() => import('../pages/protected/ProjectSettings'))
-const ProjectDetails = lazy(() => import('../pages/protected/ProjectDetails'))
+const ProjectList = lazy(() => import('../pages/protected/projectPage/ProjectList'))
+const ProjectRequests = lazy(() => import('../pages/protected/projectPage/ProjectRequests'))
+const ProjectDetails = lazy(() => import('../pages/protected/projectPage/ProjectDetails'))
+const Report = lazy(() => import('../pages/protected/reportPage/Report'))
+const Request = lazy(() => import('../pages/protected/requestPage/Request'))
+const ReportDetail = lazy(() => import('../pages/protected/reportPage/ReportDetail'))
+const RequestDetail = lazy(() => import('../pages/protected/requestPage/RequestDetail'))
 
 const routes = [
   {
     path: '/dashboard',
     component: Dashboard,
+  },
+  {
+    path: '/report-project',
+    component: Report,
+  },
+  {
+    path: '/report-project/:reportId',
+    component: ReportDetail,
+  },
+  {
+    path: '/request',
+    component: Request,
+  },
+  {
+    path: '/request/:requestId',
+    component: RequestDetail,
   },
   {
     path: '/welcome',
@@ -49,10 +68,6 @@ const routes = [
   {
     path: '/project-requests',
     component: ProjectRequests,
-  },
-  {
-    path: '/project-settings',
-    component: ProjectSettings,
   },
   {
     path: '/project-details/:projectId',
