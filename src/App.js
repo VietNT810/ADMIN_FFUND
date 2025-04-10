@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import checkAuth from './app/auth';
 import initializeApp from './app/init';
+import ScrollToTop from './components/ScrollToTop'
 
 // Importing pages
 const Layout = lazy(() => import('./containers/Layout'));
@@ -29,6 +30,7 @@ function App() {
   return (
     <>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

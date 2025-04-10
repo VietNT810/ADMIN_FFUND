@@ -1,10 +1,6 @@
 import React, { useEffect } from 'react';
 
 const Loading = () => {
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   return (
     <div className="flex items-center justify-center min-h-screen bg-base-200">
       <div className="flex flex-col items-center space-y-4">
