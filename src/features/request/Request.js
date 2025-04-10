@@ -51,6 +51,7 @@ const Request = () => {
     switch (status) {
       case 'PENDING': return 'badge-warning';
       case 'RESOLVED': return 'badge-success';
+      case 'EXTEND_TIME': return 'badge-info';
       default: return 'badge-secondary';
     }
   };
@@ -86,6 +87,7 @@ const Request = () => {
           >
             <option value="PENDING">Pending</option>
             <option value="RESOLVED">Resolved</option>
+            <option value="EXTEND_TIME">Extend Time</option>
           </select>
           <select
             value={sortOrder}

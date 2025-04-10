@@ -16,6 +16,7 @@ import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
 import UserIcon from '@heroicons/react/24/outline/UserIcon'
 import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
 import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
+import CheckCircleIcon  from '@heroicons/react/24/outline/CheckCircleIcon';
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -50,6 +51,11 @@ const routes = [
         path: '/app/project-requests',
         icon: <CurrencyDollarIcon className={submenuIconClasses}/>, 
         name: 'Project Requests', 
+      },
+      {
+        path: '/app/project-completed',
+        icon: <CheckCircleIcon className={submenuIconClasses} />,
+        name: 'Completed Projects',
       },
     ]
   },  

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesContent, deleteCategory, updateCategory, createCategory } from './categorySlice';
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; 
-import { toast } from 'react-toastify'; 
-import Loading from '../../components/Loading';
+import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
 function Categories() {
@@ -167,7 +166,7 @@ function Categories() {
 
         <div className="overflow-x-auto">
           <motion.table 
-            className="table-auto w-full bg-base-200 shadow-md rounded-lg"
+            className="table-auto w-full bg-base-100 shadow-md rounded-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

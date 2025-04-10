@@ -167,7 +167,7 @@ const ProjectDetails = () => {
       {/* Modal for Full Image/Video View */}
       {showMediaModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-base-100 p-6 rounded-lg max-w-lg w-full shadow-xl">
+          <div className="bg-base-100 p-6 rounded-lg max-w-4xl w-full shadow-xl">
             <button
               onClick={handleCloseModal}
               className="btn btn-ghost absolute top-4 right-4 text-white"
@@ -177,7 +177,7 @@ const ProjectDetails = () => {
             {/* Show image or video based on current media index */}
             {mediaArray[currentMediaIndex]?.includes('youtube.com') ? (
               <iframe
-                className="w-full h-72 rounded-lg"
+                className="w-full h-96 rounded-lg"
                 src={mediaArray[currentMediaIndex]}
                 title="Project Video"
                 frameBorder="0"

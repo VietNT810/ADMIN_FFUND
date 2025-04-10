@@ -21,6 +21,26 @@ export const getProjects = createAsyncThunk(
   }
 );
 
+// Fetch a project that is likely to be completed
+export const getProjectToComplete = createAsyncThunk(
+  'project/getProjectToComplete',
+  async ({ title, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
+    try {
+      const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
+      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/completed', {
+        params: { title, page, size, sort: sortOrderSymbol }
+      });
+
+      return {
+        projects: response.data.data.data,
+        totalPages: response.data.data.totalPages || 1,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch projects.');
+    }
+  }
+);
+
 // Get project by ID
 export const getProjectById = createAsyncThunk(
   'project/getProjectById',
@@ -107,7 +127,7 @@ export const approveProject = createAsyncThunk(
       const response = await axios.patch(
         `https://quanbeo.duckdns.org/api/v1/project/approve/${projectId}`
       );
-      return response.data.data;
+      return response.data.message;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to approve project.');
     }
@@ -172,7 +192,7 @@ const projectSlice = createSlice({
     documents: [],
     updates: [],
     phases: [],
-    milestones: [],
+    milestones: {},
     story: null,
     error: null,
     status: 'idle',
@@ -194,6 +214,18 @@ const projectSlice = createSlice({
         state.totalPages = action.payload.totalPages;
       })
       .addCase(getProjects.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(getProjectToComplete.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getProjectToComplete.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.projects = action.payload.projects;
+        state.totalPages = action.payload.totalPages;
+      })
+      .addCase(getProjectToComplete.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
@@ -257,10 +289,14 @@ const projectSlice = createSlice({
       })
       .addCase(getMilestoneByPhaseId.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.milestones = action.payload;
+        const phaseId = action.meta.arg;
+        state.milestones = {
+          ...state.milestones,
+          [phaseId]: action.payload,
+        };
       })
       .addCase(getMilestoneByPhaseId.rejected, (state, action) => {
-        state.status = 'failed';
+        state.status = 'failed'; 
         state.error = action.payload;
       })
       .addCase(approveProject.pending, (state) => {
@@ -268,11 +304,7 @@ const projectSlice = createSlice({
       })
       .addCase(approveProject.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        const updatedProject = action.payload;
-        state.projects = state.projects.map(project =>
-          project.id === updatedProject.id ? updatedProject : project
-        );
-        state.currentProject = updatedProject;
+        state.error = null;
       })
       .addCase(approveProject.rejected, (state, action) => {
         state.status = 'failed';

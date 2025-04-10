@@ -1,18 +1,42 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getRequestById } from './requestSlice';
+import { getRequestById, responseRequest } from './requestSlice';
 import Loading from '../../components/Loading';
 import { PaperClipIcon } from '@heroicons/react/24/outline';
+import { toast } from 'react-toastify'; // Ensure you have react-toastify installed
 
 const RequestDetail = () => {
   const { requestId } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [responseMessage, setResponseMessage] = useState('');
 
   // Fetch request data from the store
   const { request, status, error } = useSelector((state) => state.request);
+
+  const handleResponse = () => {
+    setIsModalOpen(true);
+  };
+
+  const confirmResponse = () => {
+    if (responseMessage) {
+      dispatch(responseRequest({ requestId, response: responseMessage }))
+        .then(() => {
+          toast.success('Response sent successfully!');
+          setIsModalOpen(false);
+          setResponseMessage('');
+          navigate('/app/request'); // Navigate to request list after successful response
+        })
+        .catch(() => {
+          toast.error('Failed to send response.');
+        });
+    } else {
+      toast.error("Please enter a response message.");
+    }
+  };
 
   useEffect(() => {
     if (requestId) {
@@ -31,10 +55,10 @@ const RequestDetail = () => {
           <div className="space-y-6">
             {/* Back Button */}
             <button
-              onClick={() => navigate('/app/requests')}
+              onClick={() => navigate('/app/request')}
               className="btn btn-ghost"
             >
-              Back to Requests
+              Back
             </button>
 
             {/* Request Information */}
@@ -94,7 +118,7 @@ const RequestDetail = () => {
             {/* Response Button */}
             {request.status === 'PENDING' && (
               <button
-                onClick={() => navigate(`/app/response-request/${request.id}`)}
+                onClick={handleResponse}
                 className="btn bg-green-500 hover:bg-green-600 text-white mt-6"
               >
                 Respond
@@ -105,6 +129,35 @@ const RequestDetail = () => {
           <div className="text-center text-gray-600">No request found</div>
         )}
       </div>
+
+      {/* Modal for Responding to Request */}
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+          <div className="bg-base-100 p-6 rounded-lg shadow-lg w-96">
+            <h3 className="text-lg font-semibold mb-4">Respond to Request</h3>
+            <textarea
+              value={responseMessage}
+              onChange={(e) => setResponseMessage(e.target.value)}
+              className="textarea textarea-bordered w-full mb-4"
+              placeholder="Enter your response..."
+            />
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="btn btn-ghost"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmResponse}
+                className="btn btn-success"
+              >
+                Send Response
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

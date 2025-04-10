@@ -21,6 +21,7 @@ const Category = lazy(() => import('../pages/protected/Category'))
 const UserManger = lazy(() => import('../pages/protected/UserManager'))
 const UserDetail = lazy(() => import('../pages/protected/UserDetail'))
 const ProjectList = lazy(() => import('../pages/protected/projectPage/ProjectList'))
+const ProjectCompleted = lazy(() => import('../pages/protected/projectPage/ProjectCompleted'))
 const ProjectRequests = lazy(() => import('../pages/protected/projectPage/ProjectRequests'))
 const ProjectDetails = lazy(() => import('../pages/protected/projectPage/ProjectDetails'))
 const Report = lazy(() => import('../pages/protected/reportPage/Report'))
@@ -64,6 +65,10 @@ const routes = [
   {
     path: '/project-list',
     component: ProjectList,
+  },
+  {
+    path: '/project-completed',
+    component: ProjectCompleted,
   },
   {
     path: '/project-requests',

@@ -70,7 +70,7 @@ const ProjectDetailsPhase = ({ getClassName }) => {
 
               {/* Display milestones for this phase */}
               <div>
-                <h4 className="font-semibold text-md text-base-content mb-2">Milestones</h4>
+                <h4 className="font-semibold text-md text-orange-500 mb-2">Milestones</h4>
                 {milestones[phase.id]?.length > 0 ? (
                   milestones[phase.id].map((milestone) => (
                     <motion.div
@@ -82,7 +82,6 @@ const ProjectDetailsPhase = ({ getClassName }) => {
                       transition={{ duration: 0.3 }}
                     >
                       <h5 className="font-semibold text-lg text-base-content">{milestone.title}</h5>
-                      <p className="text-sm text-base-content mb-2">{milestone.description}</p>
                       <p className="text-sm text-base-content"><strong>Price:</strong> ${milestone.price}</p>
                     </motion.div>
                   ))
