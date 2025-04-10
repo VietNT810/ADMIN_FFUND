@@ -9,6 +9,7 @@ import { FunnelIcon } from "@heroicons/react/24/outline";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import useClickOutside from "../../hooks/useClickOutside";
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 // calculate totals
 const calculateTotal = (transactions, field) => {
@@ -92,7 +93,18 @@ function Transactions() {
 
       <TitleCard title="Recent Transactions" topMargin="mt-2">
         {/* Filter Section */}
-        <div className="flex justify-end mb-6 relative">
+        <div className="flex justify-end space-x-4 mb-6 relative">
+          {/* View Dashboard Button with Eye Icon */}
+          <a
+            href="https://stripe.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-sm dark:bg-base-700 dark:text-white hover:bg-blue-600 hover:text-white transition-all duration-200 flex items-center space-x-2 group"
+          >
+            <EyeIcon className="w-5 h-5" />
+            <span className="hidden group-hover:inline-block">View Dashboard</span>
+          </a>
+
           {/* Nút Filter */}
           <button
             onClick={() => setIsFilterVisible(!isFilterVisible)}
@@ -124,7 +136,7 @@ function Transactions() {
             </motion.div>
           )}
         </div>
-
+        
         {/* Transactions Table */}
         <div className="overflow-x-auto w-full">
           <motion.table

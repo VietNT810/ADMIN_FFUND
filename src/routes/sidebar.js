@@ -6,17 +6,19 @@ import ChartBarIcon from '@heroicons/react/24/outline/ChartBarIcon'
 import BoltIcon from '@heroicons/react/24/outline/BoltIcon'
 import CalendarDaysIcon from '@heroicons/react/24/outline/CalendarDaysIcon'
 import DocumentDuplicateIcon from '@heroicons/react/24/outline/DocumentDuplicateIcon'
-import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon'
-import DocumentTextIcon from '@heroicons/react/24/outline/DocumentTextIcon'
-import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquareIcon'
+// import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon'
+// import DocumentTextIcon from '@heroicons/react/24/outline/DocumentTextIcon'
+// import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquareIcon'
 import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
-import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
+// import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
 import ExclamationTriangleIcon from '@heroicons/react/24/outline/ExclamationTriangleIcon'
 import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
-import UserIcon from '@heroicons/react/24/outline/UserIcon'
-import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
+// import UserIcon from '@heroicons/react/24/outline/UserIcon'
+// import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
 import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
 import CheckCircleIcon  from '@heroicons/react/24/outline/CheckCircleIcon';
+import FolderIcon  from '@heroicons/react/24/outline/FolderIcon';
+
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -45,17 +47,17 @@ const routes = [
       {
         path: '/app/project-list',
         icon: <Squares2X2Icon className={submenuIconClasses}/>,
-        name: 'Project List',
+        name: 'List',
       },
       {
         path: '/app/project-requests',
-        icon: <CurrencyDollarIcon className={submenuIconClasses}/>, 
-        name: 'Project Requests', 
+        icon: <FolderIcon className={submenuIconClasses}/>, 
+        name: 'Requests', 
       },
       {
         path: '/app/project-completed',
         icon: <CheckCircleIcon className={submenuIconClasses} />,
-        name: 'Completed Projects',
+        name: 'Completed',
       },
     ]
   },  

@@ -90,8 +90,7 @@ const ProjectList = () => {
     switch (status) {
       case 'APPROVED': return 'badge-success';
       case 'SUSPENDED': return 'badge-error';
-      case 'DRAFT': return 'badge-secondary';
-      case 'PENDING_APPROVAL': return 'badge-warning';
+      case 'DRAFT': return 'badge-warning';
       default: return 'badge';
     }
   };
@@ -135,7 +134,7 @@ const ProjectList = () => {
             <option value="APPROVED">Approved</option>
             <option value="SUSPENDED">Suspended</option>
             <option value="DRAFT">Draft</option>
-            <option value="PENDING_APPROVAL">Pending Approval</option>
+            {/* <option value="PENDING_APPROVAL">Pending Approval</option> */}
           </select>
           <select
             value={sortOrder}
