@@ -96,50 +96,50 @@ const routes = [
       }
     ]
   },
-  {
-    path: '', 
-    icon: <Cog6ToothIcon className={`${iconClasses} inline` }/>, 
-    name: 'Settings', 
-    submenu : [
-      {
-        path: '/app/settings-profile', 
-        icon: <UserIcon className={submenuIconClasses}/>, 
-        name: 'Profile', 
-      },
-      {
-        path: '/app/settings-billing',
-        icon: <WalletIcon className={submenuIconClasses}/>,
-        name: 'Billing',
-      },
-      {
-        path: '/app/settings-team',
-        icon: <UsersIcon className={submenuIconClasses}/>,
-        name: 'Team Members',
-      },
-    ]
-  },
-  {
-    path: '', 
-    icon: <DocumentTextIcon className={`${iconClasses} inline`}/>, 
-    name: 'Documentation', 
-    submenu : [
-      {
-        path: '/app/getting-started', 
-        icon: <DocumentTextIcon className={submenuIconClasses}/>, 
-        name: 'Getting Started',
-      },
-      {
-        path: '/app/features',
-        icon: <TableCellsIcon className={submenuIconClasses}/>, 
-        name: 'Features',
-      },
-      {
-        path: '/app/components',
-        icon: <CodeBracketSquareIcon className={submenuIconClasses}/>, 
-        name: 'Components',
-      }
-    ]
-  },
+  // {
+  //   path: '', 
+  //   icon: <Cog6ToothIcon className={`${iconClasses} inline` }/>, 
+  //   name: 'Settings', 
+  //   submenu : [
+  //     {
+  //       path: '/app/settings-profile', 
+  //       icon: <UserIcon className={submenuIconClasses}/>, 
+  //       name: 'Profile', 
+  //     },
+  //     {
+  //       path: '/app/settings-billing',
+  //       icon: <WalletIcon className={submenuIconClasses}/>,
+  //       name: 'Billing',
+  //     },
+  //     {
+  //       path: '/app/settings-team',
+  //       icon: <UsersIcon className={submenuIconClasses}/>,
+  //       name: 'Team Members',
+  //     },
+  //   ]
+  // },
+  // {
+  //   path: '', 
+  //   icon: <DocumentTextIcon className={`${iconClasses} inline`}/>, 
+  //   name: 'Documentation', 
+  //   submenu : [
+  //     {
+  //       path: '/app/getting-started', 
+  //       icon: <DocumentTextIcon className={submenuIconClasses}/>, 
+  //       name: 'Getting Started',
+  //     },
+  //     {
+  //       path: '/app/features',
+  //       icon: <TableCellsIcon className={submenuIconClasses}/>, 
+  //       name: 'Features',
+  //     },
+  //     {
+  //       path: '/app/components',
+  //       icon: <CodeBracketSquareIcon className={submenuIconClasses}/>, 
+  //       name: 'Components',
+  //     }
+  //   ]
+  // },
 ]
 
 export default routes

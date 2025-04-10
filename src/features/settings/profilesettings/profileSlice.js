@@ -12,7 +12,7 @@ export const getAdminProfile = createAsyncThunk(
 
     try {
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${userId}`);
-      return response.data; // Trả về dữ liệu người dùng
+      return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch Admin Account.');
     }
@@ -21,8 +21,9 @@ export const getAdminProfile = createAsyncThunk(
 
 const profileSlice = createSlice({
   name: 'profile',
+  name: 'profile',
   initialState: {
-    user: [],
+    user: null,
     loading: false,
     error: null,
   },
@@ -34,7 +35,7 @@ const profileSlice = createSlice({
         state.error = null;
       })
       .addCase(getAdminProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
+        state.user = action.payload.data;
         state.loading = false;
       })
       .addCase(getAdminProfile.rejected, (state, action) => {

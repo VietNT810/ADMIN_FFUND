@@ -1,15 +1,16 @@
 import moment from "moment";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getTransactions } from "./transactionSlice";
 import TitleCard from "../../components/Cards/TitleCard";
 import Loading from "../../components/Loading";
 import { motion } from "framer-motion";
-import { FunnelIcon } from "@heroicons/react/24/outline"; // Heroicons filter icon
-import Calendar from "react-calendar"; // Calendar component for selecting date
-import "react-calendar/dist/Calendar.css"; // Import Calendar CSS
+import { FunnelIcon } from "@heroicons/react/24/outline";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import useClickOutside from "../../hooks/useClickOutside";
 
-// Helper function to calculate totals
+// calculate totals
 const calculateTotal = (transactions, field) => {
   return transactions.reduce((acc, curr) => acc + curr[field], 0).toFixed(2);
 };
@@ -24,7 +25,10 @@ function Transactions() {
   const [currentPage, setCurrentPage] = useState(0);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
-  const [isFilterVisible, setIsFilterVisible] = useState(false); // To toggle the filter visibility
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
+
+  const calendarRef = useRef();
+  useClickOutside(calendarRef, () => setIsFilterVisible(false));
 
   useEffect(() => {
     const query = buildQuery();
@@ -87,37 +91,39 @@ function Transactions() {
       </div>
 
       <TitleCard title="Recent Transactions" topMargin="mt-2">
-        {/* Toggle filter visibility */}
-        <div className="flex justify-end mb-6">
+        {/* Filter Section */}
+        <div className="flex justify-end mb-6 relative">
+          {/* Nút Filter */}
           <button
             onClick={() => setIsFilterVisible(!isFilterVisible)}
             className="btn btn-sm btn-outline dark:bg-base-700 dark:text-white hover:bg-blue-600 hover:text-white transition-all duration-200"
           >
-            <FunnelIcon className="w-5 h-5" /> Filter
+            <FunnelIcon className="w-5 h-5 mr-1" /> Filter
           </button>
-        </div>
 
-        {/* Date Picker Filter */}
-        {isFilterVisible && (
-          <div className="mb-6">
-            <div className="flex justify-between space-x-6">
-              <div className="w-full">
-                <span className="font-semibold">Select Date Range: </span>
-                <div className="border p-4 rounded-lg shadow-md bg-base-200 dark:text-gray-500">
-                  <Calendar
-                    selectRange={true}
-                    onChange={(range) => {
-                      setStartDate(range?.[0]);
-                      setEndDate(range?.[1]);
-                    }}
-                    value={[startDate, endDate]}
-                    className="react-calendar dark-theme"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          {/* Calendar Dropdown (gắn trong cùng container relative) */}
+          {isFilterVisible && (
+            <motion.div
+              ref={calendarRef}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="absolute top-full mt-2 right-0 z-50 w-72 sm:w-96 bg-base-200 dark:bg-base-800 shadow-xl rounded-lg border p-4"
+            >
+              <span className="font-semibold text-sm block mb-2 dark:text-white">Select Date Range:</span>
+              <Calendar
+                selectRange={true}
+                onChange={(range) => {
+                  setStartDate(range?.[0]);
+                  setEndDate(range?.[1]);
+                }}
+                value={[startDate, endDate]}
+                className="react-calendar dark-theme"
+              />
+            </motion.div>
+          )}
+        </div>
 
         {/* Transactions Table */}
         <div className="overflow-x-auto w-full">

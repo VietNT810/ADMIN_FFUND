@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef  } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getProjectById } from './components/projectSlice';
@@ -10,16 +10,13 @@ const ProjectDetails = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { currentProject, status, error } = useSelector(state => state.project || { currentProject: null, error: null, status: 'idle' });
-
-  // State to manage full image/video modal
   const [showMediaModal, setShowMediaModal] = useState(false);
   const [currentMediaIndex, setCurrentMediaIndex] = useState(0);
 
-  // Prepare media array (images and videos)
   const mediaArray = [
     currentProject?.projectImage,
     currentProject?.projectVideoDemo
-  ].filter(Boolean); // Only include non-null/undefined media
+  ].filter(Boolean);
 
   useEffect(() => {
     if (projectId) {
@@ -52,7 +49,7 @@ const ProjectDetails = () => {
       <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-lg p-8">
 
         {/* Back Button */}
-        <motion.button 
+        <button 
           onClick={() => navigate(-1)} 
           className="btn bg-orange-500 hover:bg-orange-600 mb-4"
           initial={{ opacity: 0 }}
@@ -60,20 +57,15 @@ const ProjectDetails = () => {
           transition={{ duration: 0.3 }}
         >
           Back
-        </motion.button>
+        </button>
 
         {currentProject ? (
           <>
-            <motion.div 
-              className="mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
+            <div className="mb-6">
               {/* Project Image */}
               <div 
                 className="relative"
-                onClick={() => handleMediaClick(0)} // Click to open media in modal
+                onClick={() => handleMediaClick(0)}
               >
                 <img 
                   src={currentProject.projectImage} 
@@ -81,7 +73,7 @@ const ProjectDetails = () => {
                   className="w-full h-64 object-cover rounded-lg shadow-xl mb-4 cursor-pointer transition-transform duration-300 hover:scale-105"
                 />
               </div>
-            </motion.div>
+            </div>
 
             <motion.div 
               className="mb-6"
@@ -167,10 +159,10 @@ const ProjectDetails = () => {
       {/* Modal for Full Image/Video View */}
       {showMediaModal && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-base-100 p-6 rounded-lg max-w-4xl w-full shadow-xl">
+          <div className="bg-base-100 p-6 rounded-lg max-w-4xl w-full shadow-xl relative">
             <button
               onClick={handleCloseModal}
-              className="btn btn-ghost absolute top-4 right-4 text-white"
+              className="btn text-green-500 hover:text-green-600 absolute top-4 right-4"
             >
               Close
             </button>
