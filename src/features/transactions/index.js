@@ -9,6 +9,7 @@ import { FunnelIcon, ChartBarIcon } from "@heroicons/react/24/outline";
 import Calendar from "react-calendar";
 import "react-calendar/dist/Calendar.css";
 import useClickOutside from "../../hooks/useClickOutside";
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 function Transactions() {
   const dispatch = useDispatch();
@@ -306,6 +307,17 @@ function Transactions() {
 
           {/* Filter Buttons */}
           <div className="flex gap-3">
+            {/* View Dashboard Button with Eye Icon */}
+            <a
+              href="https://stripe.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-sm dark:bg-base-700 dark:text-white hover:bg-blue-600 hover:text-white transition-all duration-200 flex items-center space-x-2 group"
+            >
+              <EyeIcon className="w-5 h-5" />
+              <span className="hidden group-hover:inline-block">View Dashboard</span>
+            </a>
+            
             {/* Date Filter */}
             <div className="relative">
               <button
