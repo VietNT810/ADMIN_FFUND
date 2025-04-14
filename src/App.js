@@ -1,4 +1,4 @@
-import React, { lazy, useState, useEffect } from 'react';
+import React, { lazy, useEffect, useState } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { themeChange } from 'theme-change';
@@ -19,8 +19,8 @@ const Documentation = lazy(() => import('./pages/Documentation'));
 // Initializing different libraries
 initializeApp();
 
-
 function App() {
+  
   const [isAuthChecked, setIsAuthChecked] = useState(false);
   const [token, setToken] = useState(null);
 
