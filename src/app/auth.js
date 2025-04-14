@@ -1,78 +1,112 @@
-import axios from 'axios';
+  import axios from 'axios';
 
-const checkAuth = async () => {
-  const accessToken = localStorage.getItem('accessToken');
-  const refreshToken = localStorage.getItem('refreshToken');
-  const userRole = localStorage.getItem('role');
+  let isRefreshing = false;
+  let refreshSubscribers = [];
 
-  const PUBLIC_ROUTES = ['login', 'forgot-password', 'auth/reset-password', 'register', 'documentation'];
-  const isPublicPage = PUBLIC_ROUTES.some(r => window.location.href.includes(r));
+  const subscribeTokenRefresh = (callback) => {
+    refreshSubscribers.push(callback);
+  };
 
-  if (!accessToken && !isPublicPage) {
+  const onRefreshed = (newToken) => {
+    refreshSubscribers.forEach((callback) => callback(newToken));
+    refreshSubscribers = [];
+  };
+
+  const logout = () => {
+    localStorage.clear();
     window.location.href = '/login';
-    return;
-  }
+  };
 
-  if (userRole !== 'ADMIN' && !isPublicPage) {
-    logout();
-    return;
-  }
+  const checkAuth = async () => {
+    const accessToken = localStorage.getItem('accessToken');
+    const refreshToken = localStorage.getItem('refreshToken');
+    const userRole = localStorage.getItem('role');
 
-  axios.interceptors.request.use(
-    (config) => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
+    const PUBLIC_ROUTES = ['login', 'forgot-password', 'auth/reset-password', 'register', 'documentation'];
+    const isPublicPage = PUBLIC_ROUTES.some(r => window.location.href.includes(r));
 
-  axios.interceptors.response.use(
-    (response) => {
-      document.body.classList.remove('loading-indicator');
-      return response;
-    },
-    async (error) => {
-      document.body.classList.remove('loading-indicator');
+    if (!accessToken && !isPublicPage) {
+      window.location.href = '/login';
+      return;
+    }
 
-      if (error.response?.status === 401) {
-        console.warn('Access Token expired! Attempting to refresh...');
+    if (userRole !== 'ADMIN' && !isPublicPage) {
+      logout();
+      return;
+    }
+
+    axios.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    axios.interceptors.response.use(
+      (response) => {
+        document.body.classList.remove('loading-indicator');
+        return response;
+      },
+      async (error) => {
+        document.body.classList.remove('loading-indicator');
+        const originalRequest = error.config;
+
+        if (!error.response || error.response.status !== 403 || originalRequest._retry) {
+          return Promise.reject(error);
+        }
 
         if (!refreshToken) {
-          console.error('No refresh token found. Redirecting to login.');
           logout();
           return Promise.reject(error);
         }
 
+        // Mark request as already retried
+        originalRequest._retry = true;
+
+        if (isRefreshing) {
+          return new Promise((resolve) => {
+            subscribeTokenRefresh((newToken) => {
+              originalRequest.headers.Authorization = `Bearer ${newToken}`;
+              resolve(axios(originalRequest));
+            });
+          });
+        }
+
+        isRefreshing = true;
+
         try {
-          const { data } = await axios.post('https://quanbeo.duckdns.org/api/v1/auth/refresh-token', { refreshToken });
+          const response = await axios.post('https://quanbeo.duckdns.org/api/v1/auth/refresh-token', { token: refreshToken });
+          
+          console.log("Response Data:", response.data.data);
 
-          localStorage.setItem('accessToken', data.accessToken);
+          const newAccessToken = response.data.data.data.accessToken;
+          console.log('New accesstoken: ', newAccessToken)
 
-          error.config.headers.Authorization = `Bearer ${data.accessToken}`;
-          return axios(error.config);
+          if (!newAccessToken) {
+            console.error("accessToken missing from refresh response", response.data.data);
+            return Promise.reject(new Error("Invalid refresh response"));
+          }
+  
+          localStorage.setItem('accessToken', newAccessToken);
+  
+          onRefreshed(newAccessToken);
+
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+          return axios(originalRequest);
         } catch (refreshError) {
-          console.error('Refresh Token failed. Redirecting to login.');
           logout();
           return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
         }
       }
+    );
 
-      return Promise.reject(error);
-    }
-  );
+    return accessToken;
+  };
 
-  return accessToken;
-};
-
-const logout = () => {
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
-  localStorage.removeItem('role');
-  localStorage.removeItem('userId');
-  window.location.href = '/login';
-};
-
-export default checkAuth;
+  export default checkAuth;
