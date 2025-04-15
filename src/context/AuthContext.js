@@ -1,35 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authenticate } from '../services/authenticate';
+import checkAuth from '../app/auth';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState(null);
-  const [teamRole, setTeamRole] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication on mount and when localStorage changes
-    const checkAuth = async () => {
+    const authenticateUser = async () => {
       setIsLoading(true);
-      const isAuth = await authenticate.isAuthenticated();
+      const isAuth = await checkAuth();
       setIsAuthenticated(isAuth);
-      
+
       if (isAuth) {
         setUserRole(localStorage.getItem('role'));
       } else {
         setUserRole(null);
-        setTeamRole(null);
       }
-      
+
       setIsLoading(false);
     };
 
-    checkAuth();
+    authenticateUser();
 
     const handleStorageChange = () => {
-      checkAuth();
+      authenticateUser();
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -38,15 +35,35 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await authenticate.login(credentials);
-      const data = await response.json();
-      
+      const response = await fetch("https://quanbeo.duckdns.org/api/v1/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
+
       if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        throw new Error("Login failed");
       }
-      
+
+      const data = await response.json();
+      const { accessToken, refreshToken, role, userId } = data.data || data;
+
+      if (!accessToken) {
+        throw new Error("No access token received. Login failed!");
+      }
+
+      if (role !== "ADMIN") {
+        throw new Error("Access denied! Only ADMIN users are allowed.");
+      }
+
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("refreshToken", refreshToken);
+      localStorage.setItem("role", role);
+      localStorage.setItem("userId", userId);
+
       setIsAuthenticated(true);
-      setUserRole(data.data.role);
+      setUserRole(role);
+
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -54,7 +71,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    authenticate.logout();
+    localStorage.clear();
     setIsAuthenticated(false);
     setUserRole(null);
   };
@@ -64,7 +81,7 @@ export const AuthProvider = ({ children }) => {
     userRole,
     isLoading,
     login,
-    logout
+    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
