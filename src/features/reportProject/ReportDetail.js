@@ -34,7 +34,7 @@ const ReportDetail = () => {
               onClick={() => navigate('/app/report-project')}
               className="btn btn-ghost"
             >
-              Back to Reports
+              Back
             </button>
 
             {/* Report Information */}

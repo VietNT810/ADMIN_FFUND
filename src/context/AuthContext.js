@@ -40,12 +40,25 @@ export const AuthProvider = ({ children }) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
+      
+      const data = await response.json();
 
       if (!response.ok) {
+
+        if (typeof data.error === 'string') {
+          throw new Error(data.error);
+        }
+
+        if (typeof data.error === 'object') {
+          const errorMessages = Object.entries(data.error)
+            .map(([field, message]) => `${field}: ${message}`)
+            .join('\n');
+          return { success: false, error: errorMessages };
+        }
+        
         throw new Error("Login failed");
       }
 
-      const data = await response.json();
       const { accessToken, refreshToken, role, userId } = data.data || data;
 
       if (!accessToken) {

@@ -481,7 +481,7 @@ function Transactions() {
               transition={{ duration: 0.5 }}
             >
               <thead>
-                <tr className="bg-gray-100 dark:bg-base-700">
+                <tr className="bg-gray-100 dark:bg-base-200">
                   <th
                     onClick={() => handleSort('investorName')}
                     className="px-4 py-3 text-left text-sm font-semibold dark:text-gray-300 cursor-pointer rounded-tl-lg"
@@ -565,8 +565,8 @@ function Transactions() {
                       animate={{ opacity: 1 }}
                       transition={{ duration: 0.3, delay: index * 0.05 }}
                       className={`${index % 2 === 0
-                          ? 'bg-white dark:bg-base-800'
-                          : 'bg-gray-50 dark:bg-base-900'
+                          ? 'bg-base-100 dark:bg-base-800'
+                          : 'bg-base-100 dark:bg-base-900'
                         } hover:bg-gray-100 dark:hover:bg-base-700 transition-colors duration-150`}
                     >
                       <td className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
