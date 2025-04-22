@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesContent, deleteCategory, updateCategory, createCategory } from './categorySlice';
-import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline'; 
+import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
@@ -13,14 +13,16 @@ function Categories() {
   const [isEdit, setIsEdit] = useState(false);
   const [categoryForm, setCategoryForm] = useState({
     id: '',
-    name: '',
-    description: '',
-    subCategories: [{ name: '', description: '' }]
+    categoryName: '',
+    categoryDescription: '',
+    subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
   });
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
-  const [openDropdown, setOpenDropdown] = useState(null); 
+  const [openDropdown, setOpenDropdown] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const role = localStorage.getItem('role');
 
   useEffect(() => {
     dispatch(getCategoriesContent());
@@ -41,37 +43,51 @@ function Categories() {
   };
 
   const handleCreateCategory = () => {
+    if (!categoryForm.categoryName || !categoryForm.categoryDescription) {
+      toast.error('Category Name and Category Description are required.');
+      return;
+    }
+  
     const action = isEdit ? updateCategory : createCategory;
-
+  
     if (!isEdit) {
-      const categoryExists = categories.some(category => category.name.toLowerCase() === categoryForm.name.toLowerCase());
-
+      const categoryExists = categories.some(category => category.categoryName.toLowerCase() === categoryForm.categoryName.toLowerCase());
+  
       if (categoryExists) {
         toast.error("Category already exists.");
         return;
       }
     }
-
+  
     dispatch(action(categoryForm))
       .then(() => {
         toast.success(isEdit ? 'Category updated successfully!' : 'Category created successfully!');
         resetForm();
+        dispatch(getCategoriesContent());
       })
       .catch((error) => {
-        if (error?.response?.data?.error === "Category already exists.") {
-          toast.error("Category already exists.");
+        if (error?.response?.data?.error) {
+          if (typeof error.response.data.error === 'string') {
+            toast.error(error.response.data.error);
+          }
+          if (typeof error.response.data.error === 'object') {
+            const errorMessages = Object.entries(error.response.data.error).map(([field, message]) => `${field}: ${message}`);
+            toast.error(errorMessages.join(', '));
+          } else {
+            toast.error(error.response.data.error || "An error occurred. Please try again.");
+          }
         } else {
           toast.error("An error occurred. Please try again.");
         }
       });
-  };
+  };  
 
   const resetForm = () => {
     setCategoryForm({
       id: '',
-      name: '',
-      description: '',
-      subCategories: [{ name: '', description: '' }]
+      categoryName: '',
+      categoryDescription: '',
+      subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
     });
     setIsEdit(false);
     setIsCreateModalOpen(false);
@@ -98,7 +114,7 @@ function Categories() {
   const handleAddSubCategory = () => {
     setCategoryForm({
       ...categoryForm,
-      subCategories: [...categoryForm.subCategories, { name: '', description: '' }]
+      subCategories: [...categoryForm.subCategories, { subCategoryName: '', subCategoryDescription: '' }]
     });
   };
 
@@ -113,9 +129,9 @@ function Categories() {
   const handleEditCategory = (category) => {
     setCategoryForm({
       id: category.id,
-      name: category.name,
-      description: category.description,
-      subCategories: category.subCategories || [{ name: '', description: '' }]
+      categoryName: category.categoryName,
+      categoryDescription: category.categoryDescription,
+      subCategories: category.subCategories || [{ subCategoryName: '', subCategoryDescription: '' }]
     });
     setIsEdit(true);
     setIsCreateModalOpen(true);
@@ -125,7 +141,7 @@ function Categories() {
   const handleDeleteCategory = (category) => {
     setCategoryToDelete(category);
     setIsDeleteConfirmOpen(true);
-    setOpenDropdown(null); 
+    setOpenDropdown(null);
   };
 
   const toggleDropdown = (categoryId) => {
@@ -133,24 +149,27 @@ function Categories() {
   };
 
   const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
+    category.categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="min-h-screen bg-base-200 py-6 px-4">
       <div className="max-w-7xl mx-auto bg-base-100 shadow-lg rounded-lg p-8">
         <div className="mb-6 flex justify-between items-center">
-          <div className="relative group"> 
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-700 transition duration-200"
-            >
-              <PlusIcon className="w-5 h-5 inline-block" />
-            </button>
-            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Add new Category
-            </span>
-          </div>
+          {/* ADMIN */}
+          {role === 'ADMIN' && (
+            <div className="relative group">
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-700 transition duration-200"
+              >
+                <PlusIcon className="w-5 h-5 inline-block" />
+              </button>
+              <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                Add new Category
+              </span>
+            </div>
+          )}
 
           {/* Search Box */}
           <div className="relative">
@@ -165,7 +184,7 @@ function Categories() {
         </div>
 
         <div className="overflow-x-auto">
-          <motion.table 
+          <motion.table
             className="table-auto w-full bg-base-100 shadow-md rounded-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -184,13 +203,13 @@ function Categories() {
               {filteredCategories.length > 0 ? filteredCategories.map((category, index) => (
                 <tr key={category.id} className="border-t">
                   <td className="px-4 py-2 text-sm dark:text-gray-200">{index + 1}</td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.name}</td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.description}</td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.categoryName}</td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.categoryDescription}</td>
                   <td className="px-4 py-2 text-sm dark:text-gray-200">
                     <ul>
                       {category.subCategories.length > 0 ? category.subCategories.map((subCategory, subIndex) => (
-                        <li key={subCategory.id} className="text-sm dark:text-gray-200">
-                          {subIndex + 1}. {subCategory.name}
+                        <li key={`${subCategory.subCategoryName}-${subIndex}`} className="text-sm dark:text-gray-200">
+                          {subIndex + 1}. {subCategory.subCategoryName}
                         </li>
                       )) : (
                         <li className="text-sm dark:text-gray-200">No subcategories</li>
@@ -198,19 +217,22 @@ function Categories() {
                     </ul>
                   </td>
                   <td className="px-4 py-2 text-sm text-center">
-                    <button
-                      onClick={() => toggleDropdown(category.id)} 
-                      className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
-                    >
-                      <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
-                    </button>
+                    {/* ADMIN */}
+                    {role === 'ADMIN' && (
+                      <button
+                        onClick={() => toggleDropdown(category.id)}
+                        className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
+                      >
+                        <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
+                      </button>
+                    )}
 
                     {openDropdown === category.id && (
                       <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
                         <ul className="py-1">
                           <li>
                             <button
-                              onClick={() => handleEditCategory(category)} 
+                              onClick={() => handleEditCategory(category)}
                               className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
                             >
                               Edit Category
@@ -218,7 +240,7 @@ function Categories() {
                           </li>
                           <li>
                             <button
-                              onClick={() => handleDeleteCategory(category)} 
+                              onClick={() => handleDeleteCategory(category)}
                               className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
                             >
                               Delete Category
@@ -246,12 +268,12 @@ function Categories() {
             <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-center">{isEdit ? 'Edit Category' : 'Create New Category'}</h3>
 
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm text-gray-700">Category Name</label>
+              <label htmlFor="categoryName" className="block text-sm text-gray-700">Category Name</label>
               <input
-                id="name"
+                id="categoryName"
                 type="text"
-                name="name"
-                value={categoryForm.name}
+                name="categoryName"
+                value={categoryForm.categoryName || ''}
                 onChange={handleCategoryChange}
                 className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                 placeholder="Enter Category Name"
@@ -259,11 +281,11 @@ function Categories() {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="description" className="block text-sm text-gray-700">Category Description</label>
+              <label htmlFor="categoryDescription" className="block text-sm text-gray-700">Category Description</label>
               <textarea
-                id="description"
-                name="description"
-                value={categoryForm.description}
+                id="categoryDescription"
+                name="categoryDescription"
+                value={categoryForm.categoryDescription}
                 onChange={handleCategoryChange}
                 className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                 placeholder="Enter Category Description"
@@ -277,15 +299,15 @@ function Categories() {
                 <div key={index} className="flex space-x-4 mt-4">
                   <input
                     type="text"
-                    name="name"
-                    value={subCategory.name}
+                    name="subCategoryName"
+                    value={subCategory.subCategoryName || ''}
                     onChange={(e) => handleSubCategoryChange(index, e)}
                     placeholder="Sub Category Name"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
                   />
                   <textarea
-                    name="description"
-                    value={subCategory.description}
+                    name="subCategoryDescription"
+                    value={subCategory.subCategoryDescription}
                     onChange={(e) => handleSubCategoryChange(index, e)}
                     placeholder="Sub Category Description"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"

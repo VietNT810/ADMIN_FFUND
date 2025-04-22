@@ -59,6 +59,7 @@ function Login() {
             <div className="mb-5">
               <InputText
                 type="text"
+                id="username"
                 defaultValue={loginObj.username}
                 updateType="username"
                 containerStyle="mt-4"
@@ -71,6 +72,7 @@ function Login() {
                 <InputText
                   type={showPassword ? 'text' : 'password'}
                   defaultValue={loginObj.password}
+                  id="password"
                   updateType="password"
                   labelTitle="Password"
                   placeholder="*******"

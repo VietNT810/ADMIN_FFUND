@@ -16,7 +16,7 @@ export const getUsersContent = createAsyncThunk(
         totalPages: response.data.data.totalPages || 1,
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to fetch users.");
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to fetch users.");
     }
   }
 );
@@ -29,7 +29,7 @@ export const getUserById = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${id}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch user by ID.');
+      return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch user by ID.');
     }
   }
 );
@@ -42,7 +42,7 @@ export const banUser = createAsyncThunk(
       const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/ban/${userId}`);
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to ban user.");
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to ban user.");
     }
   }
 );
@@ -55,7 +55,7 @@ export const unbanUser = createAsyncThunk(
       const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/unban/${userId}`);
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || "Failed to unban user.");
+      return rejectWithValue(error.response?.data?.message || error.message || "Failed to unban user.");
     }
   }
 );

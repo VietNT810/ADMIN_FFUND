@@ -21,7 +21,7 @@ function LeftSidebar(){
                 <li className="mb-2 font-semibold text-xl">
                     <Link to={'/app/welcome'} className="flex items-center space-x-2 hover:text-primary transition-all duration-300">
                         {/* Đặt chiều rộng logo lớn hơn, không cần h */}
-                        <img className="mask mask-squircle w-16 transition-transform transform hover:scale-110" src="/logo192.png" alt="DashWind Logo"/>
+                        <img className="mask mask-squircle w-16 transition-transform transform hover:scale-110" src="/logo192.png" alt="FFUND Logo"/>
                         <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 hover:scale-105 transition-all duration-300">
                             FFund
                         </span>

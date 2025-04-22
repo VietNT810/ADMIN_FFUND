@@ -65,8 +65,8 @@ export const AuthProvider = ({ children }) => {
         throw new Error("No access token received. Login failed!");
       }
 
-      if (role !== "ADMIN") {
-        throw new Error("Access denied! Only ADMIN users are allowed.");
+      if (role !== "ADMIN" && role !== "MANAGER") {
+        throw new Error("Access denied! Only ADMIN and MANAGER users are allowed.");
       }
 
       localStorage.setItem("accessToken", accessToken);
