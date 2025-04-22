@@ -16,7 +16,7 @@ export const getProjects = createAsyncThunk(
         totalPages: response.data.data.totalPages || 1,
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch projects.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch projects.');
     }
   }
 );
@@ -36,7 +36,7 @@ export const getProjectToComplete = createAsyncThunk(
         totalPages: response.data.data.totalPages || 1,
       };
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch projects.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch projects.');
     }
   }
 );
@@ -46,10 +46,14 @@ export const getProjectById = createAsyncThunk(
   'project/getProjectById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project/get-by-id/${id}`);
+      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project/secured/${id}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project by ID.');
+      
+      return rejectWithValue({
+        status: error.response?.status || 'Unknown',
+        message: error.response?.data?.error || 'Failed to fetch project by ID.'
+      });
     }
   }
 );
@@ -62,7 +66,7 @@ export const getDocumentByProjectId = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-document/get-by-project-id/${projectId}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project documents.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project documents.');
     }
   }
 );
@@ -75,7 +79,7 @@ export const getUpdatePostByProjectId = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-update-post/by-project-id/${projectId}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project update posts.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project update posts.');
     }
   }
 );
@@ -88,7 +92,7 @@ export const getPhaseByProjectId = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/funding-phase/project/${projectId}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project phases.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project phases.');
     }
   }
 );
@@ -101,7 +105,7 @@ export const getMilestoneByPhaseId = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/milestone/phase/${phaseId}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project milestones.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project milestones.');
     }
   }
 );
@@ -114,7 +118,7 @@ export const getStoryByProjectId = createAsyncThunk(
       const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-story/project/${projectId}`);
       return response.data.data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch project story.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project story.');
     }
   }
 );
@@ -129,7 +133,7 @@ export const approveProject = createAsyncThunk(
       );
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to approve project.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to approve project.');
     }
   }
 );
@@ -146,7 +150,7 @@ export const rejectProject = createAsyncThunk(
 
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to reject project.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to reject project.');
     }
   }
 );
@@ -163,7 +167,7 @@ export const suspendProject = createAsyncThunk(
 
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to suspend project.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to suspend project.');
     }
   }
 );
@@ -178,7 +182,7 @@ export const completeProject = createAsyncThunk(
       );
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to complete project.');
+      return rejectWithValue(error.response?.data?.error || 'Failed to complete project.');
     }
   }
 );
@@ -238,7 +242,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjectById.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = action.payload ? `${action.payload.status}: ${action.payload.message}` : 'Unknown error';
       })
       .addCase(getStoryByProjectId.pending, (state) => {
         state.status = 'loading';

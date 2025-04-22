@@ -1,24 +1,15 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
 // GET Categories with Subcategories from API
 export const getCategoriesContent = createAsyncThunk(
     'category/getCategoriesContent',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await fetch('https://quanbeo.duckdns.org/api/v1/category/get-all', {
-                method: 'GET',
-                headers: {
-                    'accept': '*/*',
-                    'Authorization': `${localStorage.getItem('accessToken')}`,
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Failed to fetch categories and subcategories.');
-            }
-            const data = await response.json();
-            return data.data;  // Dữ liệu bao gồm cả categories và subcategories
+            const response = await axios.get('https://quanbeo.duckdns.org/api/v1/category/get-all');
+            return response.data.data;
         } catch (error) {
-            return rejectWithValue(error.message);  // Xử lý lỗi
+            return rejectWithValue(error.response?.data?.error || 'Failed to fetch categories and subcategories.');
         }
     }
 );
@@ -28,19 +19,10 @@ export const deleteCategory = createAsyncThunk(
     'category/deleteCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await fetch(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`, {
-                method: 'DELETE',
-                headers: {
-                    'accept': '*/*',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-            });
-            if (!response.ok) {
-                throw new Error('Failed to delete category.');
-            }
+            const response = await axios.delete(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`);
             return categoryId;
         } catch (error) {
-            return rejectWithValue(error.message);
+            return rejectWithValue(error.response?.data?.error || 'Failed to delete category.');
         }
     }
 );
@@ -51,30 +33,26 @@ export const createCategory = createAsyncThunk(
     async (newCategory, { rejectWithValue }) => {
         try {
             const formattedCategory = {
-                name: newCategory.name,  // Changed from 'categoryName'
-                description: newCategory.description || "",  // Changed from 'categoryDescription'
+                categoryName: newCategory.categoryName,
+                categoryDescription: newCategory.categoryDescription || '',
                 subCategories: newCategory.subCategories.map(sub => ({
-                    name: sub.name,  // Changed from 'subCategoryName'
-                    description: sub.description || ""  // Changed from 'subCategoryDescription'
+                    subCategoryName: sub.subCategoryName,
+                    subCategoryDescription: sub.subCategoryDescription || ''
                 }))
             };
 
-            const response = await fetch('https://quanbeo.duckdns.org/api/v1/category/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-                body: JSON.stringify(formattedCategory),
-            });
+            const response = await axios.post('https://quanbeo.duckdns.org/api/v1/category/create', formattedCategory);
 
-            if (!response.ok) {
-                throw new Error('Failed to create category.');
-            }
-            const data = await response.json();
-            return data.data;
+            return response.data.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
+                let errorMessages = [];
+                for (const [field, message] of Object.entries(error.response?.data?.error)) {
+                    errorMessages.push(`${field}: ${message}`);
+                }
+                return rejectWithValue(errorMessages.join(', '));
+            }
+            return rejectWithValue(error.response?.data?.error || 'Failed to create category.');
         }
     }
 );
@@ -84,32 +62,27 @@ export const updateCategory = createAsyncThunk(
     'category/updateCategory',
     async (updatedCategory, { rejectWithValue }) => {
         try {
-            // Xóa `id` khỏi request body
             const formattedCategory = {
-                name: updatedCategory.name,  // Changed from 'categoryName'
-                description: updatedCategory.description || "",  // Changed from 'categoryDescription'
+                categoryName: updatedCategory.categoryName,
+                categoryDescription: updatedCategory.categoryDescription || '',
                 subCategories: updatedCategory.subCategories?.map(sub => ({
-                    name: sub.name,  // Changed from 'subCategoryName'
-                    description: sub.description || ""  // Changed from 'subCategoryDescription'
+                    subCategoryName: sub.subCategoryName,
+                    subCategoryDescription: sub.subCategoryDescription || ''
                 })) || []
             };
 
-            const response = await fetch(`https://quanbeo.duckdns.org/api/v1/category/update/${updatedCategory.id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-                body: JSON.stringify(formattedCategory),
-            });
+            const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/category/update/${updatedCategory.id}`, formattedCategory);
 
-            if (!response.ok) {
-                throw new Error('Failed to update category.');
-            }
-            const data = await response.json();
-            return data.data;
+            return response.data.data;
         } catch (error) {
-            return rejectWithValue(error.message);
+            if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
+                let errorMessages = [];
+                for (const [field, message] of Object.entries(error.response?.data?.error)) {
+                    errorMessages.push(`${field}: ${message}`);
+                }
+                return rejectWithValue(errorMessages.join(', '));
+            }
+            return rejectWithValue(error.response?.data?.error || 'Failed to update category.');
         }
     }
 );
@@ -117,7 +90,7 @@ export const updateCategory = createAsyncThunk(
 const categorySlice = createSlice({
     name: 'category',
     initialState: {
-        categories: [],  // This now stores the category data
+        categories: [],
         status: 'idle',
         error: null,
     },
@@ -129,7 +102,15 @@ const categorySlice = createSlice({
             })
             .addCase(getCategoriesContent.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.categories = action.payload;  // Store categories from the API response
+                state.categories = action.payload.map(category => ({
+                    id: category.id,
+                    categoryName: category.name,
+                    categoryDescription: category.description,
+                    subCategories: category.subCategories.map(sub => ({
+                        subCategoryName: sub.name,
+                        subCategoryDescription: sub.description
+                    }))
+                }));
             })
             .addCase(getCategoriesContent.rejected, (state, action) => {
                 state.status = 'failed';

@@ -37,22 +37,25 @@ function ForgotPassword() {
                 })
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`HTTP ${response.status}: ${errorData.error || 'An error occurred. Please try again.'}`);
+            }
+
             const data = await response.json();
 
             if (response.status === 200) {
                 setLinkSent(true);
 
-                // Bắt đầu đếm ngược 5 giây
                 const countdownInterval = setInterval(() => {
                     setCountdown(prev => {
                         if (prev === 1) {
-                            clearInterval(countdownInterval); // Dừng đếm ngược khi đạt 0
+                            clearInterval(countdownInterval);
                         }
                         return prev - 1;
                     });
                 }, 1000);
 
-                // Sau 5 giây, chuyển hướng sang Gmail
                 setTimeout(() => {
                     window.location.href = 'https://mail.google.com/';
                 }, 5000);
@@ -60,7 +63,7 @@ function ForgotPassword() {
                 setErrorMessage(data.message || 'An error occurred. Please try again.');
             }
         } catch (error) {
-            setErrorMessage('An error occurred. Please try again.');
+            setErrorMessage(error.message || 'An error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -74,17 +77,9 @@ function ForgotPassword() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-500 to-yellow-400">
             <div className="card w-full max-w-4xl shadow-xl rounded-xl bg-white flex md:flex-row flex-col">
-                {/* Phần video */}
                 <div className="md:w-1/2 hidden md:flex items-center justify-center bg-orange-100 rounded-l-xl overflow-hidden">
-                    <video 
-                        src="/login.mp4" 
-                        autoPlay 
-                        muted 
-                        loop 
-                        className="w-full h-full object-cover" 
-                    />
+                    <img src="/logo-login.jpg" alt="Logo" className="w-full h-full object-cover" />
                 </div>
-
                 <div className="md:w-1/2 w-full py-12 px-8">
                     <div className="text-center mb-4">
                         <img 

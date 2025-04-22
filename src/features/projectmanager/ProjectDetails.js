@@ -71,8 +71,12 @@ const ProjectDetails = () => {
   };
 
   if (status === 'loading') return <Loading />;
-  if (status === 'failed') return <div className="alert alert-error">{error}</div>;
-
+  if (status === 'failed') {
+    return <div className="alert alert-error">
+      <p><strong>Status:</strong> {error.split(":")[0]} - {error.split(":")[1]}</p>
+    </div>;
+  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-4 text-base-content">
       <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-8">

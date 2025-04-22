@@ -22,87 +22,51 @@ function ResetPassword() {
             setToken(tokenFromURL);
         } else {
             setErrorMessage('Invalid or expired link');
-            toast.error('Invalid or expired link', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "colored",
-            });
+            toast.error('Invalid or expired link')
         }
     }, [location.search]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setErrorMessage('');
+
         if (newPassword !== confirmPassword) {
             setErrorMessage('Passwords do not match');
-            toast.error('Passwords do not match', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "colored",
-            });
+            toast.error('Passwords do not match')
             return;
         }
         if (!token) {
             setErrorMessage('Invalid token');
-            toast.error('Invalid token', {
-                position: "top-right",
-                autoClose: 3000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "colored",
-            });
+            toast.error('Invalid token')
             return;
         }
+
         setLoading(true);
+
         try {
             const response = await fetch('https://quanbeo.duckdns.org/api/v1/auth/reset-password', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ token, newPassword, confirmPassword }),
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`HTTP ${response.status}: ${errorData.error || 'An error occurred. Please try again.'}`);
+            }
+
             const data = await response.json();
+
             if (response.status === 200) {
-                toast.success('Password reset successful!', {
-                    position: "top-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "colored",
-                });
+                toast.success('Password reset successful!')
                 setTimeout(() => navigate('/login'), 3000);
             } else {
                 setErrorMessage(data.message || 'An error occurred. Please try again.');
-                toast.error(data.message || 'An error occurred. Please try again.', {
-                    position: "top-right",
-                    autoClose: 2000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true,
-                    theme: "colored",
-                });
+                toast.error(data.message || 'An error occurred. Please try again.')
             }
         } catch (error) {
-            toast.error('An error occurred. Please try again later.', {
-                position: "top-right",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                theme: "colored",
-            });
+            setErrorMessage(error.message || 'An error occurred. Please try again later.');
+            toast.error(error.message || 'An error occurred. Please try again later.')
         } finally {
             setLoading(false);
         }
