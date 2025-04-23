@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects, suspendProject, completeProject } from './components/projectSlice';
+import { getProjects, suspendProject, completeProject, getProjectStatistics } from './components/projectSlice';
 import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EyeIcon, PauseIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 const ProjectList = () => {
   const dispatch = useDispatch();
-  const { projects, status, error, totalPages } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
+  const { projects, status, error, totalPages, statistics } = useSelector(state => state.project || { projects: [], error: null, status: 'idle', statistics: null });
   const { categories } = useSelector(state => state.category || { categories: [] });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,23 +23,30 @@ const ProjectList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState('All');
+  const userRole = localStorage.getItem('role');
 
   useEffect(() => {
     dispatch(getCategoriesContent());
     const defaultQuery = `status:eq:${selectedStatus}`;
     dispatch(getProjects({ query: defaultQuery, page, size: 10, sortField, sortOrder }));
-  }, [dispatch, page, sortField, sortOrder, selectedStatus]);
+
+    if (userRole !== 'MANAGER') {
+      dispatch(getProjectStatistics());
+    }
+  }, [dispatch, page, sortField, sortOrder, selectedStatus, userRole]);
 
   const handleSearch = () => {
     const queryParts = [];
     if (searchTerm) queryParts.push(`title:eq:${searchTerm}`);
     if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
+    if (selectedSubCategory !== "All") queryParts.push(`subCategories.subCategory.name:eq:${selectedSubCategory}`);
     if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
     if (queryParts.length === 0) return;
     const query = queryParts.join(",");
     dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
   };
-
+  
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') handleSearch();
   };
@@ -100,57 +107,137 @@ const ProjectList = () => {
     return <div className="alert alert-error">{error}</div>;
   }
 
+  const filteredSubCategories = selectedMainCategory !== 'All'
+    ? categories.find(category => category.categoryName === selectedMainCategory)?.subCategories || []
+    : [];
+
   return (
     <div className="min-h-screen bg-base-200 py-6 px-4 text-base-content">
       <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
 
+        {/* Statistics Section */}
+        {userRole !== 'MANAGER' && statistics && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="card bg-blue-100 p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-blue-600">Total Projects</h3>
+              <p className="text-2xl font-bold">{statistics.totalProjects}</p>
+            </div>
+            <div className="card bg-green-100 p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-green-600">Approved Projects</h3>
+              <p className="text-2xl font-bold">{statistics.status_APPROVED}</p>
+            </div>
+            <div className="card bg-yellow-100 p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-yellow-600">Draft Projects</h3>
+              <p className="text-2xl font-bold">{statistics.status_DRAFT}</p>
+            </div>
+            <div className="card bg-red-100 p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-red-600">Suspended Projects</h3>
+              <p className="text-2xl font-bold">{statistics.status_SUSPENDED}</p>
+            </div>
+          </div>
+        )}
+
         {/* Filter Section */}
-        <div className="mb-6 bg-base-100 p-4 rounded-lg shadow-md grid grid-cols-1 md:grid-cols-5 gap-4">
-          <input
-            type="text"
-            placeholder="Search projects"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="input input-bordered w-full"
-          />
-          <select
-            value={selectedMainCategory}
-            onChange={(e) => setSelectedMainCategory(e.target.value)}
-            className="select select-bordered w-full"
-          >
-            <option value="All">All Categories</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.name}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={selectedStatus}
-            onChange={(e) => setSelectedStatus(e.target.value)}
-            className="select select-bordered w-full"
-          >
-            <option value="APPROVED">Approved</option>
-            <option value="SUSPENDED">Suspended</option>
-            <option value="DRAFT">Draft</option>
-            {/* <option value="PENDING_APPROVAL">Pending Approval</option> */}
-          </select>
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value)}
-            className="select select-bordered w-full"
-          >
-            <option value="asc">Ascending</option>
-            <option value="desc">Descending</option>
-          </select>
-          <button
-            onClick={handleSearch}
-            className="btn bg-orange-500 hover:bg-orange-600 text-white w-full"
-          >
-            <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
-            Search
-          </button>
+        <div className="mb-6 bg-base-100 p-4 rounded-lg shadow-md">
+          {/* Search Bar */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Search projects"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={handleKeyPress}
+              className="input input-bordered w-full"
+            />
+          </div>
+
+          {/* Filters */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Category Filter */}
+            <select
+              value={selectedMainCategory}
+              onChange={(e) => {
+                setSelectedMainCategory(e.target.value);
+                setSelectedSubCategory('All'); // Reset subCategory khi đổi category
+              }}
+              className="select select-bordered w-full"
+            >
+              <option value="All">All Categories</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.categoryName}>
+                  {category.categoryName}
+                </option>
+              ))}
+            </select>
+
+            {/* Subcategory Filter */}
+            <div className="relative">
+              <div
+                className={`tooltip tooltip-top w-full ${selectedMainCategory === 'All' ? '' : 'hidden'}`}
+                data-tip="Please select a category first"
+              >
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="select select-bordered w-full"
+                  disabled={selectedMainCategory === 'All'}
+                >
+                  <option value="All">All Subcategories</option>
+                  {filteredSubCategories.map((subCategory, index) => (
+                    <option key={index} value={subCategory.subCategoryName}>
+                      {subCategory.subCategoryName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedMainCategory !== 'All' && (
+                <select
+                  value={selectedSubCategory}
+                  onChange={(e) => setSelectedSubCategory(e.target.value)}
+                  className="select select-bordered w-full"
+                >
+                  <option value="All">All Subcategories</option>
+                  {filteredSubCategories.map((subCategory, index) => (
+                    <option key={index} value={subCategory.subCategoryName}>
+                      {subCategory.subCategoryName}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="select select-bordered w-full"
+            >
+              <option value="APPROVED">Approved</option>
+              <option value="SUSPENDED">Suspended</option>
+              <option value="DRAFT">Draft</option>
+            </select>
+
+            {/* Sort Order Filter */}
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="select select-bordered w-full"
+            >
+              <option value="asc">Ascending</option>
+              <option value="desc">Descending</option>
+            </select>
+          </div>
+
+          {/* Search Button */}
+          <div className="mt-4">
+            <button
+              onClick={handleSearch}
+              className="btn bg-orange-500 hover:bg-orange-600 text-white w-full"
+            >
+              <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
+              Search
+            </button>
+          </div>
         </div>
 
         {/* Table */}

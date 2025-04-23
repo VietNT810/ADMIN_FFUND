@@ -53,47 +53,101 @@ const ProjectDetailsPhase = ({ getClassName }) => {
 
       {phases?.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {phases.map((phase) => (
-            <motion.div
-              key={phase.id}
-              className="card bg-white shadow-lg p-6 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl border-t-4 border-orange-500"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <h3 className="font-bold text-xl text-gray-800 mb-4">Phase {phase.phaseNumber}</h3>
-              <div className="text-sm text-gray-600 space-y-2">
-                <p><strong>Status:</strong> <span className={`font-semibold ${phase.status === 'PROCESS' ? 'text-green-500' : 'text-yellow-500'}`}>{phase.status}</span></p>
-                <p><strong>Start Date:</strong> {new Date(phase.startDate).toLocaleDateString()}</p>
-                <p><strong>End Date:</strong> {new Date(phase.endDate).toLocaleDateString()}</p>
-                <p><strong>Target Amount:</strong> ${phase.targetAmount.toLocaleString()}</p>
-                <p><strong>Raised Amount:</strong> ${phase.raiseAmount.toLocaleString()}</p>
-                <p><strong>Total Investors:</strong> {phase.totalInvestors}</p>
-              </div>
+          {phases.map((phase) => {
+            const phaseProgress = phase.targetAmount > 0
+              ? (phase.raiseAmount / phase.targetAmount) * 100
+              : 0;
+            const progressDisplay = `${Math.round(phaseProgress)}%`;
+            const phaseMilestones = milestones[phase.id] || [];
 
-              {/* Display milestones for this phase */}
-              <div className="mt-4">
-                <h4 className="font-semibold text-md text-orange-500 mb-2">Milestones</h4>
-                {milestones[phase.id]?.length > 0 ? (
-                  milestones[phase.id].map((milestone) => (
-                    <motion.div
-                      key={milestone.id}
-                      className="card bg-gray-50 shadow-md p-4 mb-4 cursor-pointer hover:shadow-lg rounded-lg"
-                      onClick={() => handleMilestoneClick(milestone)}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <h5 className="font-semibold text-lg text-gray-800">{milestone.title}</h5>
-                      <p className="text-sm text-gray-600"><strong>Price:</strong> ${milestone.price.toLocaleString()}</p>
-                    </motion.div>
-                  ))
-                ) : (
-                  <p className="text-sm text-gray-500">No milestones available for this phase.</p>
-                )}
-              </div>
-            </motion.div>
-          ))}
+            return (
+              <motion.div
+                key={phase.id}
+                className="card bg-white shadow-lg p-6 rounded-lg transition-transform duration-300 transform hover:scale-105 hover:shadow-2xl border-t-4 border-orange-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-bold text-xl text-gray-800">Phase {phase.phaseNumber}</h3>
+
+                  {/* Status badge - inline display */}
+                  <span className={`inline-block px-3 py-1 text-xs rounded-full ${phase.status === 'PROCESS' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                    } font-medium`}>
+                    {phase.status}
+                  </span>
+                </div>
+
+                {/* Progress bar with percentage inside */}
+                <div className="w-full bg-gray-200 rounded-full h-6 mb-4 relative overflow-hidden">
+                  <div
+                    className="bg-green-500 h-6 rounded-full flex items-center justify-center text-xs font-medium text-white"
+                    style={{ width: `${Math.min(100, phaseProgress)}%` }}
+                  >
+                    {progressDisplay}
+                  </div>
+                  {/* If progress is too low to show text inside colored bar, show text on top */}
+                  {phaseProgress < 25 && (
+                    <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-gray-700">
+                      {progressDisplay}
+                    </div>
+                  )}
+                </div>
+
+                {/* Phase details */}
+                <div className="text-sm text-gray-600 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Timeline:</span>
+                    <span>{new Date(phase.startDate).toLocaleDateString()} - {new Date(phase.endDate).toLocaleDateString()}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Target:</span>
+                    <span className="font-medium">${phase.targetAmount.toLocaleString()}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Raised:</span>
+                    <span className="font-medium text-orange-600">${phase.raiseAmount.toLocaleString()}</span>
+                  </div>
+
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">Investors:</span>
+                    <span>{phase.totalInvestors}</span>
+                  </div>
+                </div>
+
+                {/* Display milestones for this phase */}
+                <div className="mt-4">
+                  <h4 className="font-semibold text-md text-orange-500 mb-2">
+                    Milestones {phaseMilestones.length > 0 ? `(${phaseMilestones.length})` : ''}
+                  </h4>
+
+                  {phaseMilestones.length > 0 ? (
+                    <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                      {phaseMilestones.map((milestone) => (
+                        <motion.div
+                          key={milestone.id}
+                          className="card bg-gray-50 shadow-md p-4 cursor-pointer hover:shadow-lg rounded-lg border-l-4 border-transparent hover:border-orange-400"
+                          onClick={() => handleMilestoneClick(milestone)}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <h5 className="font-semibold text-lg text-gray-800">{milestone.title}</h5>
+                          <p className="text-sm text-gray-600">
+                            <strong>Price:</strong> <span className="text-orange-600 font-medium">${milestone.price.toLocaleString()}</span>
+                          </p>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No milestones available for this phase.</p>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       ) : (
         <p className="text-center text-gray-500">No phases available for this project.</p>
@@ -117,7 +171,7 @@ const ProjectDetailsPhase = ({ getClassName }) => {
             <h3 className="text-3xl font-bold text-gray-800 mb-6">{selectedMilestone.title}</h3>
             <p className="text-lg text-gray-600 mb-4">{selectedMilestone.description}</p>
             <p className="text-lg text-gray-600 mb-6">
-              <strong>Price:</strong> ${selectedMilestone.price.toLocaleString()}
+              <strong>Price:</strong> <span className="text-orange-600 font-semibold">${selectedMilestone.price.toLocaleString()}</span>
             </p>
 
             {selectedMilestone.items && selectedMilestone.items.length > 0 && (
@@ -153,7 +207,7 @@ const ProjectDetailsPhase = ({ getClassName }) => {
                     >
                       <h5 className="font-semibold text-xl text-gray-800">{milestone.title}</h5>
                       <p className="text-lg text-gray-600">
-                        <strong>Price:</strong> ${milestone.price.toLocaleString()}
+                        <strong>Price:</strong> <span className="text-orange-600">${milestone.price.toLocaleString()}</span>
                       </p>
                     </div>
                   ))}
