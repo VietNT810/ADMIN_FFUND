@@ -5,6 +5,7 @@ import { lazy } from 'react'
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
 const Welcome = lazy(() => import('../pages/protected/Welcome'))
 const Page404 = lazy(() => import('../pages/protected/404'))
+const AccessDenied = lazy(() => import('../pages/protected/AccessDenied'))
 const Blank = lazy(() => import('../pages/protected/Blank'))
 const Charts = lazy(() => import('../pages/protected/Charts'))
 const Integration = lazy(() => import('../pages/protected/Integration'))
@@ -57,10 +58,12 @@ const routes = [
   {
     path: '/user-detail/:id',
     component: UserDetail,
+    role: ['ADMIN'],
   },
   {
     path: '/user-management',
     component: UserManger,
+    role: ['ADMIN'],
   },
   {
     path: '/project-list',
@@ -69,10 +72,12 @@ const routes = [
   {
     path: '/project-completed',
     component: ProjectCompleted,
+    role: ['MANAGER'],
   },
   {
     path: '/project-requests',
     component: ProjectRequests,
+    role: ['MANAGER'],
   },
   {
     path: '/project-details/:projectId',
@@ -93,6 +98,7 @@ const routes = [
   {
     path: '/transactions',
     component: Transactions,
+    role: ['ADMIN'],
   },
   {
     path: '/settings-profile',
@@ -125,6 +131,10 @@ const routes = [
   {
     path: '/404',
     component: Page404,
+  },
+  {
+    path: '/access-denied',
+    component: AccessDenied,
   },
   {
     path: '/blank',

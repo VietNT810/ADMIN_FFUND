@@ -5,6 +5,7 @@ import XMarkIcon  from '@heroicons/react/24/outline/XMarkIcon';
 
 function LeftSidebar(){
     const location = useLocation();
+    const userRole = localStorage.getItem('role'); 
 
     const close = (e) => {
         document.getElementById('left-sidebar-drawer').click()
@@ -29,6 +30,9 @@ function LeftSidebar(){
                 </li>
                 
                 {routes.map((route, k) => {
+                    if (route.role && !route.role.includes(userRole)) {
+                        return null;
+                    }
                     return (
                         <li key={k}>
                             {route.submenu ? 

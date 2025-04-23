@@ -6,6 +6,7 @@ import { Link, useLocation } from 'react-router-dom'
 function SidebarSubmenu({submenu, name, icon}){
     const location = useLocation()
     const [isExpanded, setIsExpanded] = useState(false)
+    const userRole = localStorage.getItem('role');
 
 
     /** Open Submenu list if path found in routes, this is for directly loading submenu routes  first time */
@@ -27,6 +28,9 @@ function SidebarSubmenu({submenu, name, icon}){
                 <ul className={`menu menu-compact`}>
                 {
                     submenu.map((m, k) => {
+                        if (m.role && !m.role.includes(userRole)) {
+                            return null;
+                        }
                         return(
                             <li key={k}>
                                 <Link to={m.path}>

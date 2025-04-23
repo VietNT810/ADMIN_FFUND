@@ -28,36 +28,43 @@ const routes = [
     path: '/app/dashboard',
     icon: <Squares2X2Icon className={iconClasses}/>, 
     name: 'Dashboard',
+    role: ['ADMIN', 'MANAGER'],
   },
   {
     path: '/app/user-management', 
     icon: <UsersIcon className={iconClasses}/>,
     name: 'User',
+    role: ['ADMIN'],
   },
   {
     path: '/app/team',
     icon: <UsersIcon className={submenuIconClasses}/>,
     name: 'Team',
+    role: ['ADMIN', 'MANAGER'],
   },
   {
     path: '', 
     icon: <BoltIcon className={`${iconClasses} inline`}/>, 
-    name: 'Project', 
+    name: 'Project',
+    role: ['ADMIN', 'MANAGER'], 
     submenu: [
       {
         path: '/app/project-list',
         icon: <Squares2X2Icon className={submenuIconClasses}/>,
         name: 'List',
+        role: ['ADMIN', 'MANAGER'],
       },
       {
         path: '/app/project-requests',
         icon: <FolderIcon className={submenuIconClasses}/>, 
         name: 'Requests', 
+        role: ['MANAGER'],
       },
       {
         path: '/app/project-completed',
         icon: <CheckCircleIcon className={submenuIconClasses} />,
         name: 'Completed',
+        role: ['MANAGER'],
       },
     ]
   },  
@@ -65,36 +72,43 @@ const routes = [
     path: '/app/category',
     icon: <DocumentDuplicateIcon className={iconClasses}/>,
     name: 'Category',
+    role: ['ADMIN', 'MANAGER'],
   },
   {
     path: '/app/transactions', 
     icon: <CurrencyDollarIcon className={iconClasses}/>, 
     name: 'Transactions',
+    role: ['ADMIN'],
   },
   {
     path: '/app/charts', 
     icon: <ChartBarIcon className={iconClasses}/>, 
     name: 'Analytics',
+    role: ['ADMIN', 'MANAGER'],
   },
   {
     path: '/app/calendar', 
     icon: <CalendarDaysIcon className={iconClasses}/>, 
     name: 'Calendar',
+    role: ['ADMIN', 'MANAGER'],
   },
   {
     path: '', 
     icon: <ExclamationTriangleIcon className={`${iconClasses} inline`}/>, 
     name: 'Requests & Reports', 
+    role: ['ADMIN', 'MANAGER'],
     submenu: [
       {
         path: '/app/request',
         icon: <InboxIcon className={submenuIconClasses}/>,
         name: 'Requests',
+        role: ['ADMIN', 'MANAGER'],
       },
       {
         path: '/app/report-project',
         icon: <ChartPieIcon className={submenuIconClasses}/>,
         name: 'Project Reports',
+        role: ['ADMIN', 'MANAGER'],
       }
     ]
   },
