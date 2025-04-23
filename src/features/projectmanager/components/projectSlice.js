@@ -187,6 +187,18 @@ export const completeProject = createAsyncThunk(
   }
 );
 
+export const getProjectStatistics = createAsyncThunk(
+  'project/getProjectStatistics',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/statistics');
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch project statistics.');
+    }
+  }
+);
+
 const projectSlice = createSlice({
   name: 'project',
   initialState: {
@@ -198,6 +210,7 @@ const projectSlice = createSlice({
     phases: [],
     milestones: {},
     story: null,
+    statistics: null,
     error: null,
     status: 'idle',
   },
@@ -348,6 +361,19 @@ const projectSlice = createSlice({
         state.currentProject = updatedProject;
       })
       .addCase(completeProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+
+      // Handle getProjectStatistics
+      .addCase(getProjectStatistics.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getProjectStatistics.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.statistics = action.payload;
+      })
+      .addCase(getProjectStatistics.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       });
