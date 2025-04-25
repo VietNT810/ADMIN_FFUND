@@ -215,6 +215,7 @@ const ProjectList = () => {
               <option value="APPROVED">Approved</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="DRAFT">Draft</option>
+              <option value="FUNDRAISING_COMPLETED">Fundraising Completed</option>
             </select>
 
             {/* Sort Order Filter */}
