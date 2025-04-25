@@ -448,25 +448,13 @@ function PhaseRuleManagement() {
                                             {currentPage * itemsPerPage + index + 1}
                                         </td>
                                         <td className="py-4 px-6 border-b text-gray-800">
-                                            {editingRule && editingRule.id === rule.id ? (
-                                                <div className="relative">
-                                                    <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">$</span>
-                                                    <input
-                                                        type="number"
-                                                        name="minTotal"
-                                                        value={editingRule.minTotal || ""}
-                                                        onChange={handleEditingChange}
-                                                        className="w-full pl-8 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                        min="1000"
-                                                    />
-                                                </div>
-                                            ) : (
-                                                rule.minTotal !== null && rule.minTotal !== undefined
-                                                    ? `$${rule.minTotal.toLocaleString()}`
-                                                    : "N/A"
-                                            )}
+                                            {/* Luôn hiển thị minTotal dưới dạng văn bản */}
+                                            {rule.minTotal !== null && rule.minTotal !== undefined
+                                                ? `$${rule.minTotal.toLocaleString()}`
+                                                : "N/A"}
                                         </td>
                                         <td className="py-4 px-6 border-b text-gray-800">
+                                            {/* Chỉ hiển thị input cho totalPhaseCount khi chỉnh sửa */}
                                             {editingRule && editingRule.id === rule.id ? (
                                                 <input
                                                     type="number"
