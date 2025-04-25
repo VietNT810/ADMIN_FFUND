@@ -11,6 +11,7 @@ import teamSlice from '../features/team/teamSlice'
 import transactionSlice from '../features/transactions/transactionSlice'
 import reportSlice from '../features/reportProject/reportSlice'
 import requestSlice from '../features/request/requestSlice'
+import phaseRulesReducer from '../features/phaseRules/components/phaseRuleSlice'
 
 const combinedReducer = {
   header: headerSlice,
@@ -25,6 +26,7 @@ const combinedReducer = {
   transaction: transactionSlice,
   request: requestSlice,
   report: reportSlice,
+  phaseRules: phaseRulesReducer,
 }
 
 export default configureStore({

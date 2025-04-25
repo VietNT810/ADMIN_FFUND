@@ -18,6 +18,8 @@ import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
 import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
 import CheckCircleIcon  from '@heroicons/react/24/outline/CheckCircleIcon';
 import FolderIcon  from '@heroicons/react/24/outline/FolderIcon';
+import DocumentCurrencyDollarIcon  from '@heroicons/react/24/outline/CurrencyDollarIcon';
+import { MilestoneIcon } from 'lucide-react'
 
 
 const iconClasses = `h-6 w-6`
@@ -97,6 +99,11 @@ const routes = [
     icon: <CalendarDaysIcon className={iconClasses}/>, 
     name: 'Calendar',
     role: ['ADMIN', 'MANAGER'],
+  },
+  {
+    path: '/app/phase-rules',
+    icon: <MilestoneIcon className={iconClasses} />,
+    name: 'Phase Rules',
   },
   {
     path: '', 
