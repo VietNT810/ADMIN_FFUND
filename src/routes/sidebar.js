@@ -43,16 +43,22 @@ const routes = [
     role: ['ADMIN', 'MANAGER'],
   },
   {
+    path: '/app/project-list',
+    icon: <Squares2X2Icon className={submenuIconClasses}/>,
+    name: 'Project',
+    role: ['ADMIN'],
+  },
+  {
     path: '', 
     icon: <BoltIcon className={`${iconClasses} inline`}/>, 
     name: 'Project',
-    role: ['ADMIN', 'MANAGER'], 
+    role: ['MANAGER'], 
     submenu: [
       {
         path: '/app/project-list',
         icon: <Squares2X2Icon className={submenuIconClasses}/>,
         name: 'List',
-        role: ['ADMIN', 'MANAGER'],
+        role: ['MANAGER'],
       },
       {
         path: '/app/project-requests',
@@ -96,19 +102,19 @@ const routes = [
     path: '', 
     icon: <ExclamationTriangleIcon className={`${iconClasses} inline`}/>, 
     name: 'Requests & Reports', 
-    role: ['ADMIN', 'MANAGER'],
+    role: ['MANAGER'],
     submenu: [
       {
         path: '/app/request',
         icon: <InboxIcon className={submenuIconClasses}/>,
         name: 'Requests',
-        role: ['ADMIN', 'MANAGER'],
+        role: ['MANAGER'],
       },
       {
         path: '/app/report-project',
         icon: <ChartPieIcon className={submenuIconClasses}/>,
         name: 'Project Reports',
-        role: ['ADMIN', 'MANAGER'],
+        role: ['MANAGER'],
       }
     ]
   },

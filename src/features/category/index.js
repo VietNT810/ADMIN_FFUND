@@ -31,13 +31,17 @@ function Categories() {
   const deleteCategoryHandler = () => {
     if (categoryToDelete) {
       dispatch(deleteCategory(categoryToDelete.id))
-        .then(() => {
-          toast.success('Category deleted successfully!');
-          setIsDeleteConfirmOpen(false);
-          setCategoryToDelete(null);
+        .then((response) => {
+          if (response.error) {
+            toast.error(response.error);
+          } else {
+            toast.success('Category deleted successfully!');
+            setIsDeleteConfirmOpen(false);
+            setCategoryToDelete(null);
+          }
         })
         .catch((error) => {
-          toast.error('Error deleting category');
+          toast.error('Category is not active.');
         });
     }
   };
@@ -136,6 +140,10 @@ function Categories() {
     setIsEdit(true);
     setIsCreateModalOpen(true);
     setOpenDropdown(null);
+  };
+
+  const handleCloseModal = () => {
+    resetForm();
   };
 
   const handleDeleteCategory = (category) => {
@@ -336,7 +344,7 @@ function Categories() {
                 {isEdit ? 'Update Category' : 'Create Category'}
               </button>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={handleCloseModal}
                 className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition duration-200 w-full sm:w-auto"
               >
                 Close

@@ -6,7 +6,7 @@ export const getCategoriesContent = createAsyncThunk(
     'category/getCategoriesContent',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get('https://quanbeo.duckdns.org/api/v1/category/get-all');
+            const response = await axios.get('https://quanbeo.duckdns.org/api/v1/category/all');
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || 'Failed to fetch categories and subcategories.');
@@ -14,15 +14,15 @@ export const getCategoriesContent = createAsyncThunk(
     }
 );
 
-// DELETE Category
+// De-active Category
 export const deleteCategory = createAsyncThunk(
     'category/deleteCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await axios.delete(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`);
+            const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`);
             return categoryId;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Failed to delete category.');
+            return rejectWithValue(error.response?.data?.error || error.message || 'Failed to delete category.');
         }
     }
 );
@@ -118,6 +118,9 @@ const categorySlice = createSlice({
             })
             .addCase(deleteCategory.fulfilled, (state, action) => {
                 state.categories = state.categories.filter(category => category.id !== action.payload);
+            })
+            .addCase(deleteCategory.rejected, (state, action) => {
+                state.error = `Error: ${action.payload}`;
             })
             .addCase(createCategory.fulfilled, (state, action) => {
                 state.categories.push(action.payload);
