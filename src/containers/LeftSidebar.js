@@ -12,11 +12,29 @@ function LeftSidebar() {
     const [isPinned, setIsPinned] = useState(false);
     const [hoverTimer, setHoverTimer] = useState(null);
 
+    const role = localStorage.getItem('role');
+
+    const filteredRoutes = routes.map(route => {
+        if (role === 'MANAGER') {
+            if (['User', 'Phase Rules', 'Transactions'].includes(route.name)) {
+                return null;
+            }
+        } else if (role === 'ADMIN') {
+            if (['Requests & Reports'].includes(route.name)) {
+                return null;
+            }
+
+            if (route.submenu) {
+                route.submenu = route.submenu.filter(subRoute => !['Completed'].includes(subRoute.name));
+            }
+        }
+        return route;
+    }).filter(Boolean);
+
     const close = (e) => {
         document.getElementById('left-sidebar-drawer').click();
     };
 
-    // Use timers for smoother hover effect
     const handleMouseEnter = () => {
         if (!isPinned) {
             clearTimeout(hoverTimer);
@@ -31,13 +49,11 @@ function LeftSidebar() {
         }
     };
 
-    // Toggle pin state
     const togglePin = () => {
         setIsPinned(!isPinned);
-        setExpanded(!isPinned); // Expand if pinning, collapse if unpinning
+        setExpanded(!isPinned);
     };
 
-    // Clear any timers when component unmounts
     useEffect(() => {
         return () => {
             if (hoverTimer) clearTimeout(hoverTimer);
@@ -60,7 +76,6 @@ function LeftSidebar() {
                     <XMarkIcon className="h-5 inline-block w-5" />
                 </button>
 
-                {/* Pin button */}
                 <button
                     className="btn btn-sm btn-ghost absolute top-2 right-2 hidden lg:flex"
                     onClick={togglePin}
@@ -86,7 +101,7 @@ function LeftSidebar() {
                 </div>
 
                 <ul className="px-2 py-2">
-                    {routes.map((route, k) => {
+                    {filteredRoutes.map((route, k) => {
                         return (
                             <li key={k} className="my-1">
                                 {route.submenu ? (
@@ -107,7 +122,6 @@ function LeftSidebar() {
                                                 {route.name}
                                             </span>
 
-                                            {/* Tooltip for collapsed state */}
                                             {!expanded && (
                                                 <div className="absolute left-14 scale-0 rounded bg-gray-800 p-2 text-xs text-white group-hover:scale-100 z-50 whitespace-nowrap">
                                                     {route.name}
