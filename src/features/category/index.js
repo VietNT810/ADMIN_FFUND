@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getCategoriesContent, deleteCategory, updateCategory, createCategory } from './categorySlice';
+import { getCategoriesContent, deleteCategory, updateCategory, createCategory, setCategories, enableCategory } from './categorySlice';
 import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 
 function Categories() {
   const dispatch = useDispatch();
-  const { categories, status, error } = useSelector(state => state.category);
+  const { categories, status, error } = useSelector(state => state.category || { categories: [], error: null, status: 'idle' });
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
@@ -18,9 +18,11 @@ function Categories() {
     subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
   });
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [openDropdown, setOpenDropdown] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categoryToConfirm, setCategoryToConfirm] = useState(null);
 
   const role = localStorage.getItem('role');
 
@@ -28,17 +30,38 @@ function Categories() {
     dispatch(getCategoriesContent());
   }, [dispatch]);
 
-  const deleteCategoryHandler = () => {
-    if (categoryToDelete) {
-      dispatch(deleteCategory(categoryToDelete.id))
-        .then(() => {
-          toast.success('Category deleted successfully!');
+
+  const handleEnableCategory = (categoryId) => {
+    setCategoryToConfirm(categoryId);
+    setIsDeleteConfirmOpen(true);
+    setOpenDropdown(null);
+  };
+
+  const handleDisableCategory = (categoryId) => {
+    setCategoryToConfirm(categoryId);
+    setIsDeleteConfirmOpen(true);
+    setOpenDropdown(null);
+  };
+
+  const confirmActiveCategory = () => {
+    if (categoryToConfirm) {
+      const category = categories.find(cate => cate.id === categoryToConfirm);
+      const action = category.active ? deleteCategory : enableCategory;
+
+      dispatch(action(categoryToConfirm)).then((result) => {
+        if (result.error) {
+          toast.error(result.payload || "An error occurred while enabling the category.");
+        } else {
+          toast.success(`Category ${category.active ? 'disabled' : 'enabled'} successfully!`);
+          const updateCategories = categories.map(cate =>
+            cate.id === categoryToConfirm ? { ...cate, active: !category.active } : cate
+          );
+          dispatch(setCategories(updateCategories));
           setIsDeleteConfirmOpen(false);
-          setCategoryToDelete(null);
-        })
-        .catch((error) => {
-          toast.error('Error deleting category');
-        });
+        }
+      }).catch((error) => {
+        toast.error(error.message || "An unexpected error occurred.");
+      });
     }
   };
 
@@ -60,25 +83,17 @@ function Categories() {
     }
   
     dispatch(action(categoryForm))
-      .then(() => {
-        toast.success(isEdit ? 'Category updated successfully!' : 'Category created successfully!');
-        resetForm();
-        dispatch(getCategoriesContent());
+      .then((result) => {
+        if (result.error) {
+          toast.error(result.payload || "An error occurred while processing the category.");
+        } else {
+          toast.success(isEdit ? 'Category updated successfully!' : 'Category created successfully!');
+          resetForm();
+          dispatch(getCategoriesContent());
+        }
       })
       .catch((error) => {
-        if (error?.response?.data?.error) {
-          if (typeof error.response.data.error === 'string') {
-            toast.error(error.response.data.error);
-          }
-          if (typeof error.response.data.error === 'object') {
-            const errorMessages = Object.entries(error.response.data.error).map(([field, message]) => `${field}: ${message}`);
-            toast.error(errorMessages.join(', '));
-          } else {
-            toast.error(error.response.data.error || "An error occurred. Please try again.");
-          }
-        } else {
-          toast.error("An error occurred. Please try again.");
-        }
+        toast.error(error.message || "An unexpected error occurred.");
       });
   };  
 
@@ -138,10 +153,8 @@ function Categories() {
     setOpenDropdown(null);
   };
 
-  const handleDeleteCategory = (category) => {
-    setCategoryToDelete(category);
-    setIsDeleteConfirmOpen(true);
-    setOpenDropdown(null);
+  const handleCloseModal = () => {
+    resetForm();
   };
 
   const toggleDropdown = (categoryId) => {
@@ -154,7 +167,7 @@ function Categories() {
 
   return (
     <div className="min-h-screen bg-base-200 py-6 px-4">
-      <div className="max-w-7xl mx-auto bg-base-100 shadow-lg rounded-lg p-8">
+      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
         <div className="mb-6 flex justify-between items-center">
           {/* ADMIN */}
           {role === 'ADMIN' && (
@@ -185,7 +198,7 @@ function Categories() {
 
         <div className="overflow-x-auto">
           <motion.table
-            className="table-auto w-full bg-base-100 shadow-md rounded-lg"
+            className="table-auto w-full bg-base-100 shadow-md rounded-xl"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
@@ -196,6 +209,7 @@ function Categories() {
                 <th className="px-4 py-2">Category Name</th>
                 <th className="px-4 py-2">Description</th>
                 <th className="px-4 py-2">Sub Categories</th>
+                <th className="px-4 py-2">Active</th>
                 <th className="px-4 py-2"></th>
               </tr>
             </thead>
@@ -216,37 +230,46 @@ function Categories() {
                       )}
                     </ul>
                   </td>
+                  <td className="px-4 py-2 text-sm dark:text-gray-200">
+                    <span className={`badge mt-2 ${category.active ? 'badge-success' : 'badge-error'}`}>
+                      {category.active ? 'Enabled' : 'Disabled'}
+                    </span>
+                  </td>
                   <td className="px-4 py-2 text-sm text-center">
                     {/* ADMIN */}
                     {role === 'ADMIN' && (
-                      <button
-                        onClick={() => toggleDropdown(category.id)}
-                        className="bg-orange-500 text-white px-3 py-1 rounded-full hover:bg-orange-700 transition duration-200"
-                      >
-                        <EllipsisHorizontalIcon className="w-5 h-5 inline-block" />
-                      </button>
-                    )}
-
-                    {openDropdown === category.id && (
-                      <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg rounded-md z-10">
-                        <ul className="py-1">
-                          <li>
-                            <button
-                              onClick={() => handleEditCategory(category)}
-                              className="block px-4 py-2 text-sm text-green-600 hover:bg-gray-100"
-                            >
-                              Edit Category
-                            </button>
-                          </li>
-                          <li>
-                            <button
-                              onClick={() => handleDeleteCategory(category)}
-                              className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
-                            >
-                              Delete Category
-                            </button>
-                          </li>
-                        </ul>
+                      <div className="relative">
+                        <button
+                          onClick={() => toggleDropdown(category.id)}
+                          className="btn btn-sm btn-ghost rounded-full"
+                        >
+                          <EllipsisHorizontalIcon className="w-5 h-5" />
+                        </button>
+                        {openDropdown === category.id && (
+                          <ul tabIndex={0} 
+                          className="dropdown-content z-100 menu p-2 shadow bg-base-100 rounded-box w-40 absolute mt-2"
+                          >
+                            <li>
+                              <button
+                                onClick={() => handleEditCategory(category)}
+                                className="text-sm text-blue-600 hover:bg-gray-100"
+                              >
+                                Edit
+                              </button>
+                            </li>
+                            <li>
+                              {category.active ? (
+                                <button onClick={() => handleDisableCategory(category.id)} className="text-red-500">
+                                  Disable
+                                </button>
+                              ) : (
+                                <button onClick={() => handleEnableCategory(category.id)} className="text-green-500">
+                                  Enable
+                                </button>
+                              )}
+                            </li>
+                          </ul>
+                        )}
                       </div>
                     )}
                   </td>
@@ -336,7 +359,7 @@ function Categories() {
                 {isEdit ? 'Update Category' : 'Create Category'}
               </button>
               <button
-                onClick={() => setIsCreateModalOpen(false)}
+                onClick={handleCloseModal}
                 className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition duration-200 w-full sm:w-auto"
               >
                 Close
@@ -346,25 +369,16 @@ function Categories() {
         </div>
       )}
 
-      {/* Modal Confirm Delete */}
+      {/* Confirm Modal */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-lg p-6 w-full sm:w-96 shadow-lg">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Are you sure you want to delete this category?</h3>
-
-            <div className="flex justify-around mt-4">
-              <button
-                onClick={deleteCategoryHandler}
-                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition duration-200 w-24"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setIsDeleteConfirmOpen(false)}
-                className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition duration-200 w-24"
-              >
-                No
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
+          <div className="modal-box bg-base-100">
+            <h3 className="font-bold text-lg text-center">
+              Are you sure you want to {categories.find(category => category.id === categoryToConfirm)?.active ? 'disable' : 'enable'} this category?
+            </h3>
+            <div className="modal-action flex justify-center mt-4 gap-4">
+              <button onClick={confirmActiveCategory} className="btn btn-success text-white">Yes</button>
+              <button onClick={() => setIsDeleteConfirmOpen(false)} className="btn">No</button>
             </div>
           </div>
         </div>

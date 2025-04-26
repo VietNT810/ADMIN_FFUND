@@ -44,7 +44,7 @@ const routes = [
   {
     path: '', 
     icon: <BoltIcon className={`${iconClasses} inline`}/>, 
-    name: 'Project', 
+    name: 'Project',
     submenu: [
       {
         path: '/app/project-list',
@@ -54,7 +54,7 @@ const routes = [
       {
         path: '/app/project-requests',
         icon: <FolderIcon className={submenuIconClasses}/>, 
-        name: 'Requests', 
+        name: 'Requests',
       },
       {
         path: '/app/project-completed',
@@ -67,6 +67,11 @@ const routes = [
     path: '/app/category',
     icon: <DocumentDuplicateIcon className={iconClasses}/>,
     name: 'Category',
+  },
+  {
+    path: '/app/criteria',
+    icon: <DocumentDuplicateIcon className={iconClasses}/>,
+    name: 'Criteria',
   },
   {
     path: '/app/transactions', 
