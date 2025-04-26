@@ -12,6 +12,7 @@ import transactionSlice from '../features/transactions/transactionSlice'
 import reportSlice from '../features/reportProject/reportSlice'
 import requestSlice from '../features/request/requestSlice'
 import phaseRulesReducer from '../features/phaseRules/components/phaseRuleSlice'
+import criteriaSlice from '../features/criteria/criteriaSlice'
 
 const combinedReducer = {
   header: headerSlice,
@@ -27,6 +28,7 @@ const combinedReducer = {
   request: requestSlice,
   report: reportSlice,
   phaseRules: phaseRulesReducer,
+  criteria: criteriaSlice,
 }
 
 export default configureStore({

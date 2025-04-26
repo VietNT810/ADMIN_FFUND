@@ -28,11 +28,16 @@ const Request = lazy(() => import('../pages/protected/requestPage/Request'))
 const ReportDetail = lazy(() => import('../pages/protected/reportPage/ReportDetail'))
 const RequestDetail = lazy(() => import('../pages/protected/requestPage/RequestDetail'))
 const PhaseRuleManagement = lazy(() => import('../pages/protected/phaseRulesPage/PhaseRules'))
+const Criteria = lazy(() => import('../pages/protected/criteriaPage/Criteria'))
 
 const routes = [
   {
     path: '/dashboard',
     component: Dashboard,
+  },
+  {
+    path: '/criteria',
+    component: Criteria,
   },
   {
     path: '/report-project',
@@ -57,12 +62,10 @@ const routes = [
   {
     path: '/user-detail/:id',
     component: UserDetail,
-    role: ['ADMIN'],
   },
   {
     path: '/user-management',
     component: UserManger,
-    role: ['ADMIN'],
   },
   {
     path: '/project-list',
@@ -71,12 +74,10 @@ const routes = [
   {
     path: '/project-completed',
     component: ProjectCompleted,
-    role: ['MANAGER'],
   },
   {
     path: '/project-requests',
     component: ProjectRequests,
-    role: ['MANAGER'],
   },
   {
     path: '/project-details/:projectId',
@@ -97,7 +98,6 @@ const routes = [
   {
     path: '/transactions',
     component: Transactions,
-    role: ['ADMIN'],
   },
   {
     path: '/settings-profile',
