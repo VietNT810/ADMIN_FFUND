@@ -27,6 +27,9 @@ const Criteria = () => {
     typeId: ''
   });
   const [editCriteriaId, setEditCriteriaId] = useState(null);
+  const [confirmDeleteModalOpen, setConfirmDeleteModalOpen] = useState(false);
+  const [criteriaToDelete, setCriteriaToDelete] = useState(null);
+
 
   useEffect(() => {
     dispatch(getCategoriesContent());
@@ -61,7 +64,7 @@ const Criteria = () => {
           if(result.error){
             toast.error(result.payload || "An error occurred while processing the category.");
           } else { 
-            toast.success("Criteria created successfully.");
+            toast.success(result.payload);
             setModalOpen(false);
             resetNewCriteria();
             dispatch(getAllCriteria({ query: searchTerm, page, size: 10, sortField, sortOrder }));
@@ -135,15 +138,35 @@ const Criteria = () => {
     }
   };
 
-  const handleDelete = (criteriaId) => {
-    dispatch(deleteCriteria(criteriaId))
-      .then(() => {
-        toast.success("Criteria deleted successfully.");
-        dispatch(getAllCriteria({ query: searchTerm, page, size: 10, sortField, sortOrder }));
-      })
-      .catch((error) => {
-        toast.error(error.message || "An unexpected error occurred.");
-      });
+  const handleDeleteConfirmation = (criteriaId) => {
+    setCriteriaToDelete(criteriaId);
+    setConfirmDeleteModalOpen(true);
+  };
+  
+  const handleDeleteCancel = () => {
+    setConfirmDeleteModalOpen(false);
+    setCriteriaToDelete(null);
+  };
+  
+  const handleDeleteConfirm = () => {
+    if (criteriaToDelete) {
+      dispatch(deleteCriteria(criteriaToDelete))
+        .then((result) => {
+          if (result.error) {
+            toast.error(result.payload || "An error occurred while deleting the detail.");
+          } else {
+            toast.success(result.payload);
+            setConfirmDeleteModalOpen(false);
+            setCriteriaToDelete(null);
+            dispatch(getAllCriteria({ query: searchTerm, page, size: 10, sortField, sortOrder }));
+          }
+        })
+        .catch((error) => {
+          toast.error(error.message || "An unexpected error occurred.");
+          setConfirmDeleteModalOpen(false);
+          setCriteriaToDelete(null);
+        });
+    }
   };
 
   const toggleModal = () => setModalOpen(!modalOpen);
@@ -165,7 +188,7 @@ const Criteria = () => {
             placeholder="Search TypeName Criteria"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="input input-bordered w-full md:w-1/2"
+            className="input input-bordered w-full md:w-1/3"
           />
           <select
             value={selectedMainCategory}
@@ -173,7 +196,7 @@ const Criteria = () => {
               setSelectedMainCategory(e.target.value);
               setSelectedSubCategory('All');
             }}
-            className="select select-bordered w-full md:w-1/3"
+            className="select select-bordered w-full md:w-1/4"
           >
             <option value="All">All Categories</option>
             {categories.map((category) => (
@@ -208,6 +231,7 @@ const Criteria = () => {
                 <th className="px-4 py-3">No</th>
                 <th className="px-4 py-3">Name</th>
                 <th className="px-4 py-3">Description</th>
+                <th className="px-4 py-3">Cetegory</th>
                 <th className="px-4 py-3 text-center">Actions</th>
               </tr>
             </thead>
@@ -217,6 +241,7 @@ const Criteria = () => {
                   <td className="px-4 py-2 text-sm">{index + 1}</td>
                   <td className="px-4 py-2 text-sm font-medium">{criteria.typeName}</td>
                   <td className="px-4 py-2 text-sm">{criteria.description}</td>
+                  <td className="px-4 py-2 text-sm">{criteria.categoryName}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex justify-center gap-3">
                       <Link to={`/app/criteria-details/${criteria.id}`} className="tooltip" data-tip="View">
@@ -229,7 +254,7 @@ const Criteria = () => {
                       </button>
 
                       {/* Delete Icon */}
-                      <button onClick={() => handleDelete(criteria.id)} className="tooltip" data-tip="Delete">
+                      <button onClick={() => handleDeleteConfirmation(criteria.id)} className="tooltip" data-tip="Delete">
                         <TrashIcon className="w-5 h-5 text-red-600 hover:text-red-800" />
                       </button>
                     </div>
@@ -355,6 +380,29 @@ const Criteria = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Confirm Delete Modal */}
+      {confirmDeleteModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+          <div className="bg-base-100 p-6 rounded-xl shadow-xl w-96 border border-base-300">
+            <h3 className="text-xl font-bold mb-4">Confirm Delete</h3>
+            <p>Are you sure you want to delete this criteria?</p>
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={handleDeleteConfirm}
+                className="btn btn-error"
+              >
+                Yes
+              </button>
+              <button
+                onClick={handleDeleteCancel}
+                className="btn btn-ghost"
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
       )}

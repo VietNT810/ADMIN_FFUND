@@ -72,7 +72,7 @@ export const createCriteriaType = createAsyncThunk(
 
       const response = await axios.post('https://quanbeo.duckdns.org/api/v1/criteria-type', formattedCriteriaType);
 
-      return response.data.data;
+      return response.data.message;
     } catch (error) {
       if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
         let errorMessages = [];
@@ -126,7 +126,7 @@ export const createCriteria = createAsyncThunk(
 
       const response = await axios.post('https://quanbeo.duckdns.org/api/v1/criteria', formattedCriteria);
 
-      return response.data.data;
+      return response.data.message;
     } catch (error) {
       if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
         let errorMessages = [];
@@ -153,16 +153,9 @@ export const createDetailCriteria = createAsyncThunk(
   
         const response = await axios.post(`https://quanbeo.duckdns.org/api/v1/criteria/detail/${newDetailCriteria.id}`, formattedCriteria);
   
-        return response.data.data;
+        return response.data.message;
       } catch (error) {
-        if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
-          let errorMessages = [];
-          for (const [field, message] of Object.entries(error.response?.data?.error)) {
-            errorMessages.push(`${field}: ${message}`);
-          }
-          return rejectWithValue(errorMessages.join(', '));
-        }
-        return rejectWithValue(error.response?.data?.error || 'Failed to create criteria.');
+        return rejectWithValue(error.response?.data?.error || 'Failed to create detail criteria.');
       }
     }
 );
@@ -188,7 +181,7 @@ export const updateCriteria = createAsyncThunk(
           }
           return rejectWithValue(errorMessages.join(', '));
         }
-        return rejectWithValue(error.response?.data?.error || 'Failed to create criteria.');
+        return rejectWithValue(error.response?.data?.error || 'Failed to update criteria.');
       }
     }
 );
@@ -204,18 +197,11 @@ export const updateDetailCriteria = createAsyncThunk(
             maxPoint: updateDetailCriteria.maxPoint,
         };
   
-        const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/criteria/${updateDetailCriteria.id}`, formattedCriteria);
+        const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/criteria/detail/update/${updateDetailCriteria.id}`, formattedCriteria);
   
         return response.data.message;
       } catch (error) {
-        if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
-          let errorMessages = [];
-          for (const [field, message] of Object.entries(error.response?.data?.error)) {
-            errorMessages.push(`${field}: ${message}`);
-          }
-          return rejectWithValue(errorMessages.join(', '));
-        }
-        return rejectWithValue(error.response?.data?.error || 'Failed to create criteria.');
+        return rejectWithValue(error.response?.data?.error || 'Failed to update detail criteria.');
       }
     }
 );
