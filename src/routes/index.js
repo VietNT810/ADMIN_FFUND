@@ -29,6 +29,8 @@ const ReportDetail = lazy(() => import('../pages/protected/reportPage/ReportDeta
 const RequestDetail = lazy(() => import('../pages/protected/requestPage/RequestDetail'))
 const PhaseRuleManagement = lazy(() => import('../pages/protected/phaseRulesPage/PhaseRules'))
 const Criteria = lazy(() => import('../pages/protected/criteriaPage/Criteria'))
+const CriteriaDetail = lazy(() => import('../pages/protected/criteriaPage/CriteriaDetail'))
+const CriteriaType = lazy(() => import('../pages/protected/criteriaPage/CriteriaType'))
 
 const routes = [
   {
@@ -38,6 +40,14 @@ const routes = [
   {
     path: '/criteria',
     component: Criteria,
+  },
+  {
+    path: '/criteria-type',
+    component: CriteriaType,
+  },
+  {
+    path: '/criteria-details/:criteriaId',
+    component: CriteriaDetail,
   },
   {
     path: '/report-project',
