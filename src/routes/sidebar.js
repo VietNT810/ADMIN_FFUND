@@ -54,9 +54,9 @@ const routes = [
         name: 'List',
       },
       {
-        path: '/app/project-requests',
+        path: '/app/project-assign',
         icon: <FolderIcon className={submenuIconClasses}/>, 
-        name: 'Requests',
+        name: 'Assign project',
       },
       {
         path: '/app/project-completed',

@@ -16,7 +16,9 @@ function Header(){
     const dispatch = useDispatch()
     const {noOfNotifications, pageTitle} = useSelector(state => state.header)
     const [currentTheme, setCurrentTheme] = useState(localStorage.getItem("theme"))
-
+    
+    const role = localStorage.getItem('role');
+    
     useEffect(() => {
         themeChange(false)
         if(currentTheme === null){
@@ -99,7 +101,12 @@ function Header(){
                         <li className="justify-between">
                         <Link to={'/app/settings-profile'}>
                             Profile
+                        </Link>
+                        {role !== 'MANAGER' && (
+                            <Link to={'/app/account-managers'}>
+                                Account Manager
                             </Link>
+                        )}
                         </li>
                         <li><a onClick={logoutUser}>Logout</a></li>
                         <div className="divider mt-0 mb-0"></div>

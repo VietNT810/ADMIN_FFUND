@@ -18,10 +18,11 @@ const DocFeatures = lazy(() => import('../pages/DocFeatures'))
 const DocComponents = lazy(() => import('../pages/DocComponents'))
 const Category = lazy(() => import('../pages/protected/Category'))
 const UserManger = lazy(() => import('../pages/protected/UserManager'))
+const AccountManagers = lazy(() => import('../pages/protected/AccountManagers'))
 const UserDetail = lazy(() => import('../pages/protected/UserDetail'))
 const ProjectList = lazy(() => import('../pages/protected/projectPage/ProjectList'))
 const ProjectCompleted = lazy(() => import('../pages/protected/projectPage/ProjectCompleted'))
-const ProjectRequests = lazy(() => import('../pages/protected/projectPage/ProjectRequests'))
+const AssignManager = lazy(() => import('../pages/protected/projectPage/AssignManager'))
 const ProjectDetails = lazy(() => import('../pages/protected/projectPage/ProjectDetails'))
 const Report = lazy(() => import('../pages/protected/reportPage/Report'))
 const Request = lazy(() => import('../pages/protected/requestPage/Request'))
@@ -78,6 +79,10 @@ const routes = [
     component: UserManger,
   },
   {
+    path: '/account-managers',
+    component: AccountManagers,
+  },
+  {
     path: '/project-list',
     component: ProjectList,
   },
@@ -86,8 +91,8 @@ const routes = [
     component: ProjectCompleted,
   },
   {
-    path: '/project-requests',
-    component: ProjectRequests,
+    path: '/project-assign',
+    component: AssignManager,
   },
   {
     path: '/project-details/:projectId',
