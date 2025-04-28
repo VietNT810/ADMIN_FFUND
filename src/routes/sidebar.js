@@ -18,7 +18,9 @@ import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
 import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
 import CheckCircleIcon  from '@heroicons/react/24/outline/CheckCircleIcon';
 import FolderIcon  from '@heroicons/react/24/outline/FolderIcon';
-import DocumentCurrencyDollarIcon  from '@heroicons/react/24/outline/CurrencyDollarIcon';
+import ClipboardDocumentListIcon from '@heroicons/react/24/outline/ClipboardDocumentListIcon';
+import ClipboardIcon from '@heroicons/react/24/outline/ClipboardIcon';
+import Bars3BottomLeftIcon from '@heroicons/react/24/outline/Bars3BottomLeftIcon';
 import { MilestoneIcon } from 'lucide-react'
 
 
@@ -44,7 +46,7 @@ const routes = [
   {
     path: '', 
     icon: <BoltIcon className={`${iconClasses} inline`}/>, 
-    name: 'Project', 
+    name: 'Project',
     submenu: [
       {
         path: '/app/project-list',
@@ -54,7 +56,7 @@ const routes = [
       {
         path: '/app/project-requests',
         icon: <FolderIcon className={submenuIconClasses}/>, 
-        name: 'Requests', 
+        name: 'Requests',
       },
       {
         path: '/app/project-completed',
@@ -68,6 +70,23 @@ const routes = [
     icon: <DocumentDuplicateIcon className={iconClasses}/>,
     name: 'Category',
   },
+  {
+    path: '', 
+    icon: <ClipboardIcon className={`${iconClasses} inline`}/>, 
+    name: 'Criteria',
+    submenu: [
+      {
+        path: '/app/criteria',
+        icon: <ClipboardDocumentListIcon className={submenuIconClasses}/>,
+        name: 'List',
+      },
+      {
+        path: '/app/criteria-type',
+        icon: <Bars3BottomLeftIcon className={submenuIconClasses} />,
+        name: 'Type',
+      },
+    ]
+  }, 
   {
     path: '/app/transactions', 
     icon: <CurrencyDollarIcon className={iconClasses}/>, 

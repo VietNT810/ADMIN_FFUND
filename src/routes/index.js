@@ -3,6 +3,7 @@ import { lazy } from 'react'
 const Dashboard = lazy(() => import('../pages/protected/Dashboard'))
 const Welcome = lazy(() => import('../pages/protected/Welcome'))
 const Page404 = lazy(() => import('../pages/protected/404'))
+const AccessDenied = lazy(() => import('../pages/protected/AccessDenied'))
 const Blank = lazy(() => import('../pages/protected/Blank'))
 const Charts = lazy(() => import('../pages/protected/Charts'))
 const Integration = lazy(() => import('../pages/protected/Integration'))
@@ -27,11 +28,26 @@ const Request = lazy(() => import('../pages/protected/requestPage/Request'))
 const ReportDetail = lazy(() => import('../pages/protected/reportPage/ReportDetail'))
 const RequestDetail = lazy(() => import('../pages/protected/requestPage/RequestDetail'))
 const PhaseRuleManagement = lazy(() => import('../pages/protected/phaseRulesPage/PhaseRules'))
+const Criteria = lazy(() => import('../pages/protected/criteriaPage/Criteria'))
+const CriteriaDetail = lazy(() => import('../pages/protected/criteriaPage/CriteriaDetail'))
+const CriteriaType = lazy(() => import('../pages/protected/criteriaPage/CriteriaType'))
 
 const routes = [
   {
     path: '/dashboard',
     component: Dashboard,
+  },
+  {
+    path: '/criteria',
+    component: Criteria,
+  },
+  {
+    path: '/criteria-type',
+    component: CriteriaType,
+  },
+  {
+    path: '/criteria-details/:criteriaId',
+    component: CriteriaDetail,
   },
   {
     path: '/report-project',
@@ -124,6 +140,10 @@ const routes = [
   {
     path: '/404',
     component: Page404,
+  },
+  {
+    path: '/access-denied',
+    component: AccessDenied,
   },
   {
     path: '/blank',

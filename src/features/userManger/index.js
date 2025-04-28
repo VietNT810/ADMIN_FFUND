@@ -23,8 +23,8 @@ const UserManager = () => {
   const [userToConfirm, setUserToConfirm] = useState(null);
 
   useEffect(() => {
-    dispatch(getUsersContent({ name, page: currentPage, sortField, sortOrder }));
-  }, [dispatch, name, currentPage, sortField, sortOrder]);
+    dispatch(getUsersContent({ query: searchTerm, page: currentPage, sortField, sortOrder }));
+  }, [dispatch, searchTerm, currentPage, sortField, sortOrder]);
 
   const handleBanUser = (userId) => {
     setUserToConfirm(userId);
