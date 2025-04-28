@@ -24,6 +24,7 @@ const ProjectList = () => {
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState('All');
+  const [isPotential, setIsPotential] = useState(false);
   const userRole = localStorage.getItem('role');
 
   useEffect(() => {
@@ -42,6 +43,7 @@ const ProjectList = () => {
     if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
     if (selectedSubCategory !== "All") queryParts.push(`subCategories.subCategory.name:eq:${selectedSubCategory}`);
     if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
+    if (isPotential) queryParts.push(`isPotential:true`); // Thêm điều kiện tìm kiếm dự án tiềm năng
     if (queryParts.length === 0) return;
     const query = queryParts.join(",");
     dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
@@ -119,20 +121,20 @@ const ProjectList = () => {
         {userRole !== 'MANAGER' && statistics && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             <div className="card bg-blue-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-blue-600">Total Projects</h3>
-              <p className="text-2xl font-bold">{statistics.totalProjects}</p>
+              <h3 className="text-lg font-semibold text-blue-700">Total Projects</h3>
+              <p className="text-2xl font-bold text-blue-800">{statistics.totalProjects}</p>
+            </div>
+            <div className="card bg-purple-100 p-4 rounded-lg shadow-md">
+              <h3 className="text-lg font-semibold text-purple-700">Potential Projects</h3>
+              <p className="text-2xl font-bold text-purple-800">{statistics.potentialProjects}</p>
             </div>
             <div className="card bg-green-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-green-600">Approved Projects</h3>
-              <p className="text-2xl font-bold">{statistics.status_APPROVED}</p>
-            </div>
-            <div className="card bg-yellow-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-yellow-600">Draft Projects</h3>
-              <p className="text-2xl font-bold">{statistics.status_DRAFT}</p>
+              <h3 className="text-lg font-semibold text-green-700">Approved Projects</h3>
+              <p className="text-2xl font-bold text-green-800">{statistics.status_APPROVED}</p>
             </div>
             <div className="card bg-red-100 p-4 rounded-lg shadow-md">
-              <h3 className="text-lg font-semibold text-red-600">Suspended Projects</h3>
-              <p className="text-2xl font-bold">{statistics.status_SUSPENDED}</p>
+              <h3 className="text-lg font-semibold text-red-700">Suspended Projects</h3>
+              <p className="text-2xl font-bold text-red-800">{statistics.status_SUSPENDED}</p>
             </div>
           </div>
         )}
@@ -227,6 +229,21 @@ const ProjectList = () => {
               <option value="asc">Ascending</option>
               <option value="desc">Descending</option>
             </select>
+          </div>
+
+          {/* Potential Projects Filter */}
+          <div className="mt-4 flex items-center space-x-2">
+            <span className="text-sm font-medium text-gray-700">Show Potential Projects</span>
+            <button
+              onClick={() => setIsPotential(!isPotential)}
+              className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors duration-300 ${isPotential ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+            >
+              <span
+                className={`inline-block w-4 h-4 transform bg-white rounded-full transition-transform duration-300 ${isPotential ? 'translate-x-5' : 'translate-x-1'
+                  }`}
+              ></span>
+            </button>
           </div>
 
           {/* Search Button */}
