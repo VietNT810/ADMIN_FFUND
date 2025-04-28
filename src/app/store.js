@@ -29,6 +29,8 @@ const combinedReducer = {
   request: requestSlice,
   report: reportSlice,
   phaseRules: phaseRulesReducer,
+  criteria: criteriaSlice,
+  systemStaticSlice: systemStaticSlice,
 }
 
 export default configureStore({
