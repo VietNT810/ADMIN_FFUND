@@ -33,18 +33,18 @@ const Criteria = () => {
 
   useEffect(() => {
     dispatch(getCategoriesContent());
-    dispatch(getAllCriteria({ query: searchTerm, page, size: 10, sortField, sortOrder }));
+    dispatch(getAllCriteria({ page: page, sortField, sortOrder }));
     dispatch(getAllCriteriaType());
-  }, [dispatch, searchTerm, page, sortField, sortOrder]);
+  }, [dispatch, page, sortField, sortOrder]);
 
   // Optimized search function to use dispatch directly
   const handleSearch = () => {
     const queryParts = [];
-    if (searchTerm) queryParts.push(`typeName:eq:${searchTerm}`);
+    if (searchTerm) queryParts.push(`categoryName:eq:${searchTerm}`);
     if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
     if (selectedSubCategory !== "All") queryParts.push(`subCategories.subCategory.name:eq:${selectedSubCategory}`);
     const query = queryParts.join(",");
-    dispatch(getAllCriteria({ query, page, size: 10, sortField, sortOrder }));
+    dispatch(getAllCriteria({ query, page: page, size: 10, sortField, sortOrder }));
   };
 
   const handlePageChange = (newPage) => {

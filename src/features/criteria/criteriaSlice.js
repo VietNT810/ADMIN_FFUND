@@ -74,13 +74,6 @@ export const createCriteriaType = createAsyncThunk(
 
       return response.data.message;
     } catch (error) {
-      if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
-        let errorMessages = [];
-        for (const [field, message] of Object.entries(error.response?.data?.error)) {
-          errorMessages.push(`${field}: ${message}`);
-        }
-        return rejectWithValue(errorMessages.join(', '));
-      }
       return rejectWithValue(error.response?.data?.error || 'Failed to create criteria type.');
     }
   }
@@ -128,13 +121,6 @@ export const createCriteria = createAsyncThunk(
 
       return response.data.message;
     } catch (error) {
-      if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
-        let errorMessages = [];
-        for (const [field, message] of Object.entries(error.response?.data?.error)) {
-          errorMessages.push(`${field}: ${message}`);
-        }
-        return rejectWithValue(errorMessages.join(', '));
-      }
       return rejectWithValue(error.response?.data?.error || 'Failed to create criteria.');
     }
   }
@@ -174,13 +160,6 @@ export const updateCriteria = createAsyncThunk(
   
         return response.data.message;
       } catch (error) {
-        if (error.response?.data?.error && typeof error.response?.data?.error === 'object') {
-          let errorMessages = [];
-          for (const [field, message] of Object.entries(error.response?.data?.error)) {
-            errorMessages.push(`${field}: ${message}`);
-          }
-          return rejectWithValue(errorMessages.join(', '));
-        }
         return rejectWithValue(error.response?.data?.error || 'Failed to update criteria.');
       }
     }

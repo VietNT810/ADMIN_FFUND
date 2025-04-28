@@ -1,18 +1,18 @@
 import { useEffect } from 'react'
 import { useDispatch } from 'react-redux'
 import { setPageTitle } from '../../../features/common/headerSlice'
-import ProjectRequests from '../../../features/projectmanager/ProjectRequests'
+import AssignManager from '../../../features/projectmanager/AssignManager'
 
 function InternalPage(){
     const dispatch = useDispatch()
 
     useEffect(() => {
-        dispatch(setPageTitle({ title : "Project Requests"}))
+        dispatch(setPageTitle({ title : "Assign Manager"}))
       }, [])
 
 
     return(
-        <ProjectRequests />
+        <AssignManager />
     )
 }
 

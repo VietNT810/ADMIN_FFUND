@@ -1,14 +1,14 @@
 import axios from "axios";
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 
-// ✅ Fetch users from API with search and sort parameters
+// Get All User
 export const getUsersContent = createAsyncThunk(
   "user/getUsersContent",
-  async ({ query, page = 0, size = 9, sortField = "id", sortOrder = "asc", role, active }, { rejectWithValue }) => {
+  async ({ query, page = 0, size = 12, sortField = "id", sortOrder = "asc", roles, active }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
       const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
-        params: { query, page, size, sort: sortOrderSymbol, role, active },
+        params: { query, page, size, sort: sortOrderSymbol, roles, active },
       });
 
       return {
@@ -17,6 +17,27 @@ export const getUsersContent = createAsyncThunk(
       };
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message || "Failed to fetch users.");
+    }
+  }
+);
+
+// Add new Manager
+export const addManager = createAsyncThunk(
+  'user/addManager',
+  async (newManager, { rejectWithValue }) => {
+    try {
+      const formattedManager = {
+        fullName: newManager.fullName,
+        username: newManager.username,
+        password: newManager.password,
+        phone: newManager.phone,
+      };
+
+      const response = await axios.post('https://quanbeo.duckdns.org/api/v1/user/manager', formattedManager);
+
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to add manager.');
     }
   }
 );
@@ -89,6 +110,7 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Get All
       .addCase(getUsersContent.pending, (state) => {
         state.status = "loading";
       })
@@ -101,6 +123,7 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      // Get User by Id
       .addCase(getUserById.pending, (state) => {
         state.status = "loading";
       })
@@ -112,11 +135,22 @@ const userSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+      // Ban
+      .addCase(banUser.pending, (state) => {
+        state.status = 'loading';
+      })
       .addCase(banUser.fulfilled, (state, action) => {
         state.banStatus = action.payload;
         state.users = state.users.map((user) =>
           user.id === action.meta.arg ? { ...user, active: true } : user
         );
+      })
+      .addCase(banUser.rejected, (state, action) => {
+        state.banStatus = `Error: ${action.payload}`;
+      })
+      // Unban
+      .addCase(unbanUser.pending, (state) => {
+        state.status = 'loading';
       })
       .addCase(unbanUser.fulfilled, (state, action) => {
         state.unbanStatus = action.payload;
@@ -124,11 +158,20 @@ const userSlice = createSlice({
           user.id === action.meta.arg ? { ...user, active: false } : user
         );
       })
-      .addCase(banUser.rejected, (state, action) => {
-        state.banStatus = `Error: ${action.payload}`;
-      })
       .addCase(unbanUser.rejected, (state, action) => {
         state.unbanStatus = `Error: ${action.payload}`;
+      })
+      // Add Manager
+      .addCase(addManager.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(addManager.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.users.push(action.payload);
+      })
+      .addCase(addManager.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
       });
   },
 });
