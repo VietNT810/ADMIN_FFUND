@@ -19,6 +19,10 @@ function LeftSidebar() {
             if (['User', 'Criteria', 'Phase Rules', 'Transactions'].includes(route.name)) {
                 return null;
             }
+            
+            if (route.submenu) {
+                route.submenu = route.submenu.filter(subRoute => !['Assign project'].includes(subRoute.name));
+            }
         } else if (role === 'ADMIN') {
             if (['Requests & Reports'].includes(route.name)) {
                 return null;
