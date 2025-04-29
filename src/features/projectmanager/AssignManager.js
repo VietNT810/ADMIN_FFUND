@@ -1,61 +1,40 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects, approveProject, rejectProject, assignManagerToProject } from './components/projectSlice';
-import { EyeIcon, CheckCircleIcon, XCircleIcon, UserIcon } from '@heroicons/react/24/outline';
+import { getProjects, assignManagerToProject } from './components/projectSlice';
+import { EyeIcon, UserIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
 import Loading from '../../components/Loading';
 import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import { getUsersContent } from '../userManger/userSlice';
 
-const ProjectRequests = () => {
+const AssignManager = () => {
   const dispatch = useDispatch();
-  const { projects, status, error } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
+  const { projects, totalPages, status, error } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
   const { users } = useSelector(state => state.user || { users: [] });
 
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [actionType, setActionType] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [selectedManagerId, setSelectedManagerId] = useState(null);
-  const reasonInputRef = useRef(null);
+  const [sortField, setSortField] = useState('createdAt');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [page, setPage] = useState(0);
 
   useEffect(() => {
-    dispatch(getUsersContent({ query: 'roles:eq:MANAGER', size: 100 }));
-    dispatch(getProjects({ query: 'status:eq:DRAFT', sortField: 'createdAt', sortOrder: 'asc' }));
-  }, [dispatch]);
-
-  const handleApprove = () => {
-    dispatch(approveProject(selectedProjectId))
-        .then((result) => {
-          if(result.error) {
-            toast.error(result.payload || "An error occurred while processing the project.");
-          } else {
-            setShowConfirmation(false);
-            toast.success(result.payload);
-            dispatch(getProjects({ query: 'status:eq:DRAFT', page: 0, size: 10, sortField: 'createdAt', sortOrder: 'asc' }));
-          }
-        })
-        .catch(() => {
-            toast.error('Failed to approve project.');
-        });
-  };
-
-  const handleReject = () => {
-    const reason = reasonInputRef.current.value.trim();
-    if (reason) {
-      dispatch(rejectProject({ projectId: selectedProjectId, reason }))
-        .then(() => {
-          setShowConfirmation(false);
-          toast.success('Project rejected successfully!');
-          dispatch(getProjects({ query: 'status:eq:DRAFT', page: 0, size: 10, sortField: 'createdAt', sortOrder: 'asc' }));
-        })
-        .catch(() => {
-          toast.error('Failed to reject project.');
-        });
-    } else {
-      alert("Rejection reason is required.");
-    }
-  };
+    const fetchData = async () => {
+      try {
+        await dispatch(getUsersContent({ query: 'roles:eq:MANAGER', size: 100 }));
+  
+        await dispatch(getProjects({ query: 'status:eq:DRAFT', page, size: 10, sortField, sortOrder }));
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        toast.error('Failed to load data');
+      }
+    };
+  
+    fetchData();
+  }, [dispatch, page, sortField, sortOrder]);  
 
   const handleAssignManager = () => {
     if (selectedManagerId) {
@@ -66,7 +45,7 @@ const ProjectRequests = () => {
           } else {
             toast.success(result.payload);
             setShowConfirmation(false);
-            dispatch(getProjects({ query: 'status:eq:DRAFT', page: 0, size: 10, sortField: 'createdAt', sortOrder: 'asc' }));
+            dispatch(getProjects({ query: 'status:eq:DRAFT', page, size: 10, sortField, sortOrder}));
           }
         })
         .catch(() => {
@@ -98,57 +77,59 @@ const ProjectRequests = () => {
 
   return (
     <div className="min-h-screen bg-base-200 py-6 px-4 text-base-content">
-      <div className="max-w-7xl mx-auto bg-base-100 shadow-lg rounded-lg p-8 space-y-8">
+      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
 
-        {/* Card View for Pending Projects */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array.isArray(projects) && projects.length > 0 ? projects.map((project, index) => (
-            project.status === 'DRAFT' && (
-              <motion.div
-                key={project.id}
-                className="bg-base-100 shadow-md rounded-lg p-4 hover:bg-base-200 transition"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <h3 className="text-lg font-semibold">{project.title}</h3>
-                <p className="text-sm text-gray-600">{project.team?.teamName || "No Team"}</p>
-                <p className="text-sm text-gray-500">{project.location}</p>
-                <p className="text-sm text-gray-400">{new Date(project.createdAt).toLocaleString()}</p>
-                
-                <div className="mt-4 flex justify-between space-x-4">
-                  <Link
-                    to={`/app/project-details/${project.id}`}
-                    className="text-blue-500 hover:text-blue-800 tooltip"
-                    data-tip="View"
+        {/* Table View for Pending Projects */}
+        <div className="overflow-auto">
+          <table className="table w-full bg-base-100 shadow-md rounded-lg border">
+            <thead className="bg-base-200 text-sm font-semibold text-base-content border-b">
+              <tr>
+                <th className="px-4 py-3">No</th>
+                <th className="px-4 py-3">Project Title</th>
+                <th className="px-4 py-3">Manager Assigned</th>
+                <th className="px-4 py-3">Location</th>
+                <th className="px-4 py-3 text-center"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.isArray(projects) && projects.length > 0 ? projects.map((project, index) => (
+                project.status === 'DRAFT' && (
+                  <motion.tr
+                    key={project.id}
+                    className="hover:bg-base-100 transition"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                   >
-                    <EyeIcon className="w-5 h-5" />
-                  </Link>
-                  {/* <button
-                    onClick={() => confirmAction('approve', project.id)}
-                    className="text-green-600 hover:text-green-800"
-                  >
-                    <CheckCircleIcon className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => confirmAction('reject', project.id)}
-                    className="text-red-600 hover:text-red-800"
-                  >
-                    <XCircleIcon className="w-5 h-5" />
-                  </button> */}
-                  <button
-                    onClick={() => confirmAction('assign', project.id)}
-                    className="text-red-500 hover:text-red-800 tooltip"
-                    data-tip="Assign"
-                  >
-                    <UserIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </motion.div>
-            )
-          )) : (
-            <div className="text-center text-base-content col-span-full">No pending projects</div>
-          )}
+                    <td className="px-4 py-2 text-sm">{index + 1}</td>
+                    <td className="px-4 py-2 text-sm font-medium">{project.title}</td>
+                    <td className="px-4 py-2 text-sm">{project.managerName || "No manager assigned yet"}</td>
+                    <td className="px-4 py-2 text-sm">{project.location}</td>
+                    <td className="px-4 py-2 text-sm text-center">
+                      <div className="flex justify-center gap-3"> 
+                        <Link
+                          to={`/app/project-details/${project.id}`}
+                          className="text-blue-500 hover:text-blue-800 tooltip" data-tip="View"
+                        >
+                          <EyeIcon className="w-5 h-5" />
+                        </Link>
+                        <button
+                          onClick={() => confirmAction('assign', project.id)}
+                          className="text-red-500 hover:text-red-800 tooltip" data-tip="Assign Manager"
+                        >
+                          <UserIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </td>
+                  </motion.tr>
+                )
+              )) : (
+                <tr>
+                  <td colSpan="7" className="text-center text-base-content py-4">No projects to assign</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -156,21 +137,11 @@ const ProjectRequests = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-20">
           <div className="bg-base-100 rounded-lg p-6 max-w-sm w-full">
             <h3 className="text-lg font-semibold text-base-content mb-4">
-              {actionType === 'approve' ? 'Approve Project' : actionType === 'reject' ? 'Reject Project' : 'Assign Manager'}
+              Assign Manager
             </h3>
             <p className="text-sm text-base-content">
-              Are you sure you want to {actionType} this project?
+              Are you sure you want to assign a manager to this project?
             </p>
-            {actionType === 'reject' && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-base-content">Reason</label>
-                <textarea
-                  ref={reasonInputRef}
-                  className="w-full p-2 mt-2 border border-base-300 rounded-md"
-                  rows="4"
-                />
-              </div>
-            )}
             {actionType === 'assign' && (
               <div className="mt-4">
                 <label className="block text-sm font-medium text-base-content">Assign Manager</label>
@@ -190,10 +161,10 @@ const ProjectRequests = () => {
                 Cancel
               </button>
               <button
-                onClick={actionType === 'approve' ? handleApprove : actionType === 'reject' ? handleReject : handleAssignManager}
-                className={`btn ${actionType === 'approve' ? 'btn-success' : actionType === 'reject' ? 'btn-error' : 'btn-primary'} text-white`}
+                onClick={handleAssignManager}
+                className="btn btn-primary text-white"
               >
-                {actionType === 'approve' ? 'Approve' : actionType === 'reject' ? 'Reject' : 'Assign'}
+                Assign
               </button>
             </div>
           </div>
@@ -203,4 +174,4 @@ const ProjectRequests = () => {
   );
 };
 
-export default ProjectRequests;
+export default AssignManager;

@@ -4,11 +4,11 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 // Get All User
 export const getUsersContent = createAsyncThunk(
   "user/getUsersContent",
-  async ({ query, page = 0, size = 12, sortField = "id", sortOrder = "asc", roles, active }, { rejectWithValue }) => {
+  async ({ query, page = 0, size = 12, sortField = "id", sortOrder = "asc" }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
       const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
-        params: { query, page, size, sort: sortOrderSymbol, roles, active },
+        params: { query, page, size, sort: sortOrderSymbol },
       });
 
       return {
