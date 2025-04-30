@@ -93,16 +93,6 @@ const routes = [
     name: 'Transactions',
   },
   {
-    path: '/app/charts', 
-    icon: <ChartBarIcon className={iconClasses}/>, 
-    name: 'Analytics',
-  },
-  {
-    path: '/app/calendar', 
-    icon: <CalendarDaysIcon className={iconClasses}/>, 
-    name: 'Calendar',
-  },
-  {
     path: '/app/phase-rules',
     icon: <MilestoneIcon className={iconClasses} />,
     name: 'Phase Rules',

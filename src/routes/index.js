@@ -31,6 +31,7 @@ const PhaseRuleManagement = lazy(() => import('../pages/protected/phaseRulesPage
 const Criteria = lazy(() => import('../pages/protected/criteriaPage/Criteria'))
 const CriteriaDetail = lazy(() => import('../pages/protected/criteriaPage/CriteriaDetail'))
 const CriteriaType = lazy(() => import('../pages/protected/criteriaPage/CriteriaType'))
+const ProjectScoring = lazy(() => import('../pages/protected/projectPage/ProjectScroring'))
 
 const routes = [
   {
@@ -157,6 +158,10 @@ const routes = [
     path: '/phase-rules',
     component: PhaseRuleManagement,
   },
+  {
+    path: '/project-scoring/:projectId',
+    component: ProjectScoring,
+  }
 ]
 
 export default routes

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects, suspendProject, completeProject, getProjectStatistics } from './components/projectSlice';
+import { getProjects, suspendProject, completeProject, getProjectStatistics, getProjectsManager } from './components/projectSlice';
 import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EyeIcon, PauseIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
@@ -30,9 +30,11 @@ const ProjectList = () => {
   useEffect(() => {
     dispatch(getCategoriesContent());
     const defaultQuery = `status:eq:${selectedStatus}`;
-    dispatch(getProjects({ query: defaultQuery, page, size: 10, sortField, sortOrder }));
 
-    if (userRole !== 'MANAGER') {
+    if (userRole === 'MANAGER') {
+      dispatch(getProjectsManager({ query: `status:eq:PENDING_APPROVAL`, page, size: 10, sortField, sortOrder }));
+    } else {
+      dispatch(getProjects({ query: defaultQuery, page, size: 10, sortField, sortOrder }));
       dispatch(getProjectStatistics());
     }
   }, [dispatch, page, sortField, sortOrder, selectedStatus, userRole]);
@@ -43,10 +45,16 @@ const ProjectList = () => {
     if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
     if (selectedSubCategory !== "All") queryParts.push(`subCategories.subCategory.name:eq:${selectedSubCategory}`);
     if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
-    if (isPotential) queryParts.push(`isPotential:true`); // Thêm điều kiện tìm kiếm dự án tiềm năng
+    if (isPotential) queryParts.push(`isPotential:true`);
     if (queryParts.length === 0) return;
+
     const query = queryParts.join(",");
-    dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
+
+    if (userRole === 'MANAGER') {
+      dispatch(getProjectsManager({ query, page, size: 10, sortField, sortOrder }));
+    } else {
+      dispatch(getProjects({ query, page, size: 10, sortField, sortOrder }));
+    }
   };
   
   const handleKeyPress = (e) => {
@@ -83,23 +91,13 @@ const ProjectList = () => {
     setCompleteModalOpen(true);
   };
 
-  // const confirmComplete = () => {
-  //   dispatch(completeProject(selectedProjectId))
-  //     .then(() => {
-  //       setCompleteModalOpen(false);
-  //       toast.success('Project completed!');
-  //     })
-  //     .catch(() => {
-  //       const errorMessage = error?.response?.data?.error || 'Failed to complete project.';
-  //       toast.error(errorMessage);
-  //     });
-  // };
-
   const getStatusColor = (status) => {
     switch (status) {
       case 'APPROVED': return 'badge-success';
       case 'SUSPENDED': return 'badge-error';
       case 'DRAFT': return 'badge-warning';
+      case 'FUNDRAISING_COMPLETED': return 'badge-info';
+      case 'PENDING_APPROVAL': return 'badge-warning';
       default: return 'badge';
     }
   };
@@ -218,6 +216,7 @@ const ProjectList = () => {
               <option value="SUSPENDED">Suspended</option>
               <option value="DRAFT">Draft</option>
               <option value="FUNDRAISING_COMPLETED">Fundraising Completed</option>
+              <option value="PENDING_APPROVAL">Pending Approval</option>
             </select>
 
             {/* Sort Order Filter */}
@@ -293,17 +292,21 @@ const ProjectList = () => {
                   <td className="px-4 py-2 text-sm">{new Date(project.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex justify-center gap-3">
-                      <Link to={`/app/project-details/${project.id}`} className="tooltip" data-tip="View">
-                        <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
-                      </Link>
+                      {userRole === 'MANAGER' ? (
+                        <Link to={`/app/project-scoring/${project.id}`} className="tooltip" data-tip="Score">
+                          <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+                        </Link>
+                      ) : (
+                        <Link to={`/app/project-details/${project.id}`} className="tooltip" data-tip="View">
+                          <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+                        </Link>
+                      )}
+
                       {project.status === 'APPROVED' && (
                         <>
                           <button className="tooltip" data-tip="Suspend" onClick={() => handleSuspend(project.id)}>
                             <PauseIcon className="w-5 h-5 text-red-600 hover:text-red-800" />
                           </button>
-                          {/* <button className="tooltip" data-tip="Complete" onClick={() => handleComplete(project.id)}>
-                            <CheckCircleIcon className="w-5 h-5 text-green-600 hover:text-green-800" />
-                          </button> */}
                         </>
                       )}
                     </div>
@@ -359,23 +362,6 @@ const ProjectList = () => {
           </div>
         </div>
       )}
-
-      {/* Complete Modal
-      {completeModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
-          <div className="bg-base-100 p-6 rounded-xl shadow-xl w-96 border border-base-300">
-            <h3 className="text-xl font-bold text-success mb-4 flex items-center gap-2">
-              <CheckCircleIcon className="w-6 h-6" />
-              Complete Project
-            </h3>
-            <p>Are you sure you want to mark this project as completed?</p>
-            <div className="flex justify-end gap-3 mt-4">
-              <button className="btn btn-ghost" onClick={() => setCompleteModalOpen(false)}>Cancel</button>
-              <button className="btn btn-success" onClick={confirmComplete}>Confirm</button>
-            </div>
-          </div>
-        </div>
-      )} */}
     </div>
   );
 };
