@@ -5,16 +5,13 @@ import { MagnifyingGlassIcon, EllipsisHorizontalIcon } from '@heroicons/react/24
 import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 import Loading from '../../components/Loading';
-import useTheme from '../../hooks/useTheme';
 
 const UserManager = () => {
-  useTheme();
 
   const dispatch = useDispatch();
   const { users, error, status, totalPages } = useSelector(state => state.user || { users: [], error: null, status: 'idle' });
-
+ 
   const [searchTerm, setSearchTerm] = useState('');
-  const [name, setName] = useState('');
   const [sortField, setSortField] = useState('id');
   const [sortOrder, setSortOrder] = useState('asc');
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -23,8 +20,8 @@ const UserManager = () => {
   const [userToConfirm, setUserToConfirm] = useState(null);
 
   useEffect(() => {
-    dispatch(getUsersContent({ query: searchTerm, page: currentPage, sortField, sortOrder }));
-  }, [dispatch, searchTerm, currentPage, sortField, sortOrder]);
+    dispatch(getUsersContent({page: currentPage, sortField, sortOrder }));
+  }, [dispatch, currentPage, sortField, sortOrder]);
 
   const handleBanUser = (userId) => {
     setUserToConfirm(userId);
@@ -60,9 +57,21 @@ const UserManager = () => {
     setOpenDropdown(openDropdown === userId ? null : userId);
   };
 
-  const handleSearch = () => setName(searchTerm);
-  const handleKeyPress = (e) => e.key === 'Enter' && handleSearch();
-  const handlePageChange = (newPage) => newPage >= 0 && newPage < totalPages && setCurrentPage(newPage);
+  const handleSearch = () => {
+    const queryParts = [];
+    if (searchTerm) queryParts.push(`fullName:eq:${searchTerm}`);
+    if (queryParts.length === 0) return;
+    const query = queryParts.join(",");
+    dispatch(getUsersContent({ query, page: currentPage, sortField, sortOrder }));
+  };
+
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter') handleSearch();
+  };
+
+  const handlePageChange = (newPage) => {
+    newPage >= 0 && newPage < totalPages && setCurrentPage(newPage);
+  }
 
   if (status === 'loading') return <Loading />;
   if (status === 'failed') return <div className="alert alert-error">{error}</div>;

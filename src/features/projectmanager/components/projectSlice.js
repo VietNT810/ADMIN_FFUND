@@ -21,6 +21,26 @@ export const getProjects = createAsyncThunk(
   }
 );
 
+// Fetch all projects
+export const getProjectOfManager = createAsyncThunk(
+  'project/getProjectOfManager',
+  async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
+    try {
+      const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
+      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/manager/get-all', {
+        params: { query, page, size, sort: sortOrderSymbol }
+      });
+
+      return {
+        projects: response.data.data.data,
+        totalPages: response.data.data.totalPages || 1,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch projects.');
+    }
+  }
+);
+
 // Fetch a project that is likely to be completed
 export const getProjectToComplete = createAsyncThunk(
   'project/getProjectToComplete',
@@ -119,6 +139,21 @@ export const getStoryByProjectId = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project story.');
+    }
+  }
+);
+
+// Assign manager to project
+export const assignManagerToProject = createAsyncThunk(
+  'project/assignManagerToProject',
+  async ({ projectId, managerId }, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `https://quanbeo.duckdns.org/api/v1/project/assign/${projectId}/manager/${managerId}`
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to assign manager to project.');
     }
   }
 );
@@ -231,6 +266,7 @@ const projectSlice = createSlice({
     milestones: {},
     story: null,
     statistics: null,
+    assign: null,
     error: null,
     status: 'idle',
   },
@@ -251,6 +287,18 @@ const projectSlice = createSlice({
         state.totalPages = action.payload.totalPages;
       })
       .addCase(getProjects.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
+      .addCase(getProjectOfManager.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getProjectOfManager.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.projects = action.payload.projects;
+        state.totalPages = action.payload.totalPages;
+      })
+      .addCase(getProjectOfManager.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
       })
@@ -384,7 +432,18 @@ const projectSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload;
       })
-
+      // assign manager to project
+      .addCase(assignManagerToProject.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(assignManagerToProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.assign = action.payload;
+      })
+      .addCase(assignManagerToProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
       // Handle getProjectStatistics
       .addCase(getProjectStatistics.pending, (state) => {
         state.status = 'loading';

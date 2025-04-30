@@ -39,7 +39,7 @@ const UserDetail = () => {
     setShowConfirm(false);
   };
 
-  const handleGoBack = () => navigate('/app/user-management');
+  const handleGoBack = () => navigate(-1);
 
   const handleOpenConfirm = (action) => {
     setActionType(action);
