@@ -98,6 +98,7 @@ const ProjectList = () => {
       case 'DRAFT': return 'badge-warning';
       case 'FUNDRAISING_COMPLETED': return 'badge-info';
       case 'PENDING_APPROVAL': return 'badge-warning';
+      case 'RESUBMIT' : return 'badge-warning';
       default: return 'badge';
     }
   };
@@ -213,8 +214,10 @@ const ProjectList = () => {
               className="select select-bordered w-full"
             >
               <option value="APPROVED">Approved</option>
+              <option value="RESUBMIT">Resubmit</option>
               <option value="SUSPENDED">Suspended</option>
               <option value="DRAFT">Draft</option>
+              <option value="REJECTED">Rejected</option>
               <option value="FUNDRAISING_COMPLETED">Fundraising Completed</option>
               <option value="PENDING_APPROVAL">Pending Approval</option>
             </select>
@@ -282,7 +285,7 @@ const ProjectList = () => {
                 >
                   <td className="px-4 py-2 text-sm">{index + 1}</td>
                   <td className="px-4 py-2 text-sm font-medium">{project.title}</td>
-                  <td className="px-4 py-2 text-sm">{project.team?.teamName || "No Team"}</td>
+                  <td className="px-4 py-2 text-sm">{project.teamName || "No Team"}</td>
                   <td className="px-4 py-2">
                     <span className={`badge ${getStatusColor(project.status)} px-3 py-1 text-xs`}>
                       {project.status}

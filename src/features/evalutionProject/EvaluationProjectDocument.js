@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getDocumentByProjectId } from './components/projectSlice';
+import { getDocumentByProjectId } from '../projectmanager/components/projectSlice';
 import Loading from '../../components/Loading';
 import * as XLSX from 'xlsx';
 import {

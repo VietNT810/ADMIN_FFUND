@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { getCategoriesContent, deleteCategory, updateCategory, createCategory, setCategories, enableCategory } from './categorySlice';
-import { PlusIcon, EllipsisHorizontalIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilSquareIcon, CheckCircleIcon, XCircleIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-toastify';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function Categories() {
   const dispatch = useDispatch();
@@ -18,11 +18,9 @@ function Categories() {
     subCategories: [{ subCategoryName: '', subCategoryDescription: '' }]
   });
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [categoryToDelete, setCategoryToDelete] = useState(null);
-  const [openDropdown, setOpenDropdown] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
   const [categoryToConfirm, setCategoryToConfirm] = useState(null);
+  const [expandedCategory, setExpandedCategory] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const role = localStorage.getItem('role');
 
@@ -30,17 +28,14 @@ function Categories() {
     dispatch(getCategoriesContent());
   }, [dispatch]);
 
-
   const handleEnableCategory = (categoryId) => {
     setCategoryToConfirm(categoryId);
     setIsDeleteConfirmOpen(true);
-    setOpenDropdown(null);
   };
 
   const handleDisableCategory = (categoryId) => {
     setCategoryToConfirm(categoryId);
     setIsDeleteConfirmOpen(true);
-    setOpenDropdown(null);
   };
 
   const confirmActiveCategory = () => {
@@ -50,9 +45,16 @@ function Categories() {
 
       dispatch(action(categoryToConfirm)).then((result) => {
         if (result.error) {
-          toast.error(result.payload || "An error occurred while enabling the category.");
+          toast.error(result.payload || "An error occurred while processing the category.");
         } else {
-          toast.success(`Category ${category.active ? 'disabled' : 'enabled'} successfully!`);
+          toast.success(`Category ${category.active ? 'disabled' : 'enabled'} successfully!`, {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true
+          });
           const updateCategories = categories.map(cate =>
             cate.id === categoryToConfirm ? { ...cate, active: !category.active } : cate
           );
@@ -66,28 +68,54 @@ function Categories() {
   };
 
   const handleCreateCategory = () => {
+    // Validate main category fields
     if (!categoryForm.categoryName || !categoryForm.categoryDescription) {
       toast.error('Category Name and Category Description are required.');
       return;
     }
-  
+
+    // Validate subcategories - at least one valid subcategory required
+    const validSubCategories = categoryForm.subCategories.filter(sub =>
+      sub.subCategoryName && sub.subCategoryName.trim() !== ''
+    );
+
+    if (validSubCategories.length === 0) {
+      toast.error('At least one subcategory with a name is required.');
+      return;
+    }
+
+    // Filter out empty subcategories
+    const formToSubmit = {
+      ...categoryForm,
+      subCategories: validSubCategories
+    };
+
     const action = isEdit ? updateCategory : createCategory;
-  
+
     if (!isEdit) {
-      const categoryExists = categories.some(category => category.categoryName.toLowerCase() === categoryForm.categoryName.toLowerCase());
-  
+      const categoryExists = categories.some(category =>
+        category.categoryName.toLowerCase() === categoryForm.categoryName.toLowerCase()
+      );
+
       if (categoryExists) {
         toast.error("Category already exists.");
         return;
       }
     }
-  
-    dispatch(action(categoryForm))
+
+    dispatch(action(formToSubmit))
       .then((result) => {
         if (result.error) {
           toast.error(result.payload || "An error occurred while processing the category.");
         } else {
-          toast.success(isEdit ? 'Category updated successfully!' : 'Category created successfully!');
+          toast.success(isEdit ? 'Category updated successfully!' : 'Category created successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true
+          });
           resetForm();
           dispatch(getCategoriesContent());
         }
@@ -95,7 +123,7 @@ function Categories() {
       .catch((error) => {
         toast.error(error.message || "An unexpected error occurred.");
       });
-  };  
+  };
 
   const resetForm = () => {
     setCategoryForm({
@@ -134,6 +162,11 @@ function Categories() {
   };
 
   const handleRemoveSubCategory = (index) => {
+    if (categoryForm.subCategories.length <= 1) {
+      toast.warning("At least one subcategory is required.");
+      return;
+    }
+
     const newSubCategories = categoryForm.subCategories.filter((_, i) => i !== index);
     setCategoryForm({
       ...categoryForm,
@@ -146,241 +179,429 @@ function Categories() {
       id: category.id,
       categoryName: category.categoryName,
       categoryDescription: category.categoryDescription,
-      subCategories: category.subCategories || [{ subCategoryName: '', subCategoryDescription: '' }]
+      subCategories: category.subCategories?.length > 0
+        ? category.subCategories
+        : [{ subCategoryName: '', subCategoryDescription: '' }]
     });
     setIsEdit(true);
     setIsCreateModalOpen(true);
-    setOpenDropdown(null);
   };
 
   const handleCloseModal = () => {
     resetForm();
   };
 
-  const toggleDropdown = (categoryId) => {
-    setOpenDropdown(openDropdown === categoryId ? null : categoryId);
+  const toggleCategoryExpansion = (categoryId) => {
+    setExpandedCategory(expandedCategory === categoryId ? null : categoryId);
   };
 
   const filteredCategories = categories.filter((category) =>
     category.categoryName?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  return (
-    <div className="min-h-screen bg-base-200 py-6 px-4">
-      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
-        <div className="mb-6 flex justify-between items-center">
-          {/* ADMIN */}
-          {role === 'ADMIN' && (
-            <div className="relative group">
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-700 transition duration-200"
-              >
-                <PlusIcon className="w-5 h-5 inline-block" />
-              </button>
-              <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Add new Category
-              </span>
-            </div>
-          )}
+  // Motion variants
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  };
 
+  const listVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-[95%] mx-auto bg-white shadow-xl rounded-xl p-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Category Management</h1>
+
+        <div className="mb-8 flex justify-between items-center">
           {/* Search Box */}
-          <div className="relative">
+          <div className="relative flex-grow max-w-md">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
             <input
               type="text"
               placeholder="Search Categories"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 border rounded-md w-64 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="pl-10 pr-4 py-3 w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
             />
           </div>
+
+          {/* Add Category Button */}
+          {role === 'ADMIN' && (
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg transition duration-300 shadow-md"
+            >
+              <PlusIcon className="w-5 h-5" />
+              <span>Add Category</span>
+            </button>
+          )}
         </div>
 
-        <div className="overflow-x-auto">
-          <motion.table
-            className="table-auto w-full bg-base-100 shadow-md rounded-xl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <thead>
-              <tr className="bg-base-200 dark:text-orange-400 text-left text-sm font-semibold text-gray-700">
-                <th className="px-4 py-2">No</th>
-                <th className="px-4 py-2">Category Name</th>
-                <th className="px-4 py-2">Description</th>
-                <th className="px-4 py-2">Sub Categories</th>
-                <th className="px-4 py-2">Active</th>
-                <th className="px-4 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredCategories.length > 0 ? filteredCategories.map((category, index) => (
-                <tr key={category.id} className="border-t">
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">{index + 1}</td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.categoryName}</td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">{category.categoryDescription}</td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">
-                    <ul>
-                      {category.subCategories.length > 0 ? category.subCategories.map((subCategory, subIndex) => (
-                        <li key={`${subCategory.subCategoryName}-${subIndex}`} className="text-sm dark:text-gray-200">
-                          {subIndex + 1}. {subCategory.subCategoryName}
-                        </li>
-                      )) : (
-                        <li className="text-sm dark:text-gray-200">No subcategories</li>
-                      )}
-                    </ul>
-                  </td>
-                  <td className="px-4 py-2 text-sm dark:text-gray-200">
-                    <span className={`badge mt-2 ${category.active ? 'badge-success' : 'badge-error'}`}>
-                      {category.active ? 'Enabled' : 'Disabled'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2 text-sm text-center">
-                    {/* ADMIN */}
-                    {role === 'ADMIN' && (
-                      <div className="relative">
+        {/* Category Cards */}
+        <motion.div
+          className="grid grid-cols-1 gap-6"
+          variants={listVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {filteredCategories.length > 0 ? filteredCategories.map((category) => (
+            <motion.div
+              key={category.id}
+              className={`rounded-xl border ${category.active ? 'border-green-200' : 'border-red-200'} overflow-hidden shadow-md transition-all duration-300`}
+              variants={cardVariants}
+            >
+              <div
+                className={`px-5 py-4 ${category.active ? 'bg-green-50' : 'bg-red-50'} flex justify-between items-center cursor-pointer`}
+                onClick={() => toggleCategoryExpansion(category.id)}
+              >
+                <div className="flex-grow">
+                  <h3 className="text-xl font-semibold text-gray-800">{category.categoryName}</h3>
+                  <p className="text-sm text-gray-600 mt-1">{category.categoryDescription}</p>
+                </div>
+
+                <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${category.active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                    {category.active ? 'Active' : 'Inactive'}
+                  </span>
+
+                  {/* Actions directly visible */}
+                  {role === 'ADMIN' && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEditCategory(category)}
+                        className="p-2 bg-blue-50 hover:bg-blue-100 rounded-full transition-colors text-blue-600"
+                        title="Edit Category"
+                      >
+                        <PencilSquareIcon className="w-5 h-5" />
+                      </button>
+
+                      {category.active ? (
                         <button
-                          onClick={() => toggleDropdown(category.id)}
-                          className="btn btn-sm btn-ghost rounded-full"
+                          onClick={() => handleDisableCategory(category.id)}
+                          className="p-2 bg-red-50 hover:bg-red-100 rounded-full transition-colors text-red-600"
+                          title="Disable Category"
                         >
-                          <EllipsisHorizontalIcon className="w-5 h-5" />
+                          <XCircleIcon className="w-5 h-5" />
                         </button>
-                        {openDropdown === category.id && (
-                          <ul tabIndex={0} 
-                          className="dropdown-content z-100 menu p-2 shadow bg-base-100 rounded-box w-40 absolute mt-2"
-                          >
-                            <li>
-                              <button
-                                onClick={() => handleEditCategory(category)}
-                                className="text-sm text-blue-600 hover:bg-gray-100"
-                              >
-                                Edit
-                              </button>
-                            </li>
-                            <li>
-                              {category.active ? (
-                                <button onClick={() => handleDisableCategory(category.id)} className="text-red-500">
-                                  Disable
-                                </button>
-                              ) : (
-                                <button onClick={() => handleEnableCategory(category.id)} className="text-green-500">
-                                  Enable
-                                </button>
-                              )}
-                            </li>
-                          </ul>
-                        )}
-                      </div>
+                      ) : (
+                        <button
+                          onClick={() => handleEnableCategory(category.id)}
+                          className="p-2 bg-green-50 hover:bg-green-100 rounded-full transition-colors text-green-600"
+                          title="Enable Category"
+                        >
+                          <CheckCircleIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Visual indicator for expansion */}
+                  <div className="p-2 rounded-full">
+                    {expandedCategory === category.id ? (
+                      <ChevronUpIcon className="w-5 h-5 text-gray-600" />
+                    ) : (
+                      <ChevronDownIcon className="w-5 h-5 text-gray-600" />
                     )}
-                  </td>
-                </tr>
-              )) : (
-                <tr>
-                  <td colSpan="5" className="text-center text-gray-600 py-4">No categories available</td>
-                </tr>
-              )}
-            </tbody>
-          </motion.table>
-        </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subcategories Expansion */}
+              <AnimatePresence>
+                {expandedCategory === category.id && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-5 bg-white">
+                      <h4 className="text-sm font-semibold text-gray-600 mb-3 flex items-center gap-2">
+                        <svg className="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                        Subcategories ({category.subCategories?.length || 0})
+                      </h4>
+
+                      {category.subCategories?.length > 0 ? (
+                        <div className="flex flex-wrap gap-4">
+                          {category.subCategories.map((subCategory, index) => (
+                            <div
+                              key={index}
+                              className="bg-gray-50 p-3 rounded-lg border border-gray-100 flex-shrink-0"
+                              style={{ minWidth: '200px', maxWidth: '300px' }}
+                            >
+                              <h5 className="font-medium text-gray-800">{subCategory.subCategoryName}</h5>
+                              <p className="text-sm text-gray-600 mt-1">{subCategory.subCategoryDescription}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500 italic">No subcategories available</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )) : (
+            <div className="py-10 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No categories found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {searchQuery ? `No categories matching "${searchQuery}"` : "Start by creating a new category."}
+              </p>
+            </div>
+          )}
+        </motion.div>
       </div>
 
-      {/* Modal Create or Edit Category */}
+      {/* Create/Edit Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white rounded-xl p-8 w-full sm:w-96 lg:w-1/2 shadow-lg transition-all ease-in-out transform duration-300 overflow-y-auto max-h-[80vh]">
-            <h3 className="text-2xl font-semibold text-gray-800 mb-6 text-center">{isEdit ? 'Edit Category' : 'Create New Category'}</h3>
-
-            <div className="mb-4">
-              <label htmlFor="categoryName" className="block text-sm text-gray-700">Category Name</label>
-              <input
-                id="categoryName"
-                type="text"
-                name="categoryName"
-                value={categoryForm.categoryName || ''}
-                onChange={handleCategoryChange}
-                className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
-                placeholder="Enter Category Name"
-              />
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="categoryDescription" className="block text-sm text-gray-700">Category Description</label>
-              <textarea
-                id="categoryDescription"
-                name="categoryDescription"
-                value={categoryForm.categoryDescription}
-                onChange={handleCategoryChange}
-                className="w-full px-4 py-3 mt-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
-                placeholder="Enter Category Description"
-              />
-            </div>
-
-            {/* Sub Categories */}
-            <div className="mb-4">
-              <label className="block text-sm text-gray-700">Sub Categories</label>
-              {categoryForm.subCategories.map((subCategory, index) => (
-                <div key={index} className="flex space-x-4 mt-4">
-                  <input
-                    type="text"
-                    name="subCategoryName"
-                    value={subCategory.subCategoryName || ''}
-                    onChange={(e) => handleSubCategoryChange(index, e)}
-                    placeholder="Sub Category Name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
-                  />
-                  <textarea
-                    name="subCategoryDescription"
-                    value={subCategory.subCategoryDescription}
-                    onChange={(e) => handleSubCategoryChange(index, e)}
-                    placeholder="Sub Category Description"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-200 ease-in-out"
-                  />
-                  <button
-                    onClick={() => handleRemoveSubCategory(index)}
-                    className="text-red-500 hover:text-red-700 mt-4"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={handleAddSubCategory}
-                className="mt-4 w-full bg-green-500 text-white px-4 py-2 rounded-full hover:bg-green-700 transition duration-200"
-              >
-                Add Sub Category
-              </button>
-            </div>
-
-            <div className="mt-6 flex justify-between">
-              <button
-                onClick={handleCreateCategory}
-                className="bg-orange-500 text-white px-6 py-3 rounded-lg hover:bg-orange-700 transition duration-200 w-full sm:w-auto"
-              >
-                {isEdit ? 'Update Category' : 'Create Category'}
-              </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+          <motion.div
+            className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="border-b border-gray-200 px-6 py-4 bg-gray-50 rounded-t-xl flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-800">
+                {isEdit ? 'Edit Category' : 'Create New Category'}
+              </h2>
               <button
                 onClick={handleCloseModal}
-                className="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition duration-200 w-full sm:w-auto"
+                className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Close
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
               </button>
             </div>
-          </div>
+
+            <div className="p-6">
+              {/* Main Category Fields */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                  </svg>
+                  Main Category Information
+                </h3>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="categoryName" className="block text-sm font-medium text-gray-700 mb-1">
+                      Category Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="categoryName"
+                      type="text"
+                      name="categoryName"
+                      value={categoryForm.categoryName || ''}
+                      onChange={handleCategoryChange}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
+                      placeholder="Enter Category Name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="categoryDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                      Category Description <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="categoryDescription"
+                      name="categoryDescription"
+                      value={categoryForm.categoryDescription}
+                      onChange={handleCategoryChange}
+                      rows="3"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
+                      placeholder="Enter Category Description"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Sub Categories Section */}
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-700 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                    Subcategories
+                  </h3>
+                  <button
+                    onClick={handleAddSubCategory}
+                    className="flex items-center gap-1 text-sm font-medium text-green-600 hover:text-green-800 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Subcategory
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-4">
+                  {categoryForm.subCategories.map((subCategory, index) => (
+                    <motion.div
+                      key={index}
+                      className="p-4 border border-gray-200 rounded-lg bg-gray-50"
+                      style={{ width: '48%' }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-sm font-medium text-gray-700">Subcategory #{index + 1}</h4>
+                        <button
+                          onClick={() => handleRemoveSubCategory(index)}
+                          className="text-red-500 hover:text-red-700 text-sm flex items-center gap-1 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                          </svg>
+                          Remove
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Name <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            name="subCategoryName"
+                            value={subCategory.subCategoryName || ''}
+                            onChange={(e) => handleSubCategoryChange(index, e)}
+                            placeholder="Subcategory Name"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description
+                          </label>
+                          <textarea
+                            name="subCategoryDescription"
+                            value={subCategory.subCategoryDescription}
+                            onChange={(e) => handleSubCategoryChange(index, e)}
+                            placeholder="Subcategory Description"
+                            rows="2"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-200"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={handleCloseModal}
+                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateCategory}
+                  className="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                >
+                  {isEdit ? (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                      </svg>
+                      Update Category
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                      Create Category
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
 
       {/* Confirm Modal */}
       {isDeleteConfirmOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-30">
-          <div className="modal-box bg-base-100">
-            <h3 className="font-bold text-lg text-center">
-              Are you sure you want to {categories.find(category => category.id === categoryToConfirm)?.active ? 'disable' : 'enable'} this category?
-            </h3>
-            <div className="modal-action flex justify-center mt-4 gap-4">
-              <button onClick={confirmActiveCategory} className="btn btn-success text-white">Yes</button>
-              <button onClick={() => setIsDeleteConfirmOpen(false)} className="btn">No</button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <motion.div
+            className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            <div className="text-center">
+              {/* Icon: warning or check based on action */}
+              {categories.find(category => category.id === categoryToConfirm)?.active ? (
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4">
+                  <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                  </svg>
+                </div>
+              ) : (
+                <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+                  <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              )}
+
+              <h3 className="text-xl font-medium text-gray-900 mb-2">
+                Confirm Action
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to {categories.find(category => category.id === categoryToConfirm)?.active ? 'disable' : 'enable'} this category?
+                {categories.find(category => category.id === categoryToConfirm)?.active && (
+                  <span className="block mt-2 text-sm text-red-600">
+                    This category will no longer be available for selection.
+                  </span>
+                )}
+              </p>
+
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => setIsDeleteConfirmOpen(false)}
+                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmActiveCategory}
+                  className={`px-5 py-2 ${categories.find(category => category.id === categoryToConfirm)?.active
+                    ? 'bg-red-500 hover:bg-red-600'
+                    : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg transition-colors`}
+                >
+                  {categories.find(category => category.id === categoryToConfirm)?.active ? 'Yes, Disable' : 'Yes, Enable'}
+                </button>
+              </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

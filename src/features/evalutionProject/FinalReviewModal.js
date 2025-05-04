@@ -53,8 +53,9 @@ const FinalReviewModal = ({
                             <div className={`mt-2 text-sm font-medium ${totalScore.percentage >= 70 ? 'text-green-600' :
                                 totalScore.percentage >= 50 ? 'text-yellow-600' : 'text-red-600'
                                 }`}>
-                                {totalScore.percentage >= 70 ? 'Meets standards' :
-                                    totalScore.percentage >= 50 ? 'Needs improvement' : 'Below standards'}
+                                {totalScore.percentage >= 90 ? 'Excellent - Potential Project' :
+                                    totalScore.percentage >= 70 ? 'Meets standards' :
+                                        totalScore.percentage >= 50 ? 'Needs improvement' : 'Below standards'}
                             </div>
                         </div>
                     </div>
@@ -159,16 +160,16 @@ const FinalReviewModal = ({
 
                     {!isReadOnly && (
                         <>
-                            {approvalStatus.status === 'APPROVAL' ? (
+                            {approvalStatus.status === 'approve' ? (
                                 <button
-                                    className="btn btn-success"
-                                    onClick={() => handleProjectDecision('APPROVAL')}
+                                    className={`btn ${totalScore.percentage >= 90 ? 'btn-primary' : 'btn-success'}`}
+                                    onClick={() => handleProjectDecision('approve')}
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
                                         <span className="loading loading-spinner loading-sm"></span>
                                     ) : (
-                                        'Approve Project'
+                                        totalScore.percentage >= 90 ? 'Approve as Potential Project' : 'Approve Project'
                                     )}
                                 </button>
                             ) : (
@@ -180,7 +181,7 @@ const FinalReviewModal = ({
                                     {isSubmitting ? (
                                         <span className="loading loading-spinner loading-sm"></span>
                                     ) : (
-                                        'Reject Project'
+                                        totalScore.percentage < 50 ? 'Reject & Ban Project' : 'Reject Project'
                                     )}
                                 </button>
                             )}

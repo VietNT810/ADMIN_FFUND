@@ -14,7 +14,7 @@ import requestSlice from '../features/request/requestSlice'
 import phaseRulesReducer from '../features/phaseRules/components/phaseRuleSlice'
 import criteriaSlice from '../features/criteria/criteriaSlice'
 import systemStaticSlice from '../features/dashboard/components/SystemStaticSlice'
-import evaluationReducer from '../features/projectmanager/components/evalutionProjectSlice'
+import evaluationReducer from '../features/evalutionProject/components/evalutionProjectSlice'
 
 const combinedReducer = {
   header: headerSlice,

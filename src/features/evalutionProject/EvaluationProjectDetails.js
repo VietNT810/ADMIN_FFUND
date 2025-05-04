@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjectById } from './components/projectSlice';
+import { getProjectById } from '../projectmanager/components/projectSlice';
 import { getMemberById } from '../team/teamSlice';
 import Loading from '../../components/Loading';
 import { motion } from 'framer-motion';
@@ -61,17 +61,17 @@ const ProjectDetailsEvaluation = () => {
   };
 
   // Simplified member click handler for dropdown functionality
-const handleMemberClick = async (memberId) => {
-  setMemberLoading(true);
-  try {
-    await dispatch(getMemberById(memberId)).unwrap();
-    // Note: The data will be loaded into the Redux store
-  } catch (error) {
-    console.error("Failed to fetch member details:", error);
-  } finally {
-    setMemberLoading(false);
-  }
-};
+  const handleMemberClick = async (memberId) => {
+    setMemberLoading(true);
+    try {
+      await dispatch(getMemberById(memberId)).unwrap();
+      // Note: The data will be loaded into the Redux store
+    } catch (error) {
+      console.error("Failed to fetch member details:", error);
+    } finally {
+      setMemberLoading(false);
+    }
+  };
 
   const handleCloseMemberModal = () => {
     setShowMemberModal(false);
@@ -128,7 +128,7 @@ const handleMemberClick = async (memberId) => {
       }
     }
   };
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-4 text-base-content">
       <div className="max-w-7xl mx-auto bg-white shadow-lg rounded-lg p-8">
@@ -373,43 +373,43 @@ const handleMemberClick = async (memberId) => {
                             <div className="mb-4">
                               <h5 className="text-lg font-semibold text-orange-600 mb-2">Portfolio</h5>
 
-                                {memberPortfolios[member.memberId]?.studentPortfolio ? (
-                                  <div className="space-y-4">
-                                    <div className="h-96 w-full bg-gray-50 rounded-md overflow-hidden border border-gray-200">
-                                      <iframe
-                                        src={`${memberPortfolios[member.memberId].studentPortfolio}#view=FitH`}
-                                        title="Portfolio Preview"
-                                        className="w-full h-full border-0"
-                                      ></iframe>
-                                    </div>
+                              {memberPortfolios[member.memberId]?.studentPortfolio ? (
+                                <div className="space-y-4">
+                                  <div className="h-[600px] w-full bg-gray-50 rounded-md overflow-hidden border border-gray-200">
+                                    <iframe
+                                      src={`${memberPortfolios[member.memberId].studentPortfolio}#view=FitH`}
+                                      title="Portfolio Preview"
+                                      className="w-full h-full border-0"
+                                    ></iframe>
+                                  </div>
 
-                                    <div className="flex justify-end">
-                                      <a
-                                        href={memberPortfolios[member.memberId].studentPortfolio}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white"
-                                        onClick={(e) => e.stopPropagation()}
-                                      >
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                        Open in New Tab
-                                      </a>
-                                    </div>
+                                  <div className="flex justify-end">
+                                    <a
+                                      href={memberPortfolios[member.memberId].studentPortfolio}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                      </svg>
+                                      Open in New Tab
+                                    </a>
                                   </div>
-                                ) : (
-                                  <div className="text-center py-6 bg-gray-100 rounded-lg">
-                                    <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                                    </svg>
-                                    <p className="mt-2 text-gray-600">Portfolio not available</p>
-                                  </div>
-                                )}
-                              </div>
+                                </div>
+                              ) : (
+                                <div className="text-center py-6 bg-gray-100 rounded-lg">
+                                  <svg className="w-12 h-12 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                  </svg>
+                                  <p className="mt-2 text-gray-600">Portfolio not available</p>
+                                </div>
+                              )}
+                            </div>
 
                             {/* Additional Member Info from Redux store */}
-                              {memberPortfolios[member.memberId] && (
+                            {memberPortfolios[member.memberId] && (
                               <div className="mt-6 space-y-4">
                                 <h5 className="text-lg font-semibold text-green-600 mb-2">Additional Information</h5>
 
@@ -457,7 +457,7 @@ const handleMemberClick = async (memberId) => {
       {/* Modal for Full Image/Video View */}
       {showMediaModal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div 
+          <div
             ref={modalRef}
             className="bg-white p-6 rounded-lg max-w-4xl w-full shadow-xl relative"
           >
