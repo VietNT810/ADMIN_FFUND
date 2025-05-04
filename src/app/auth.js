@@ -30,7 +30,8 @@ const checkAuth = async () => {
     return;
   }
 
-  if (userRole !== 'ADMIN' && !isPublicPage) {
+  // Sửa điều kiện này để cho phép cả ADMIN và MANAGER
+  if ((userRole !== 'ADMIN' && userRole !== 'MANAGER') && !isPublicPage) {
     logout();
     return;
   }
@@ -80,7 +81,7 @@ const checkAuth = async () => {
 
       try {
         const response = await axios.post('https://quanbeo.duckdns.org/api/v1/auth/refresh-token', { token: refreshToken });
-        
+
         console.log("Response Data:", response.data.data);
 
         const newAccessToken = response.data.data.accessToken;

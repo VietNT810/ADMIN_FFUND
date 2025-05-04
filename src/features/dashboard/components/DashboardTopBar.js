@@ -1,75 +1,50 @@
-import SelectBox from "../../../components/Input/SelectBox"
-import ArrowDownTrayIcon  from '@heroicons/react/24/outline/ArrowDownTrayIcon'
-import ShareIcon  from '@heroicons/react/24/outline/ShareIcon'
-import EnvelopeIcon  from '@heroicons/react/24/outline/EnvelopeIcon'
-import EllipsisVerticalIcon  from '@heroicons/react/24/outline/EllipsisVerticalIcon'
-import ArrowPathIcon  from '@heroicons/react/24/outline/ArrowPathIcon'
-import { useState } from "react"
-import Datepicker from "react-tailwindcss-datepicker"; 
+import React, { useState } from "react";
+import Datepicker from "react-tailwindcss-datepicker";
 
+function DashboardTopBar({ updateDashboardPeriod }) {
+    // Initial date range for current year
+    const currentYear = new Date().getFullYear();
+    const defaultDateValue = {
+        startDate: `${currentYear}-01-01`,
+        endDate: `${currentYear}-12-31`
+    };
+    const [dateValue, setDateValue] = useState(defaultDateValue);
 
+    // Handle date range change from datepicker
+    const handleDateChange = (newValue) => {
+        // Check if newValue is null and reset to default
+        if (!newValue.startDate || !newValue.endDate) {
+            setDateValue(defaultDateValue);
+            updateDashboardPeriod({
+                start: `${defaultDateValue.startDate}T00:00:00`,
+                end: `${defaultDateValue.endDate}T23:59:59`
+            });
+        } else {
+            setDateValue(newValue);
+            updateDashboardPeriod({
+                start: `${newValue.startDate}T00:00:00`,
+                end: `${newValue.endDate}T23:59:59`
+            });
+        }
+    };
 
-const periodOptions = [
-    {name : "Today", value : "TODAY"},
-    {name : "Yesterday", value : "YESTERDAY"},
-    {name : "This Week", value : "THIS_WEEK"},
-    {name : "Last Week", value : "LAST_WEEK"},
-    {name : "This Month", value : "THIS_MONTH"},
-    {name : "Last Month", value : "LAST_MONTH"},
-]
+    return (
+        <div className="bg-white rounded-lg shadow mb-6 p-4">
+            <div className="flex flex-col md:flex-row items-center justify-between">
+                <h2 className="text-xl font-semibold mb-4 md:mb-0">Dashboard Analytics</h2>
 
-function DashboardTopBar({updateDashboardPeriod}){
-
-        const [dateValue, setDateValue] = useState({ 
-            startDate: new Date(), 
-            endDate: new Date() 
-        }); 
-        
-        const handleDatePickerValueChange = (newValue) => {
-            console.log("newValue:", newValue); 
-            setDateValue(newValue); 
-            updateDashboardPeriod(newValue)
-        } 
-
-
-    return(
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="">
-            <Datepicker 
-                containerClassName="w-72 " 
-                value={dateValue} 
-                theme={"light"}
-                inputClassName="input input-bordered w-72" 
-                popoverDirection={"down"}
-                toggleClassName="invisible"
-                onChange={handleDatePickerValueChange} 
-                showShortcuts={true} 
-                primaryColor={"white"} 
-            /> 
-            {/* <SelectBox 
-                options={periodOptions}
-                labelTitle="Period"
-                placeholder="Select date range"
-                containerStyle="w-72"
-                labelStyle="hidden"
-                defaultValue="TODAY"
-                updateFormValue={updateSelectBoxValue}
-            /> */}
-            </div>
-            <div className="text-right ">
-                <button className="btn btn-ghost btn-sm normal-case"><ArrowPathIcon className="w-4 mr-2"/>Refresh Data</button>
-                <button className="btn btn-ghost btn-sm normal-case  ml-2"><ShareIcon className="w-4 mr-2"/>Share</button>
-
-                <div className="dropdown dropdown-bottom dropdown-end  ml-2">
-                    <label tabIndex={0} className="btn btn-ghost btn-sm normal-case btn-square "><EllipsisVerticalIcon className="w-5"/></label>
-                    <ul tabIndex={0} className="dropdown-content menu menu-compact  p-2 shadow bg-base-100 rounded-box w-52">
-                        <li><a><EnvelopeIcon className="w-4"/>Email Digests</a></li>
-                        <li><a><ArrowDownTrayIcon className="w-4"/>Download</a></li>
-                    </ul>
+                <div className="w-full md:w-72">
+                    <Datepicker
+                        value={dateValue}
+                        onChange={handleDateChange}
+                        showShortcuts={true}
+                        primaryColor="blue"
+                        inputClassName="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                    />
                 </div>
             </div>
         </div>
-    )
+    );
 }
 
-export default DashboardTopBar
+export default DashboardTopBar;

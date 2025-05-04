@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Fetch all projects
+// Fetch all projects ADMIN
 export const getProjects = createAsyncThunk(
   'project/getProjects',
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
@@ -230,6 +230,26 @@ export const getProjectStatistics = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project statistics.');
+    }
+  }
+);
+
+// Fetch all projects MANAGER
+export const getProjectsManager = createAsyncThunk(
+  'project/getProjects',
+  async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
+    try {
+      const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
+      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/manager/get-all', {
+        params: { query, page, size, sort: sortOrderSymbol }
+      });
+
+      return {
+        projects: response.data.data.data,
+        totalPages: response.data.data.totalPages || 1,
+      };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch projects.');
     }
   }
 );
