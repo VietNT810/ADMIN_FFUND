@@ -39,6 +39,7 @@
     "react-table": "^7.8.0",
     "react-tailwindcss-datepicker": "^1.6.0",
     "react-toastify": "^11.0.3",
+    "react-tooltip": "^5.28.1",
     "selenium-webdriver": "^4.31.0",
     "sockjs-client": "^1.6.1",
     "theme-change": "^2.2.0",

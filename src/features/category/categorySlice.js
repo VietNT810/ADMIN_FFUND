@@ -82,6 +82,25 @@ export const updateCategory = createAsyncThunk(
     }
 );
 
+// POST New SubCategory
+export const createSubCategory = createAsyncThunk(
+    'category/createSubCategory',
+    async (newSubCategory, { rejectWithValue }) => {
+        try {
+            const formattedSubCategory = {
+                subCategoryName: newSubCategory.subCategoryName,
+                subCategoryDescription: newSubCategory.subCategoryDescription || ''
+            };
+
+            const response = await axios.post(`https://quanbeo.duckdns.org/api/v1/category/sub/${newSubCategory.categoryId}`, formattedSubCategory);
+
+            return response.data.message;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.error || 'Failed to create Subcategory.');
+        }
+    }
+);
+
 // PUT Update SubCategory
 export const updateSubCategory = createAsyncThunk(
     'category/updateSubCategory',
@@ -136,6 +155,7 @@ const categorySlice = createSlice({
                     categoryName: category.name,
                     categoryDescription: category.description,
                     subCategories: category.subCategories.map(sub => ({
+                        id: sub.id,
                         subCategoryName: sub.name,
                         subCategoryDescription: sub.description
                     })),
@@ -221,6 +241,23 @@ const categorySlice = createSlice({
                 }
             })
             .addCase(updateSubCategory.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
+            })
+            // Create Subcategory
+            .addCase(createSubCategory.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(createSubCategory.fulfilled, (state, action) => {
+                const categoryIndex = state.categories.findIndex(category => category.id === action.payload.categoryId);
+                if (categoryIndex >= 0) {
+                    state.categories[categoryIndex].subCategories.push({
+                        subCategoryName: action.payload.subCategoryName,
+                        subCategoryDescription: action.payload.subCategoryDescription,
+                    });
+                }
+            })
+            .addCase(createSubCategory.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = action.payload;
             });
