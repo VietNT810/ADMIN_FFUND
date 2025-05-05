@@ -33,6 +33,7 @@ const Criteria = lazy(() => import('../pages/protected/criteriaPage/Criteria'))
 const CriteriaDetail = lazy(() => import('../pages/protected/criteriaPage/CriteriaDetail'))
 const CriteriaType = lazy(() => import('../pages/protected/criteriaPage/CriteriaType'))
 const ProjectScoring = lazy(() => import('../pages/protected/projectPage/ProjectScroring'))
+const GlobalSettingsManager = lazy(() => import('../pages/protected/globalSetting/globalSetting'))
 
 const routes = [
   {
@@ -166,7 +167,11 @@ const routes = [
   {
     path: '/project-scoring/:projectId',
     component: ProjectScoring,
-  }
+  },
+  {
+    path: '/global-settings',
+    component: GlobalSettingsManager,
+  },
 ]
 
 export default routes

@@ -77,6 +77,25 @@ export const getProjectEvaluationsAfter = createAsyncThunk(
     }
 );
 
+export const getProjectEvaluationsLastest = createAsyncThunk(
+    'evaluation/getProjectEvaluationsAfter',
+    async (projectId, { rejectWithValue }) => {
+        try {
+            console.log('Fetching evaluations for project:', projectId);
+            const response = await axios.get(`${BASE_URL}/evaluation/latest-graded/${projectId}`);
+            console.log('API Response:', response.data);
+
+            // Return the data directly without additional processing
+            const evaluationsData = response.data.data;
+            console.log('Raw evaluations data being returned to reducer:', evaluationsData);
+            return evaluationsData;
+        } catch (error) {
+            console.error('API Error:', error);
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch evaluations');
+        }
+    }
+);
+
 
 const initialState = {
     evaluations: [],
@@ -217,7 +236,7 @@ const evaluationProjectSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload || 'Failed to fetch founder evaluations';
                 console.log('Redux - getProjectEvaluationsAfter.rejected:', action.payload);
-            });
+            })
     },
 });
 
