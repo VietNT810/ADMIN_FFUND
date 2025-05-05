@@ -22,6 +22,7 @@ import ClipboardDocumentListIcon from '@heroicons/react/24/outline/ClipboardDocu
 import ClipboardIcon from '@heroicons/react/24/outline/ClipboardIcon';
 import Bars3BottomLeftIcon from '@heroicons/react/24/outline/Bars3BottomLeftIcon';
 import { MilestoneIcon } from 'lucide-react'
+import AdjustmentsHorizontalIcon from '@heroicons/react/24/outline/AdjustmentsHorizontalIcon'
 
 
 const iconClasses = `h-6 w-6`
@@ -98,6 +99,11 @@ const routes = [
     name: 'Phase Rules',
   },
   {
+    path: '/app/global-settings',
+    icon: <AdjustmentsHorizontalIcon className={iconClasses} />,
+    name: 'Global Settings',
+  },
+  {
     path: '', 
     icon: <ExclamationTriangleIcon className={`${iconClasses} inline`}/>, 
     name: 'Requests & Reports', 
@@ -114,50 +120,6 @@ const routes = [
       }
     ]
   },
-  // {
-  //   path: '', 
-  //   icon: <Cog6ToothIcon className={`${iconClasses} inline` }/>, 
-  //   name: 'Settings', 
-  //   submenu : [
-  //     {
-  //       path: '/app/settings-profile', 
-  //       icon: <UserIcon className={submenuIconClasses}/>, 
-  //       name: 'Profile', 
-  //     },
-  //     {
-  //       path: '/app/settings-billing',
-  //       icon: <WalletIcon className={submenuIconClasses}/>,
-  //       name: 'Billing',
-  //     },
-  //     {
-  //       path: '/app/settings-team',
-  //       icon: <UsersIcon className={submenuIconClasses}/>,
-  //       name: 'Team Members',
-  //     },
-  //   ]
-  // },
-  // {
-  //   path: '', 
-  //   icon: <DocumentTextIcon className={`${iconClasses} inline`}/>, 
-  //   name: 'Documentation', 
-  //   submenu : [
-  //     {
-  //       path: '/app/getting-started', 
-  //       icon: <DocumentTextIcon className={submenuIconClasses}/>, 
-  //       name: 'Getting Started',
-  //     },
-  //     {
-  //       path: '/app/features',
-  //       icon: <TableCellsIcon className={submenuIconClasses}/>, 
-  //       name: 'Features',
-  //     },
-  //     {
-  //       path: '/app/components',
-  //       icon: <CodeBracketSquareIcon className={submenuIconClasses}/>, 
-  //       name: 'Components',
-  //     }
-  //   ]
-  // },
 ]
 
 export default routes

@@ -209,7 +209,7 @@ const ApprovedProjectPanel = ({
 
                         {/* Component summary list with click to view details */}
                         <div className="mt-2 flex-grow overflow-hidden">
-                            <h3 className="font-semibold mb-2">Component Scores</h3>
+                            <h3 className="font-semibold mb-2">Lastest Grade</h3>
                             <div className="space-y-3 overflow-y-auto h-[calc(100%-2rem)]">
                                 {displayEvaluations.map(evaluation => {
                                     const componentStats = calculateComponentContribution(evaluation);

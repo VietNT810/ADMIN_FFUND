@@ -22,7 +22,8 @@ import {
     updateEvaluationGrade,
     clearError,
     clearSuccessMessage,
-    getProjectEvaluationsAfter
+    getProjectEvaluationsAfter,
+    getProjectEvaluationsLastest
 } from './components/evalutionProjectSlice';
 
 import { approveProject, rejectProject } from '../projectmanager/components/projectSlice';
@@ -138,7 +139,7 @@ const ProjectScoring = () => {
             const useAfterEvaluationStatuses = ['APPROVED', 'FUNDRAISING_COMPLETED', 'SUSPENDED', 'BAN', 'UNDER_REVIEW', 'REJECTED', 'RESUBMIT'];
 
             if (currentProject && currentProject.status && useAfterEvaluationStatuses.includes(currentProject.status)) {
-                actionResult = await dispatch(getProjectEvaluationsAfter(parseInt(projectId)));
+                actionResult = await dispatch(getProjectEvaluationsLastest(parseInt(projectId)));
             } else {
                 actionResult = await dispatch(getProjectEvaluations(parseInt(projectId)));
             }
