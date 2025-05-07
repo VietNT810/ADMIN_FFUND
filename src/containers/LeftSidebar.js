@@ -16,7 +16,7 @@ function LeftSidebar() {
 
     const filteredRoutes = routes.map(route => {
         if (role === 'MANAGER') {
-            if (['User', 'Criteria', 'Phase Rules', 'Transactions', 'Global Settings', 'Dashboard'].includes(route.name)) {
+            if (['Users', 'Criteria', 'Phase Rules', 'Transactions', 'Global Settings', 'Dashboard'].includes(route.name)) {
                 return null;
             }
             

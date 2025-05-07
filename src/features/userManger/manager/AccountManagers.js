@@ -144,7 +144,6 @@ const AccountManagers = () => {
 
     if (status === 'loading') return <Loading />;
     
-    if (status === 'failed') return <div className="alert alert-error">{error}</div>;
 
     return (
         <div className="min-h-screen bg-base-200 text-base-content py-6 px-4">
