@@ -91,7 +91,7 @@ const UserManager = () => {
             className="input input-bordered w-64"
           />
           <select value={sortField} onChange={(e) => setSortField(e.target.value)} className="select select-bordered">
-            <option value="id">ID</option>
+            <option value="id">No</option>
             <option value="fullName">Full Name</option>
           </select>
           <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="select select-bordered">

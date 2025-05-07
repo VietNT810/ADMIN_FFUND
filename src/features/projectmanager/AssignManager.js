@@ -41,7 +41,7 @@ const ProjectRequests = () => {
         await dispatch(getUsersContent({ query: 'roles:eq:MANAGER', size: 100 })).unwrap();
 
         await dispatch(getProjects({
-          query: 'status:eq:PENDING_APPROVAL',
+          query: 'status:eq:DRAFT',
           sortField: 'createdAt',
           sortOrder: 'asc'
         })).unwrap();
@@ -100,7 +100,7 @@ const ProjectRequests = () => {
         } else {
           setShowConfirmation(false);
           toast.success(result.payload);
-          dispatch(getProjects({ query: 'status:eq:PENDING_APPROVAL', sortField: 'createdAt', sortOrder: 'asc' }));
+          dispatch(getProjects({ query: 'status:eq:DRAFT', sortField: 'createdAt', sortOrder: 'asc' }));
         }
       })
       .catch(() => {
@@ -115,7 +115,7 @@ const ProjectRequests = () => {
         .then(() => {
           setShowConfirmation(false);
           toast.success('Project rejected successfully!');
-          dispatch(getProjects({ query: 'status:eq:PENDING_APPROVAL', sortField: 'createdAt', sortOrder: 'asc' }));
+          dispatch(getProjects({ query: 'status:eq:DRAFT', sortField: 'createdAt', sortOrder: 'asc' }));
         })
         .catch(() => {
           toast.error('Failed to reject project.');
@@ -134,7 +134,7 @@ const ProjectRequests = () => {
           } else {
             toast.success(result.payload);
             setShowConfirmation(false);
-            dispatch(getProjects({ query: 'status:eq:PENDING_APPROVAL', sortField: 'createdAt', sortOrder: 'asc' }));
+            dispatch(getProjects({ query: 'status:eq:DRAFT', sortField: 'createdAt', sortOrder: 'asc' }));
           }
         })
         .catch(() => {
@@ -161,7 +161,7 @@ const ProjectRequests = () => {
   };
 
   const filteredProjects = projects.filter(project =>
-    project.status === 'PENDING_APPROVAL' &&
+    project.status === 'DRAFT' &&
     (project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (project.team?.teamName || '').toLowerCase().includes(searchTerm.toLowerCase()))
   );
