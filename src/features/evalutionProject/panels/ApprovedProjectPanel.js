@@ -92,7 +92,7 @@ const ApprovedProjectPanel = ({
             {/* Show detail view when evaluation is selected, otherwise show summary */}
             {selectedEvaluation ? (
                 <>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-4 sticky top-0 z-10 bg-base-100 py-2">
                         <h3 className="text-xl font-bold">
                             {displayEvaluations.find(e => e.id === selectedEvaluation)?.componentName ||
                                 displayEvaluations.find(e => e.id === selectedEvaluation)?.typeName ||
@@ -171,12 +171,12 @@ const ApprovedProjectPanel = ({
             ) : (
                 <>
                     {/* Summary View */}
-                    <div className="flex justify-between items-center mb-3">
+                    <div className="flex justify-between items-center mb-3 flex-shrink-0">
                         <h2 className="text-xl font-semibold">Evaluation Summary</h2>
                     </div>
 
-                    <div className="flex flex-col flex-grow">
-                        <div className="bg-white rounded-lg p-4 mb-4 shadow-sm">
+                    <div className="flex flex-col flex-grow overflow-hidden">
+                        <div className="bg-white rounded-lg p-4 mb-4 shadow-sm flex-shrink-0">
                             <div className="flex justify-between items-center mb-3">
                                 <h3 className="font-semibold">Final Score</h3>
                                 <span className="text-xl font-bold">
@@ -208,9 +208,9 @@ const ApprovedProjectPanel = ({
                         </div>
 
                         {/* Component summary list with click to view details */}
-                        <div className="mt-2 flex-grow overflow-hidden">
-                            <h3 className="font-semibold mb-2">Lastest Grade</h3>
-                            <div className="space-y-3 overflow-y-auto h-[calc(100%-2rem)]">
+                        <div className="mt-2 flex-grow overflow-hidden flex flex-col">
+                            <h3 className="font-semibold mb-2 flex-shrink-0">Latest Grade</h3>
+                            <div className="overflow-y-auto flex-grow">
                                 {displayEvaluations.map(evaluation => {
                                     const componentStats = calculateComponentContribution(evaluation);
 
@@ -238,7 +238,7 @@ const ApprovedProjectPanel = ({
                                             <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1">
                                                 <div
                                                     className={`h-1.5 rounded-full ${componentStats.percentage >= 70 ? 'bg-emerald-500' :
-                                                            componentStats.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                                                        componentStats.percentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
                                                         }`}
                                                     style={{ width: `${componentStats.percentage}%` }}
                                                 ></div>
