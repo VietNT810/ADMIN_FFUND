@@ -302,14 +302,14 @@ const ProjectList = () => {
                 className="select select-bordered w-full"
               >
                 <option value="">All Projects</option>
-                {userRole === 'MANAGER' && (
-                  <option value="PENDING_APPROVAL">Pending Approval</option>
-                )}
+                <option value="PENDING_APPROVAL">Pending Approval</option>                  
                 <option value="APPROVED">Approved</option>
                 <option value="RESUBMIT">Resubmit</option>
                 <option value="SUSPENDED">Suspended</option>
                 <option value="REJECTED">Rejected</option>
                 <option value="FUNDRAISING_COMPLETED">Fundraising Completed</option>
+                <option value="DRAFT">Draft</option>
+                <option value="UNDER_REVIEW">Under Review</option>
               </select>
             </div>
 
@@ -392,7 +392,7 @@ const ProjectList = () => {
                 <table className="table w-full bg-base-100 shadow-md rounded-lg border">
                   <thead className="bg-base-200 text-sm font-semibold text-base-content border-b">
                     <tr>
-                      <th className="px-4 py-3">#</th>
+                      <th className="px-4 py-3">ID</th>
                       <th className="px-4 py-3">Title</th>
                       <th className="px-4 py-3">Team</th>
                       <th className="px-4 py-3">Status</th>
@@ -410,7 +410,7 @@ const ProjectList = () => {
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.05 }}
                       >
-                        <td className="px-4 py-2 text-sm">{index + 1}</td>
+                        <td className="px-4 py-2 text-sm">{project.id}</td>
                         <td className="px-4 py-2 text-sm font-medium">{project.title}</td>
                         <td className="px-4 py-2 text-sm">{project.teamName || "No Team"}</td>
                         <td className="px-4 py-2">

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { motion } from 'framer-motion';
 
 // Project detail components
 import ProjectDetailsDocumentEvaluation from './EvaluationProjectDocument';
@@ -23,12 +24,16 @@ import {
     clearError,
     clearSuccessMessage,
     getProjectEvaluationsAfter,
-    getProjectEvaluationsLastest
+    getProjectEvaluationsLastest,
+    approveUnderReviewProject
+
 } from './components/evalutionProjectSlice';
 
 import { approveProject, rejectProject } from '../projectmanager/components/projectSlice';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import FinalReviewModal from './FinalReviewModal';
+import { toast } from 'react-toastify';
+import { CheckCircleIcon } from 'lucide-react';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -61,9 +66,12 @@ const ProjectScoring = () => {
     const [showFinalReview, setShowFinalReview] = useState(false);
     const [approvalMessage, setApprovalMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    const [isApproving, setIsApproving] = useState(false);
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [phaseDocuments, setPhaseDocuments] = useState({});
+    const [expandedPhase, setExpandedPhase] = useState(null);
     const { currentProject } = useSelector(state => state.project || { currentProject: null });
-
+    const userRole = localStorage.getItem('role');
     const displayEvaluations = evaluations.length > 0 ? evaluations : manuallyPopulatedEvaluations;
 
     const areAllEvaluationsScored = useCallback(() => {
@@ -86,6 +94,30 @@ const ProjectScoring = () => {
 
         return true;
     }, [displayEvaluations, evaluationItems]);
+
+    const hasRequiredDocuments = useCallback((phaseId) => {
+        if (!phaseDocuments[phaseId] || !Array.isArray(phaseDocuments[phaseId])) return false;
+
+        const hasProgressReport = phaseDocuments[phaseId].some(doc => doc.type === 'PROGRESS_REPORT');
+        const hasFundUsageReport = phaseDocuments[phaseId].some(doc => doc.type === 'FUND_USAGE_REPORT');
+
+        return hasProgressReport && hasFundUsageReport;
+    }, [phaseDocuments]);
+
+    const handleApproveProject = useCallback(() => {
+        setShowApprovalModal(true);
+    }, []);
+
+    const updatePhaseDocuments = useCallback((phaseId, documents) => {
+        setPhaseDocuments(prev => ({
+            ...prev,
+            [phaseId]: documents
+        }));
+    }, []);
+
+    const setCurrentExpandedPhase = useCallback((phaseId) => {
+        setExpandedPhase(phaseId);
+    }, []);
 
     const calculateTotalScore = useCallback(() => {
         let totalActual = 0;
@@ -270,6 +302,25 @@ const ProjectScoring = () => {
         };
     }, []);
 
+    const confirmApproval = useCallback(async () => {
+        if (!currentProject || !currentProject.id) return;
+
+        try {
+            setIsApproving(true);
+            await dispatch(approveUnderReviewProject({ projectId: currentProject.id })).unwrap();
+            toast.success('Project has been approved successfully!');
+            setShowApprovalModal(false);
+
+            // Reload project data after approval
+            fetchData();
+        } catch (error) {
+            console.error('Error approving project:', error);
+            toast.error(error.message || 'Failed to approve project');
+        } finally {
+            setIsApproving(false);
+        }
+    }, [currentProject, dispatch, fetchData]);
+
     useEffect(() => {
         fetchData();
 
@@ -419,7 +470,12 @@ const ProjectScoring = () => {
             case 'basic': return <ProjectDetailsEvaluation projectId={projectId} evaluationMode={true} />;
             case 'story': return <ProjectDetailsStoryEvaluation projectId={projectId} evaluationMode={true} />;
             case 'documents': return <ProjectDetailsDocumentEvaluation projectId={projectId} evaluationMode={true} />;
-            case 'phases': return <EvaluationProjectDetailsPhase projectId={projectId} evaluationMode={true} />;
+            case 'phases': return <EvaluationProjectDetailsPhase
+                projectId={projectId}
+                evaluationMode={true}
+                updatePhaseDocuments={updatePhaseDocuments}
+                setCurrentExpandedPhase={setCurrentExpandedPhase}
+            />;
             case 'updates':
                 return shouldShowUpdatesTab() ?
                     <ProjectDetailsUpdate projectId={projectId} evaluationMode={true} /> :
@@ -576,11 +632,24 @@ const ProjectScoring = () => {
                             </h1>
                             <p className="text-base-content/70">Project ID: {projectId}</p>
                         </div>
-                        {currentProject && currentProject.title && (
-                            <div className="text-right">
+                        <div className="text-right flex items-center gap-3">
+                            {currentProject && currentProject.title && (
                                 <h2 className="text-xl font-semibold text-orange-600">{currentProject.title}</h2>
-                            </div>
-                        )}
+                            )}
+                            {userRole === 'MANAGER' &&
+                                currentProject &&
+                                currentProject.status === 'UNDER_REVIEW' &&
+                                expandedPhase &&
+                                hasRequiredDocuments(expandedPhase) && (
+                                    <button
+                                        onClick={handleApproveProject}
+                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
+                                    >
+                                        <CheckCircleIcon className="w-4 h-4 mr-1" />
+                                        Approve Project
+                                    </button>
+                                )}
+                        </div>
                     </div>
                 </div>
 
@@ -672,6 +741,54 @@ const ProjectScoring = () => {
                 handleProjectDecision={handleProjectDecision}
                 isSubmitting={isSubmitting}
             />
+
+            {/* Approval Confirmation Modal */}
+            {showApprovalModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+                    <motion.div
+                        className="bg-white rounded-lg w-full max-w-md shadow-2xl p-6"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <CheckCircleIcon className="w-6 h-6 text-green-500 mr-2" />
+                            Approve Project
+                        </h3>
+
+                        <p className="text-gray-600 mb-4">
+                            Are you sure you want to approve this project? The project will move from
+                            "Under Review" to "Approved" status.
+                        </p>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowApprovalModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmApproval}
+                                disabled={isApproving}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors flex items-center"
+                            >
+                                {isApproving ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    "Confirm Approval"
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
