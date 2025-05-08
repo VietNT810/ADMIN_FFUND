@@ -1,8 +1,15 @@
 var webdriver = require('selenium-webdriver');
 var By = webdriver.By;
 var until = webdriver.until;
+const { viewUser } = require('./scripts/viewUser');
+const { viewTeam } = require('./scripts/viewTeam');
+const { viewDashboard } = require('./scripts/viewDashboard');
+const { viewProject } = require('./scripts/viewProject');
+const { viewCategory } = require('./scripts/viewCategory');
+const { viewCriteria } = require('./scripts/viewCriteria');
+const { viewTPG } = require('./scripts/viewTPG');
 
-(async function testLogin() {
+(async function mainTest() {
   let browser = new webdriver.Builder()
     .withCapabilities(webdriver.Capabilities.chrome())
     .build();
@@ -45,7 +52,7 @@ var until = webdriver.until;
         return;
     }
 
-    if (currentUrl !== 'https://deploy-f-fund-b4n2.vercel.app/') {
+    if (currentUrl !== 'https://admin-ffund.vercel.app/app/welcome') {
         console.log('Login failed: Unexpected URL:', currentUrl);
         return;
     }
@@ -56,15 +63,6 @@ var until = webdriver.until;
     await browser.wait(until.urlContains('/app/welcome'), 10000);
     console.log('Logged in successfully as Admin!');
 
-    //button[class='mt-4 btn btn-primary hover:scale-105 transition duration-300']
-    // Kiểm tra xem Profile icon
-    let profileIcon = await browser.wait(until.elementLocated(By.css("img[alt='profile']")), 10000); 
-    if (profileIcon) {
-      console.log('Profile icon is displayed. Login success!');
-    } else {
-      console.log('Profile icon is not displayed. Login failed!');
-    }
-
     // Kiểm tra nút button Get Start
     let actionButton = await browser.wait(until.elementLocated(By.css("button[class='mt-4 btn btn-primary hover:scale-105 transition duration-300']")), 10000);
     if (await actionButton.isDisplayed()) {
@@ -72,7 +70,28 @@ var until = webdriver.until;
     } else {
       console.log('Action button is not displayed. Login failed!');
     }
- 
+
+    // viewDashboard
+    await viewDashboard(browser);
+    
+    // viewUser
+    await viewUser(browser);
+
+    // viewTeam
+    await viewTeam(browser);
+    
+    // viewProject
+    await viewProject(browser);
+
+    // viewCategory
+    await viewCategory(browser);
+    
+    // viewCriteria
+    await viewCriteria(browser);
+
+    // viewTPG
+    await viewTPG(browser);
+    
   } catch (error) {
     console.error('Error during login:', error);
   } finally {

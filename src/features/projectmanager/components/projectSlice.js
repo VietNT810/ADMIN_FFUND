@@ -254,6 +254,18 @@ export const getProjectsManager = createAsyncThunk(
   }
 );
 
+export const getPhaseDocumentByPhaseId = createAsyncThunk(
+  'phase-document/getPhaseDocumentByPhaseId',
+  async (phaseId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/phase-document/submitted/${phaseId}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch phase documents.');
+    }
+  }
+);
+
 const projectSlice = createSlice({
   name: 'project',
   initialState: {

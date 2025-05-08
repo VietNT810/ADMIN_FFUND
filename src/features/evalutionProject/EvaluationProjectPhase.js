@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { getPhaseByProjectId, getMilestoneByPhaseId } from '../../features/projectmanager/components/projectSlice';
+import { getPhaseByProjectId, getMilestoneByPhaseId, getPhaseDocumentByPhaseId } from '../../features/projectmanager/components/projectSlice';
 import Loading from '../../components/Loading';
 import { motion } from 'framer-motion';
+import { DocumentTextIcon, InformationCircleIcon } from '@heroicons/react/24/outline';
+import { DownloadIcon } from 'lucide-react';
 
 const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false }) => {
     const { projectId } = useParams();
@@ -15,8 +17,12 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
     const [showModal, setShowModal] = useState(false);
     const [selectedMilestone, setSelectedMilestone] = useState(null);
     const [expandedPhase, setExpandedPhase] = useState(null);
-    const [viewMode, setViewMode] = useState('compact'); // 'compact' or 'detailed'
+    const [viewMode, setViewMode] = useState('compact'); 
     const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+    const [phaseDocuments, setPhaseDocuments] = useState({});
+    const [documentLoading, setDocumentLoading] = useState({});
+    const [showDocumentModal, setShowDocumentModal] = useState(false);
+    const [selectedDocument, setSelectedDocument] = useState(null);
 
     useEffect(() => {
         if (projectId) {
@@ -42,6 +48,28 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
         }
     }, [dispatch, phases, expandedPhase, initialLoadComplete]);
 
+    // Load phase documents when a phase is expanded
+    useEffect(() => {
+        if (expandedPhase && !phaseDocuments[expandedPhase]) {
+            setDocumentLoading(prev => ({ ...prev, [expandedPhase]: true }));
+            
+            dispatch(getPhaseDocumentByPhaseId(expandedPhase))
+                .unwrap()
+                .then(data => {
+                    setPhaseDocuments(prev => ({ 
+                        ...prev, 
+                        [expandedPhase]: Array.isArray(data) ? data : [data] 
+                    }));
+                })
+                .catch(error => {
+                    console.error('Failed to load phase documents:', error);
+                })
+                .finally(() => {
+                    setDocumentLoading(prev => ({ ...prev, [expandedPhase]: false }));
+                });
+        }
+    }, [expandedPhase, phaseDocuments, dispatch]);
+
     const handleMilestoneClick = (milestone) => {
         setSelectedMilestone(milestone);
         setShowModal(true);
@@ -54,6 +82,41 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
 
     const togglePhaseExpansion = (phaseId) => {
         setExpandedPhase(expandedPhase === phaseId ? null : phaseId);
+    };
+
+    const handleDocumentClick = (document) => {
+        setSelectedDocument(document);
+        setShowDocumentModal(true);
+    };
+
+    const closeDocumentModal = () => {
+        setShowDocumentModal(false);
+        setSelectedDocument(null);
+    };
+
+    const getDocumentTypeLabel = (type) => {
+        switch(type) {
+            case 'PROGRESS_REPORT': return 'Progress Report';
+            case 'FINANCIAL_REPORT': return 'Financial Report';
+            case 'TECHNICAL_REPORT': return 'Technical Report';
+            case 'OTHER': return 'Other Document';
+            default: return type;
+        }
+    };
+
+    const getDocumentFileName = (url) => {
+        if (!url) return 'Document';
+        const parts = url.split('/');
+        return parts[parts.length - 1] || 'Document';
+    };
+
+    const downloadDocument = (url, fileName) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName || getDocumentFileName(url);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     if (status === 'loading') return <Loading />;
@@ -91,6 +154,8 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
                     const progressDisplay = `${Math.round(phaseProgress)}%`;
                     const phaseMilestones = milestones[phase.id] || [];
                     const isExpanded = expandedPhase === phase.id;
+                    const phaseHasDocuments = phaseDocuments[phase.id]?.length > 0;
+                    const isDocumentLoading = documentLoading[phase.id];
 
                     return (
                         <motion.div
@@ -187,6 +252,70 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
                                             <span className="text-xs text-gray-500 block">Investors</span>
                                             <span className="font-medium">{phase.totalInvestors}</span>
                                         </div>
+                                    </div>
+
+                                    {/* Phase Documents Section */}
+                                    <div className="mb-6">
+                                        <h4 className="font-medium text-lg mb-3 flex items-center">
+                                            <DocumentTextIcon className="w-5 h-5 mr-2 text-blue-500" />
+                                            Phase Documents
+                                        </h4>
+
+                                        {isDocumentLoading ? (
+                                            <div className="flex items-center justify-center p-4 border rounded-lg bg-gray-50">
+                                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mr-2"></div>
+                                                <span className="text-gray-600">Loading documents...</span>
+                                            </div>
+                                        ) : phaseHasDocuments ? (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {phaseDocuments[phase.id].map((document, idx) => (
+                                                    <motion.div
+                                                        key={document.id || idx}
+                                                        className="border rounded-lg p-4 hover:shadow-md hover:border-blue-300 transition-all flex flex-col"
+                                                        whileHover={{ y: -2 }}
+                                                    >
+                                                        <div className="flex items-start mb-2">
+                                                            <DocumentTextIcon className="w-6 h-6 text-blue-500 flex-shrink-0 mr-2" />
+                                                            <div>
+                                                                <h5 className="font-medium text-gray-800">
+                                                                    {getDocumentTypeLabel(document.type)}
+                                                                </h5>
+                                                                <p className="text-xs text-gray-500">
+                                                                    Phase {document.phaseNumber}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {document.documentDescription && (
+                                                            <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                                                {document.documentDescription}
+                                                            </p>
+                                                        )}
+                                                        
+                                                        <div className="mt-auto flex justify-between items-center pt-2">
+                                                            <button
+                                                                onClick={() => handleDocumentClick(document)}
+                                                                className="text-blue-600 hover:text-blue-800 text-sm flex items-center"
+                                                            >
+                                                                <InformationCircleIcon className="w-4 h-4 mr-1" />
+                                                                View
+                                                            </button>
+                                                            <button
+                                                                onClick={() => downloadDocument(document.documentUrl, getDocumentFileName(document.documentUrl))}
+                                                                className="text-teal-600 hover:text-teal-800 text-sm flex items-center"
+                                                            >
+                                                                <DownloadIcon className="w-4 h-4 mr-1" />
+                                                                Download
+                                                            </button>
+                                                        </div>
+                                                    </motion.div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <p className="text-sm text-gray-500 italic p-3 bg-gray-50 rounded-lg">
+                                                No documents available for this phase.
+                                            </p>
+                                        )}
                                     </div>
 
                                     {/* Milestones Section */}
@@ -403,6 +532,114 @@ const EvaluationProjectDetailsPhase = ({ getClassName, evaluationMode = false })
                                 className="px-4 py-2 bg-teal-500 hover:bg-teal-600 rounded-md text-white font-medium transition-colors w-full sm:w-auto"
                             >
                                 Close
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Document Details Modal */}
+            {showDocumentModal && selectedDocument && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+                    <motion.div
+                        className="bg-white rounded-lg w-full max-w-2xl shadow-2xl relative max-h-[90vh] overflow-hidden flex flex-col"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {/* Modal Header */}
+                        <div className="p-5 border-b sticky top-0 bg-white z-10 flex justify-between items-center">
+                            <h3 className="text-xl font-bold text-gray-800">Document Details</h3>
+                            <button
+                                onClick={closeDocumentModal}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-5 overflow-y-auto flex-grow">
+                            <div className="mb-6">
+                                <h2 className="text-xl font-bold text-gray-900 mb-2">{getDocumentTypeLabel(selectedDocument.type)}</h2>
+                                
+                                <div className="flex flex-wrap gap-3 mb-4">
+                                    <div className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                        Phase {selectedDocument.phaseNumber}
+                                    </div>
+                                    <div className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                        {selectedDocument.submitted ? 'Submitted' : 'Not Submitted'}
+                                    </div>
+                                </div>
+                                
+                                {selectedDocument.documentDescription && (
+                                    <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                                        <h4 className="text-md font-medium text-gray-700 mb-2">Description</h4>
+                                        <p className="text-gray-600">{selectedDocument.documentDescription}</p>
+                                    </div>
+                                )}
+
+                                <div className="mt-6">
+                                    <h4 className="text-md font-medium text-gray-700 mb-3">File Information</h4>
+                                    <div className="p-4 border rounded-lg bg-gray-50">
+                                        <div className="flex items-center mb-3">
+                                            <DocumentTextIcon className="w-8 h-8 text-blue-500 mr-3" />
+                                            <div>
+                                                <p className="font-medium text-gray-800">{getDocumentFileName(selectedDocument.documentUrl)}</p>
+                                                <p className="text-sm text-gray-500">
+                                                    {selectedDocument.documentUrl?.split('.').pop()?.toUpperCase() || 'Document'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Document Preview */}
+                                {selectedDocument.documentUrl && (
+                                    <div className="mt-6">
+                                        <h4 className="text-md font-medium text-gray-700 mb-3">Preview</h4>
+                                        <div className="border rounded-lg overflow-hidden bg-gray-100 h-60 flex items-center justify-center">
+                                            {selectedDocument.documentUrl.match(/\.(pdf)$/i) ? (
+                                                <iframe 
+                                                    src={`${selectedDocument.documentUrl}#toolbar=0`} 
+                                                    className="w-full h-full" 
+                                                    title="PDF Document"
+                                                ></iframe>
+                                            ) : selectedDocument.documentUrl.match(/\.(jpg|jpeg|png|gif)$/i) ? (
+                                                <img 
+                                                    src={selectedDocument.documentUrl} 
+                                                    alt="Document" 
+                                                    className="max-h-full max-w-full object-contain"
+                                                />
+                                            ) : (
+                                                <div className="text-center p-4">
+                                                    <DocumentTextIcon className="w-12 h-12 text-blue-400 mx-auto mb-2" />
+                                                    <p className="text-gray-600">Preview not available</p>
+                                                    <p className="text-sm text-gray-500">Please download to view</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-4 border-t bg-gray-50 sticky bottom-0 flex justify-between">
+                            <button
+                                onClick={closeDocumentModal}
+                                className="px-4 py-2 border border-gray-300 bg-white hover:bg-gray-50 rounded-md text-gray-700 font-medium transition-colors"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={() => downloadDocument(selectedDocument.documentUrl, getDocumentFileName(selectedDocument.documentUrl))}
+                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-md text-white font-medium transition-colors flex items-center"
+                            >
+                                <DownloadIcon className="w-5 h-5 mr-2" />
+                                Download Document
                             </button>
                         </div>
                     </motion.div>

@@ -2,19 +2,13 @@
 // Icons
 import Squares2X2Icon from '@heroicons/react/24/outline/Squares2X2Icon'
 import CurrencyDollarIcon from '@heroicons/react/24/outline/CurrencyDollarIcon'
-import ChartBarIcon from '@heroicons/react/24/outline/ChartBarIcon'
 import BoltIcon from '@heroicons/react/24/outline/BoltIcon'
-import CalendarDaysIcon from '@heroicons/react/24/outline/CalendarDaysIcon'
 import DocumentDuplicateIcon from '@heroicons/react/24/outline/DocumentDuplicateIcon'
-// import Cog6ToothIcon from '@heroicons/react/24/outline/Cog6ToothIcon'
-// import DocumentTextIcon from '@heroicons/react/24/outline/DocumentTextIcon'
-// import CodeBracketSquareIcon from '@heroicons/react/24/outline/CodeBracketSquareIcon'
 import UsersIcon from '@heroicons/react/24/outline/UsersIcon'
-// import WalletIcon from '@heroicons/react/24/outline/WalletIcon'
+import UserGroupIcon from '@heroicons/react/24/outline/UserGroupIcon'
 import ExclamationTriangleIcon from '@heroicons/react/24/outline/ExclamationTriangleIcon'
 import ChartPieIcon from '@heroicons/react/24/outline/ChartPieIcon'
-// import UserIcon from '@heroicons/react/24/outline/UserIcon'
-// import TableCellsIcon from '@heroicons/react/24/outline/TableCellsIcon';
+import UserIcon from '@heroicons/react/24/outline/UserIcon'
 import InboxIcon  from '@heroicons/react/24/outline/InboxIcon';
 import CheckCircleIcon  from '@heroicons/react/24/outline/CheckCircleIcon';
 import FolderIcon  from '@heroicons/react/24/outline/FolderIcon';
@@ -23,7 +17,7 @@ import ClipboardIcon from '@heroicons/react/24/outline/ClipboardIcon';
 import Bars3BottomLeftIcon from '@heroicons/react/24/outline/Bars3BottomLeftIcon';
 import { MilestoneIcon } from 'lucide-react'
 import AdjustmentsHorizontalIcon from '@heroicons/react/24/outline/AdjustmentsHorizontalIcon'
-
+import IdentificationIcon from '@heroicons/react/24/outline/IdentificationIcon'
 
 const iconClasses = `h-6 w-6`
 const submenuIconClasses = `h-5 w-5`
@@ -35,13 +29,25 @@ const routes = [
     name: 'Dashboard',
   },
   {
-    path: '/app/user-management', 
-    icon: <UsersIcon className={iconClasses}/>,
-    name: 'User',
+    path: '', 
+    icon: <UsersIcon className={`${iconClasses} inline`}/>, 
+    name: 'Users',
+    submenu: [
+      {
+        path: '/app/user-management',
+        icon: <UserIcon className={submenuIconClasses}/>,
+        name: 'User',
+      },
+      {
+        path: '/app/account-managers',
+        icon: <IdentificationIcon className={submenuIconClasses}/>, 
+        name: 'Management Account',
+      },
+    ]
   },
   {
     path: '/app/team',
-    icon: <UsersIcon className={submenuIconClasses}/>,
+    icon: <UserGroupIcon className={submenuIconClasses}/>,
     name: 'Team',
   },
   {
