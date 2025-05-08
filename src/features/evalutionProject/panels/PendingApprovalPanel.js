@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
 
 const PendingApprovalPanel = ({
@@ -17,6 +17,25 @@ const PendingApprovalPanel = ({
     dispatch,
     getEvaluationItems
 }) => {
+    // Refs để lưu vị trí cuộn và trạng thái chấm điểm
+    const scrollContainerRef = useRef(null);
+    const lastClickedItemRef = useRef(null);
+    const lastScrollPositionRef = useRef(0);
+    const isRestoringPositionRef = useRef(false);
+
+    // Lưu danh sách item IDs để kiểm tra khi nào danh sách thay đổi
+    const itemIdsRef = useRef([]);
+
+    // Memoize evaluationItems để so sánh thay đổi
+    const currentItemIds = useMemo(() => {
+        return evaluationItems.map(item => item.id);
+    }, [evaluationItems]);
+
+    // Cập nhật khi danh sách ID thay đổi
+    useEffect(() => {
+        itemIdsRef.current = currentItemIds;
+    }, [currentItemIds]);
+
     // Calculate scores for current component
     const currentEvaluationScore = useMemo(() => {
         if (!selectedEvaluation || !evaluationItems.length) {
@@ -74,11 +93,71 @@ const PendingApprovalPanel = ({
         };
     }, [displayEvaluations]);
 
-    const generateScoreButtons = (itemId, maxPoint, currentPoint) => {
-        const scoreOptions = [];
-        const step = maxPoint <= 5 ? 0.5 : 1;
+    // Phục hồi vị trí cuộn sau khi re-render
+    const restoreScrollPosition = useCallback(() => {
+        if (isRestoringPositionRef.current) return;
 
-        for (let i = 0; i <= maxPoint; i += step) {
+        if (scrollContainerRef.current && lastScrollPositionRef.current > 0) {
+            isRestoringPositionRef.current = true;
+
+            // Sử dụng requestAnimationFrame để đảm bảo DOM đã cập nhật
+            requestAnimationFrame(() => {
+                if (scrollContainerRef.current) {
+                    scrollContainerRef.current.scrollTop = lastScrollPositionRef.current;
+
+                    // Đợi thêm chút để đảm bảo scroll đã hoàn tất
+                    setTimeout(() => {
+                        isRestoringPositionRef.current = false;
+                    }, 100);
+                }
+            });
+        }
+    }, []);
+
+    // Kiểm tra khi evaluationItems thay đổi và phục hồi vị trí
+    useEffect(() => {
+        // Nếu đang chấm điểm, cần phục hồi vị trí
+        if (lastClickedItemRef.current) {
+            restoreScrollPosition();
+        }
+    }, [evaluationItems, restoreScrollPosition]);
+
+    // Xử lý khi component mount/unmount hoặc selectedEvaluation thay đổi
+    useEffect(() => {
+        // Khi chọn evaluation mới, reset vị trí cuộn
+        if (selectedEvaluation) {
+            lastClickedItemRef.current = null;
+            lastScrollPositionRef.current = 0;
+        }
+
+        return () => {
+            // Lưu vị trí cuộn khi unmount
+            if (scrollContainerRef.current) {
+                lastScrollPositionRef.current = scrollContainerRef.current.scrollTop;
+            }
+        };
+    }, [selectedEvaluation]);
+
+    // Xử lý cuộn đến item khi item được chọn
+    useEffect(() => {
+        // Nếu có item vừa được chấm, highlight nó
+        if (lastClickedItemRef.current && !isRestoringPositionRef.current) {
+            const element = document.getElementById(`item-${lastClickedItemRef.current}`);
+            if (element) {
+                // Chỉ flash highlight, không scroll
+                element.classList.add('flash-highlight');
+                setTimeout(() => {
+                    element.classList.remove('flash-highlight');
+                }, 1000);
+            }
+        }
+    }, [evaluationItems]);
+
+    const generateScoreButtons = (item) => {
+        const scoreOptions = [];
+        const step = item.maxPoint <= 5 ? 0.5 : 1;
+
+        for (let i = 0; i <= item.maxPoint; i += step) {
             if (i === Math.floor(i)) {
                 scoreOptions.push(i);
             }
@@ -88,11 +167,11 @@ const PendingApprovalPanel = ({
             <div className="flex flex-wrap gap-1 mt-1">
                 {scoreOptions.map(score => (
                     <button
-                        key={`${itemId}-${score}`}
+                        key={`${item.id}-${score}`}
                         type="button"
-                        onClick={() => handleScoreChange(itemId, score)}
+                        onClick={() => handleScoreWithPosition(item.id, score)}
                         className={`px-2 py-0.5 text-xs rounded-md transition-colors border 
-                            ${currentPoint === score
+                            ${item.actualPoint === score
                                 ? 'bg-green-600 text-white border-green-700 font-medium'
                                 : 'bg-white text-gray-700 border-green-200 hover:bg-green-50'}`}
                     >
@@ -103,8 +182,33 @@ const PendingApprovalPanel = ({
         );
     };
 
+    // Hàm xử lý chấm điểm có lưu và khôi phục vị trí
+    const handleScoreWithPosition = (itemId, score) => {
+        // Lưu vị trí cuộn hiện tại trước khi gọi API
+        if (scrollContainerRef.current) {
+            lastScrollPositionRef.current = scrollContainerRef.current.scrollTop;
+        }
+
+        // Lưu ID của item vừa được chấm điểm
+        lastClickedItemRef.current = itemId;
+
+        // Thực hiện chấm điểm (gọi API thông qua parent component)
+        handleScoreChange(itemId, score);
+    };
+
     return (
         <div className="flex flex-col h-full bg-white rounded-xl shadow-sm">
+            <style jsx>{`
+                .flash-highlight {
+                    animation: flash-border 1s ease-out;
+                }
+                
+                @keyframes flash-border {
+                    0%, 100% { border-color: #d1fae5; }
+                    50% { border-color: #10b981; border-width: 2px; box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2); }
+                }
+            `}</style>
+
             {displayEvaluations.length > 0 ? (
                 <>
                     {/* Component Selection Dropdown - Fixed Height */}
@@ -115,8 +219,13 @@ const PendingApprovalPanel = ({
                             value={selectedEvaluation || ''}
                             onChange={(e) => {
                                 const val = e.target.value ? Number(e.target.value) : null;
+
                                 setSelectedEvaluation(val);
                                 if (val) dispatch(getEvaluationItems(val));
+
+                                // Reset các giá trị lưu vị trí khi chuyển component
+                                lastClickedItemRef.current = null;
+                                lastScrollPositionRef.current = 0;
                             }}
                         >
                             <option value="">Select a component</option>
@@ -135,11 +244,27 @@ const PendingApprovalPanel = ({
                     {selectedEvaluation && (
                         <div className="flex-grow flex flex-col overflow-hidden">
                             {/* Main scrollable content area - Flexible height */}
-                            <div className="flex-grow overflow-y-auto">
+                            <div
+                                className="flex-grow overflow-y-auto"
+                                ref={scrollContainerRef}
+                                onScroll={() => {
+                                    // Chỉ cập nhật vị trí khi không phải đang trong quá trình phục hồi
+                                    if (!isRestoringPositionRef.current && scrollContainerRef.current) {
+                                        lastScrollPositionRef.current = scrollContainerRef.current.scrollTop;
+                                    }
+                                }}
+                            >
                                 <div className="px-4 py-2 space-y-3">
                                     {evaluationItems.length > 0 ? (
                                         evaluationItems.map((item) => (
-                                            <div key={item.id} className="p-3 border border-gray-100 rounded-md bg-white shadow-sm hover:border-green-200 transition-all duration-200">
+                                            <div
+                                                key={item.id}
+                                                id={`item-${item.id}`}
+                                                className={`p-3 border rounded-md bg-white shadow-sm transition-all duration-200 ${lastClickedItemRef.current === item.id
+                                                        ? 'border-green-300 ring-1 ring-green-200'
+                                                        : 'border-gray-100 hover:border-green-200'
+                                                    }`}
+                                            >
                                                 <div className="flex justify-between items-center mb-2 gap-2">
                                                     <h3 className="font-medium text-gray-800 text-sm">{item.basicRequirement}</h3>
                                                     <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs rounded-md border border-green-100 whitespace-nowrap">
@@ -160,7 +285,7 @@ const PendingApprovalPanel = ({
                                                     </div>
 
                                                     {/* Score buttons */}
-                                                    {generateScoreButtons(item.id, item.maxPoint, item.actualPoint)}
+                                                    {generateScoreButtons(item)}
 
                                                     <div className="mt-1.5">
                                                         <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -199,7 +324,13 @@ const PendingApprovalPanel = ({
                                         <div className="mt-2 flex justify-end">
                                             <button
                                                 className="btn btn-sm bg-green-600 hover:bg-green-700 border-none text-white gap-1"
-                                                onClick={handleCommentSave}
+                                                onClick={() => {
+                                                    // Lưu vị trí trước khi lưu comment
+                                                    if (scrollContainerRef.current) {
+                                                        lastScrollPositionRef.current = scrollContainerRef.current.scrollTop;
+                                                    }
+                                                    handleCommentSave();
+                                                }}
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
                                                     <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l6.92-6.918a2.121 2.121 0 013 3l-6.92 6.918c-.383.383-.84.685-1.343.886l-3.154 1.262a.5.5 0 01-.65-.65z" />

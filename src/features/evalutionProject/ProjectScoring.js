@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 // Project detail components
 import ProjectDetailsDocumentEvaluation from './EvaluationProjectDocument';
 import EvaluationProjectDetailsPhase from './EvaluationProjectPhase';
-import ProjectDetailsStory from '../projectmanager/ProjectDetailsStory';
+import ProjectDetailsStoryEvaluation from './EvaluationProjectStory';
 import ProjectDetailsUpdate from '../projectmanager/ProjectDetailsUpdate';
 import ProjectDetailsEvaluation from './EvaluationProjectDetails';
 
@@ -417,7 +417,7 @@ const ProjectScoring = () => {
     const renderTabContent = () => {
         switch (activeTab) {
             case 'basic': return <ProjectDetailsEvaluation projectId={projectId} evaluationMode={true} />;
-            case 'story': return <ProjectDetailsStory projectId={projectId} evaluationMode={true} />;
+            case 'story': return <ProjectDetailsStoryEvaluation projectId={projectId} evaluationMode={true} />;
             case 'documents': return <ProjectDetailsDocumentEvaluation projectId={projectId} evaluationMode={true} />;
             case 'phases': return <EvaluationProjectDetailsPhase projectId={projectId} evaluationMode={true} />;
             case 'updates':
