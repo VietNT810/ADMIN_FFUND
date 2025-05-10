@@ -17,21 +17,18 @@ const PendingApprovalPanel = ({
     dispatch,
     getEvaluationItems
 }) => {
-    // Refs để lưu vị trí cuộn và trạng thái chấm điểm
+
     const scrollContainerRef = useRef(null);
     const lastClickedItemRef = useRef(null);
     const lastScrollPositionRef = useRef(0);
     const isRestoringPositionRef = useRef(false);
 
-    // Lưu danh sách item IDs để kiểm tra khi nào danh sách thay đổi
     const itemIdsRef = useRef([]);
 
-    // Memoize evaluationItems để so sánh thay đổi
     const currentItemIds = useMemo(() => {
         return evaluationItems.map(item => item.id);
     }, [evaluationItems]);
 
-    // Cập nhật khi danh sách ID thay đổi
     useEffect(() => {
         itemIdsRef.current = currentItemIds;
     }, [currentItemIds]);
