@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { motion } from 'framer-motion';
 
 // Project detail components
 import ProjectDetailsDocumentEvaluation from './EvaluationProjectDocument';
@@ -25,15 +24,14 @@ import {
     clearSuccessMessage,
     getProjectEvaluationsAfter,
     getProjectEvaluationsLastest,
-    approveUnderReviewProject
 
 } from './components/evalutionProjectSlice';
 
 import { approveProject, rejectProject } from '../projectmanager/components/projectSlice';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import FinalReviewModal from './FinalReviewModal';
-import { toast } from 'react-toastify';
-import { CheckCircleIcon } from 'lucide-react';
+import ProjectViolationCard from '../violation/ProjectViolationCard';
+import ViolationManager from '../violation/violationManager';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -66,13 +64,11 @@ const ProjectScoring = () => {
     const [showFinalReview, setShowFinalReview] = useState(false);
     const [approvalMessage, setApprovalMessage] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isApproving, setIsApproving] = useState(false);
-    const [showApprovalModal, setShowApprovalModal] = useState(false);
     const [phaseDocuments, setPhaseDocuments] = useState({});
     const [expandedPhase, setExpandedPhase] = useState(null);
     const { currentProject } = useSelector(state => state.project || { currentProject: null });
-    const userRole = localStorage.getItem('role');
     const displayEvaluations = evaluations.length > 0 ? evaluations : manuallyPopulatedEvaluations;
+    const [showViolationManager, setShowViolationManager] = useState(false);
 
     const areAllEvaluationsScored = useCallback(() => {
         if (!displayEvaluations.length) return false;
@@ -103,10 +99,6 @@ const ProjectScoring = () => {
 
         return hasProgressReport && hasFundUsageReport;
     }, [phaseDocuments]);
-
-    const handleApproveProject = useCallback(() => {
-        setShowApprovalModal(true);
-    }, []);
 
     const updatePhaseDocuments = useCallback((phaseId, documents) => {
         setPhaseDocuments(prev => ({
@@ -302,25 +294,6 @@ const ProjectScoring = () => {
         };
     }, []);
 
-    const confirmApproval = useCallback(async () => {
-        if (!currentProject || !currentProject.id) return;
-
-        try {
-            setIsApproving(true);
-            await dispatch(approveUnderReviewProject({ projectId: currentProject.id })).unwrap();
-            toast.success('Project has been approved successfully!');
-            setShowApprovalModal(false);
-
-            // Reload project data after approval
-            fetchData();
-        } catch (error) {
-            console.error('Error approving project:', error);
-            toast.error(error.message || 'Failed to approve project');
-        } finally {
-            setIsApproving(false);
-        }
-    }, [currentProject, dispatch, fetchData]);
-
     useEffect(() => {
         fetchData();
 
@@ -483,6 +456,18 @@ const ProjectScoring = () => {
                         <p className="text-yellow-700">Updates will be available after the project is approved.</p>
                     </div>;
             default: return <ProjectDetailsEvaluation projectId={projectId} evaluationMode={true} />;
+            case 'violations':
+                return showViolationManager ? (
+                    <ViolationManager
+                        projectId={projectId}
+                        onBackToSummary={() => setShowViolationManager(false)}
+                    />
+                ) : (
+                    <ProjectViolationCard
+                        projectId={projectId}
+                        onManageViolations={() => setShowViolationManager(true)}
+                    />
+                );
         }
     };
 
@@ -557,6 +542,9 @@ const ProjectScoring = () => {
                         comment={comment}
                         getEvaluationItems={getEvaluationItems}
                         dispatch={dispatch}
+                        currentProject={currentProject}
+                        expandedPhase={expandedPhase}
+                        hasRequiredDocuments={hasRequiredDocuments}
                     />
                 );
         }
@@ -616,7 +604,11 @@ const ProjectScoring = () => {
                       ${currentProject.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
                                                 currentProject.status === 'PENDING_APPROVAL' ? 'bg-yellow-100 text-yellow-800' :
                                                     currentProject.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                                                        'bg-gray-100 text-gray-800'}`}>
+                                                        currentProject.status === 'UNDER_REVIEW' ? 'bg-blue-100 text-blue-800' :
+                                                            currentProject.status === 'RESUBMIT' ? 'bg-slate-100 text-slate-800' :
+                                                                currentProject.status === 'SUSPENDED' ? 'bg-yellow-100 text-yellow-600' :
+                                                                    currentProject.status === 'BAN' ? 'bg-red-100 text-red-800' :
+                                                                        'bg-gray-100 text-gray-800'}`}>
                                             {currentProject.status?.replace(/_/g, ' ')}
                                         </span>
                                     )}
@@ -636,19 +628,6 @@ const ProjectScoring = () => {
                             {currentProject && currentProject.title && (
                                 <h2 className="text-xl font-semibold text-orange-600">{currentProject.title}</h2>
                             )}
-                            {userRole === 'MANAGER' &&
-                                currentProject &&
-                                currentProject.status === 'UNDER_REVIEW' &&
-                                expandedPhase &&
-                                hasRequiredDocuments(expandedPhase) && (
-                                    <button
-                                        onClick={handleApproveProject}
-                                        className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
-                                    >
-                                        <CheckCircleIcon className="w-4 h-4 mr-1" />
-                                        Approve Project
-                                    </button>
-                                )}
                         </div>
                     </div>
                 </div>
@@ -706,6 +685,15 @@ const ProjectScoring = () => {
                                     Updates
                                 </button>
                             )}
+                            <button
+                                className={`tab tab-lifted flex items-center ${activeTab === 'violations' ? 'tab-active text-red-600 border-red-600' : 'text-gray-600 hover:text-red-500'}`}
+                                onClick={() => setActiveTab('violations')}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${activeTab === 'violations' ? 'text-red-600' : 'text-gray-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                                Violations
+                            </button>
                         </div>
 
                         <div className="bg-base-100 rounded-b-xl rounded-tr-xl shadow-md p-4 overflow-y-auto flex-grow">
@@ -741,54 +729,6 @@ const ProjectScoring = () => {
                 handleProjectDecision={handleProjectDecision}
                 isSubmitting={isSubmitting}
             />
-
-            {/* Approval Confirmation Modal */}
-            {showApprovalModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
-                    <motion.div
-                        className="bg-white rounded-lg w-full max-w-md shadow-2xl p-6"
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-                            <CheckCircleIcon className="w-6 h-6 text-green-500 mr-2" />
-                            Approve Project
-                        </h3>
-
-                        <p className="text-gray-600 mb-4">
-                            Are you sure you want to approve this project? The project will move from
-                            "Under Review" to "Approved" status.
-                        </p>
-
-                        <div className="flex justify-end space-x-3">
-                            <button
-                                onClick={() => setShowApprovalModal(false)}
-                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={confirmApproval}
-                                disabled={isApproving}
-                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors flex items-center"
-                            >
-                                {isApproving ? (
-                                    <>
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Processing...
-                                    </>
-                                ) : (
-                                    "Confirm Approval"
-                                )}
-                            </button>
-                        </div>
-                    </motion.div>
-                </div>
-            )}
         </div>
     );
 };

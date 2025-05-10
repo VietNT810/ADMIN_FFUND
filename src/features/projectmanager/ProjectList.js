@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getProjects, suspendProject, completeProject, getProjectStatistics, getProjectsManager } from './components/projectSlice';
+import { getProjects, suspendProject, completeProject, getProjectStatistics, getProjectsManager, approveSuspendedProject } from './components/projectSlice';
 import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EyeIcon, PauseIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
 import { Link } from 'react-router-dom';
@@ -34,6 +34,7 @@ const ProjectList = () => {
   });
 
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
+  const [approveModalOpen, setApproveModalOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [suspendReason, setSuspendReason] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -141,20 +142,41 @@ const ProjectList = () => {
     setIsModalOpen(true);
   };
 
-  const confirmSuspend = () => {
+  const confirmSuspend = async () => {
     if (suspendReason) {
-      dispatch(suspendProject({ projectId: selectedProjectId, reason: suspendReason }))
-        .then(() => {
-          toast.success('Project suspended successfully!');
-          setIsModalOpen(false);
-          setSuspendReason('');
-          handleSearch();
-        })
-        .catch(() => {
-          toast.error('Error suspending project.');
-        });
+      try {
+        await dispatch(suspendProject({
+          projectId: selectedProjectId,
+          reason: suspendReason
+        })).unwrap();
+
+        toast.success('Project suspended successfully!');
+        setIsModalOpen(false);
+        setSuspendReason('');
+        handleSearch();
+      } catch (error) {
+        toast.error(error || 'Error suspending project. Please try again.');
+        console.error('Suspend project error:', error);
+      }
     } else {
       toast.warning("Please enter a reason for suspending the project.");
+    }
+  };
+
+  const handleApproveSuspended = (projectId) => {
+    setSelectedProjectId(projectId);
+    setApproveModalOpen(true);
+  };
+
+  const confirmApproveSuspended = async () => {
+    try {
+      await dispatch(approveSuspendedProject(selectedProjectId)).unwrap();
+      toast.success('Project has been approved and is now active!');
+      setApproveModalOpen(false);
+      handleSearch();
+    } catch (error) {
+      toast.error(error || 'Error approving suspended project. Please try again.');
+      console.error('Approve suspended project error:', error);
     }
   };
 
@@ -302,7 +324,7 @@ const ProjectList = () => {
                 className="select select-bordered w-full"
               >
                 <option value="">All Projects</option>
-                <option value="PENDING_APPROVAL">Pending Approval</option>                  
+                <option value="PENDING_APPROVAL">Pending Approval</option>
                 <option value="APPROVED">Approved</option>
                 <option value="RESUBMIT">Resubmit</option>
                 <option value="SUSPENDED">Suspended</option>
@@ -432,15 +454,22 @@ const ProjectList = () => {
                               </Link>
                             )}
 
-                            {/* Placeholder for consistent spacing when suspend button is not present */}
-                            {project.status !== 'APPROVED' && (
-                              <div className="w-5"></div>
-                            )}
-
+                            {/* Action buttons that change based on project status */}
                             {project.status === 'APPROVED' && (
                               <button className="tooltip" data-tip="Suspend" onClick={() => handleSuspend(project.id)}>
                                 <PauseIcon className="w-5 h-5 text-red-600 hover:text-red-800" />
                               </button>
+                            )}
+
+                            {project.status === 'SUSPENDED' && (
+                              <button className="tooltip" data-tip="Approve Suspended" onClick={() => handleApproveSuspended(project.id)}>
+                                <CheckCircleIcon className="w-5 h-5 text-green-600 hover:text-green-800" />
+                              </button>
+                            )}
+
+                            {/* Placeholder for consistent spacing when neither button is present */}
+                            {project.status !== 'APPROVED' && project.status !== 'SUSPENDED' && (
+                              <div className="w-5"></div>
                             )}
                           </div>
                         </td>
@@ -512,6 +541,41 @@ const ProjectList = () => {
                 setSuspendReason('');
               }}>Cancel</button>
               <button className="btn btn-error" onClick={confirmSuspend}>Confirm</button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Approve Suspended Modal */}
+      {approveModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50 z-50">
+          <motion.div
+            className="bg-base-100 p-6 rounded-xl shadow-xl w-96 border border-base-300"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+          >
+            <h3 className="text-xl font-bold text-success mb-4 flex items-center gap-2">
+              <CheckCircleIcon className="w-6 h-6" />
+              Approve Suspended Project
+            </h3>
+            <p className="mb-4 text-gray-700">
+              This will reactivate the suspended project and make it visible to users again.
+              Are you sure you want to proceed?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setApproveModalOpen(false)}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={confirmApproveSuspended}
+              >
+                Confirm Approval
+              </button>
             </div>
           </motion.div>
         </div>
