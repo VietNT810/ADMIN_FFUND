@@ -34,9 +34,9 @@ const RejectedProjectPanel = ({
     }, [displayEvaluations]);
 
     return (
-        <div className="flex flex-col space-y-4 h-full overflow-hidden">
+        <div className="flex flex-col h-full overflow-hidden">
             {/* Rejection Notice Panel */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm flex-shrink-0">
                 <div className="flex items-start">
                     <div className="flex-shrink-0">
                         <svg className="w-6 h-6 text-red-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -61,7 +61,7 @@ const RejectedProjectPanel = ({
             {/* Show detail view when evaluation is selected, otherwise show summary */}
             {selectedEvaluation ? (
                 <>
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-center mb-4 sticky top-0 bg-base-200 z-10 p-2 rounded-lg">
                         <h3 className="text-xl font-bold">
                             {displayEvaluations.find(e => e.id === selectedEvaluation)?.componentName ||
                                 displayEvaluations.find(e => e.id === selectedEvaluation)?.typeName ||
@@ -167,9 +167,9 @@ const RejectedProjectPanel = ({
                     </div>
 
                     {/* Components List */}
-                    <div className="bg-white rounded-lg shadow-sm p-4 flex-grow overflow-hidden">
+                    <div className="bg-white rounded-lg shadow-sm p-4 overflow-hidden h-[calc(100%-8rem)]">
                         <h3 className="font-semibold mb-3">Component Evaluations</h3>
-                        <div className="space-y-3 overflow-y-auto h-[calc(100%-2rem)]">
+                        <div className="overflow-y-auto max-h-full">
                             {displayEvaluations.map(evaluation => {
                                 const componentPercentage = evaluation.maximumPoint > 0 ?
                                     (Number(evaluation.actualPoint || 0) / Number(evaluation.maximumPoint || 0)) * 100 : 0;
@@ -193,7 +193,7 @@ const RejectedProjectPanel = ({
                                         <div className="w-full bg-gray-200 rounded-full h-1.5 mb-2">
                                             <div
                                                 className={`h-1.5 rounded-full ${componentPercentage >= 70 ? 'bg-emerald-500' :
-                                                        componentPercentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
+                                                    componentPercentage >= 50 ? 'bg-amber-500' : 'bg-red-500'
                                                     }`}
                                                 style={{ width: `${componentPercentage}%` }}
                                             ></div>
@@ -214,7 +214,7 @@ const RejectedProjectPanel = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex justify-between mt-2">
+                    <div className="flex justify-between mt-4">
                         <button
                             onClick={() => navigate('/projects-list')}
                             className="btn btn-outline btn-sm"

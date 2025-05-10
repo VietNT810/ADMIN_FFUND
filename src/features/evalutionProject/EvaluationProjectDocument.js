@@ -89,6 +89,7 @@ const ProjectDetailsDocumentEvaluation = ({ getClassName }) => {
     };
 
     const formatDocumentType = (type) => {
+        if (!type) return 'Unknown Type';
         return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     };
 
@@ -338,28 +339,28 @@ const ProjectDetailsDocumentEvaluation = ({ getClassName }) => {
             )}
 
             {/* Add custom styles for Excel tables */}
-            <style jsx>{`
-                .excel-content table {
+            <style>{`
+                    .excel-content table {
                     border-collapse: collapse;
                     width: 100%;
-                }
-                .excel-content th, .excel-content td {
+                    }
+                    .excel-content th, .excel-content td {
                     border: 1px solid #ddd;
                     padding: 8px;
                     text-align: left;
-                }
-                .excel-content tr:nth-child(even) {
+                    }
+                    .excel-content tr:nth-child(even) {
                     background-color: #f2f2f2;
-                }
-                .excel-content th {
-                    padding-top: 12px;
-                    padding-bottom: 12px;
-                    background-color: #f8f8f8;
-                    color: #333;
-                    position: sticky;
-                    top: 0;
-                    z-index: 10;
-                }
+                    }
+                    .excel-content th {
+                        padding-top: 12px;
+                        padding-bottom: 12px;
+                        background-color: #f8f8f8;
+                        color: #333;
+                        position: sticky;
+                        top: 0;
+                        z-index: 10;
+                    }
             `}</style>
         </div>
     );

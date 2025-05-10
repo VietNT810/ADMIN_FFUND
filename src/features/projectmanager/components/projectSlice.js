@@ -258,13 +258,15 @@ export const getPhaseDocumentByPhaseId = createAsyncThunk(
   'phase-document/getPhaseDocumentByPhaseId',
   async (phaseId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/phase-document/submitted/${phaseId}`);
+      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/phase-document/submitted/all/${phaseId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch phase documents.');
     }
   }
 );
+
+
 
 const projectSlice = createSlice({
   name: 'project',
@@ -467,7 +469,18 @@ const projectSlice = createSlice({
       .addCase(getProjectStatistics.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
-      });
+      })
+      .addCase(getPhaseDocumentByPhaseId.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(getPhaseDocumentByPhaseId.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.documents = action.payload;
+      })
+      .addCase(getPhaseDocumentByPhaseId.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
   },
 });
 

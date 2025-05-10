@@ -98,7 +98,7 @@ export const getProjectEvaluationsAfter = createAsyncThunk(
 );
 
 export const getProjectEvaluationsLastest = createAsyncThunk(
-    'evaluation/getProjectEvaluationsAfter',
+    'evaluation/getProjectEvaluationsLatest',
     async (projectId, { rejectWithValue }) => {
         try {
             console.log('Fetching evaluations for project:', projectId);
@@ -111,6 +111,50 @@ export const getProjectEvaluationsLastest = createAsyncThunk(
         } catch (error) {
             console.error('API Error:', error);
             return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch evaluations');
+        }
+    }
+);
+
+export const getPhaseInvesment = createAsyncThunk(
+    'evaluation/getPhaseInvesment',
+    async ({ phaseId, query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
+        try {
+            const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
+            console.log('Fetching evaluations for phase:', phaseId);
+
+            // Build URL with query parameters
+            const response = await axios.get(`${BASE_URL}/investment/all/${phaseId}`, {
+                params: {
+                    query,
+                    page,
+                    size,
+                    sort: sortOrderSymbol
+                }
+            });
+
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
+export const approveUnderReviewProject = createAsyncThunk(
+    'evaluation/approveUnderReviewProject',
+    async ({ projectId }, { rejectWithValue }) => {
+        try {
+            const response = await axios.patch(`${BASE_URL}/project/approve/under-review/${projectId}`);
+            return response.data;
+        } catch (error) {
+            // Properly extract the error structure
+            const errorMessage = error.response?.data?.error || 
+                                error.response?.data?.message || 
+                                'Failed to approve project';
+            
+            return rejectWithValue({
+                status: error.response?.status,
+                error: errorMessage
+            });
         }
     }
 );
@@ -267,6 +311,43 @@ const evaluationProjectSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload || 'Failed to fetch founder evaluations';
                 console.log('Redux - getProjectEvaluationsAfter.rejected:', action.payload);
+            })
+
+            .addCase(getPhaseInvesment.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(getPhaseInvesment.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                // Store the investments data in evaluations array
+                state.evaluations = action.payload.data || [];
+                // Also store pagination info if needed
+                state.pagination = {
+                    currentPage: action.payload.currentPage,
+                    totalPages: action.payload.totalPages,
+                    pageSize: action.payload.pageSize,
+                    totalElements: action.payload.totalElements
+                };
+            })
+            .addCase(getPhaseInvesment.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload || 'Failed to fetch phase investments';
+            })
+            .addCase(approveUnderReviewProject.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(approveUnderReviewProject.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.successMessage = 'Project has been approved successfully!';
+            })
+            .addCase(approveUnderReviewProject.rejected, (state, action) => {
+                state.status = 'failed';
+                // Handle the structured error
+                if (action.payload && action.payload.error) {
+                    state.error = `${action.payload.error} (Status: ${action.payload.status || 'unknown'})`;
+                } else {
+                    state.error = action.error.message || 'Failed to approve project';
+                }
             })
     },
 });
