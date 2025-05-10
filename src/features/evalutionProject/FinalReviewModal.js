@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pie } from 'react-chartjs-2';
+import { useSelector } from 'react-redux';
 
 const FinalReviewModal = ({
     showFinalReview,
@@ -16,6 +17,29 @@ const FinalReviewModal = ({
     isReadOnly = false,
     projectStatus = 'UNKNOWN'
 }) => {
+    const { thresholds } = useSelector(state => state.evaluation);
+
+    const passPercentage = thresholds.passPercentage * 100;
+    const excellentPercentage = thresholds.excellentPercentage * 100;
+    const resubmitPercentage = thresholds.resubmitPercentage * 100;
+
+    const getScoreMessage = useMemo(() => {
+        const percentage = totalScore.percentage;
+
+        if (percentage >= excellentPercentage) return 'Excellent - Potential Project';
+        if (percentage >= passPercentage) return 'Meets standards';
+        if (percentage >= resubmitPercentage) return 'Needs improvement';
+        return 'Below standards';
+    }, [totalScore.percentage, excellentPercentage, passPercentage, resubmitPercentage]);
+
+    const getScoreColor = useMemo(() => {
+        const percentage = totalScore.percentage;
+
+        if (percentage >= passPercentage) return 'text-green-600';
+        if (percentage >= resubmitPercentage) return 'text-yellow-600';
+        return 'text-red-600';
+    }, [totalScore.percentage, passPercentage, resubmitPercentage]);
+
     if (!showFinalReview) return null;
 
     return (
@@ -50,12 +74,8 @@ const FinalReviewModal = ({
                             <div className="text-base-content/70">
                                 {totalScore.actual} / {totalScore.maximum} points
                             </div>
-                            <div className={`mt-2 text-sm font-medium ${totalScore.percentage >= 70 ? 'text-green-600' :
-                                totalScore.percentage >= 50 ? 'text-yellow-600' : 'text-red-600'
-                                }`}>
-                                {totalScore.percentage >= 90 ? 'Excellent - Potential Project' :
-                                    totalScore.percentage >= 70 ? 'Meets standards' :
-                                        totalScore.percentage >= 50 ? 'Needs improvement' : 'Below standards'}
+                            <div className={`mt-2 text-sm font-medium ${getScoreColor}`}>
+                                {getScoreMessage}
                             </div>
                         </div>
                     </div>
@@ -86,8 +106,8 @@ const FinalReviewModal = ({
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-full bg-base-200 rounded-full h-2">
                                                         <div
-                                                            className={`h-2 rounded-full ${percentage >= 70 ? 'bg-green-500' :
-                                                                percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                                            className={`h-2 rounded-full ${percentage >= passPercentage ? 'bg-green-500' :
+                                                                    percentage >= resubmitPercentage ? 'bg-yellow-500' : 'bg-red-500'
                                                                 }`}
                                                             style={{ width: `${percentage}%` }}
                                                         ></div>
@@ -132,23 +152,6 @@ const FinalReviewModal = ({
                     </div>
                 </div>
 
-                <div className="mb-4">
-                    <h3 className="font-semibold text-lg mb-2">Additional Comments</h3>
-                    {isReadOnly ? (
-                        <div className="p-3 border rounded-lg bg-base-200 min-h-[80px]">
-                            {approvalMessage || <span className="text-base-content/50">No additional comments provided.</span>}
-                        </div>
-                    ) : (
-                        <textarea
-                            className="textarea textarea-bordered w-full"
-                            rows="3"
-                            value={approvalMessage}
-                            onChange={(e) => setApprovalMessage(e.target.value)}
-                            placeholder="Add any additional comments about this project..."
-                        ></textarea>
-                    )}
-                </div>
-
                 <div className="flex justify-end gap-2 mt-6">
                     <button
                         className="btn btn-outline"
@@ -162,14 +165,14 @@ const FinalReviewModal = ({
                         <>
                             {approvalStatus.status === 'approve' ? (
                                 <button
-                                    className={`btn ${totalScore.percentage >= 90 ? 'btn-primary' : 'btn-success'}`}
+                                    className={`btn ${totalScore.percentage >= excellentPercentage ? 'btn-primary' : 'btn-success'}`}
                                     onClick={() => handleProjectDecision('approve')}
                                     disabled={isSubmitting}
                                 >
                                     {isSubmitting ? (
                                         <span className="loading loading-spinner loading-sm"></span>
                                     ) : (
-                                        totalScore.percentage >= 90 ? 'Approve as Potential Project' : 'Approve Project'
+                                        totalScore.percentage >= excellentPercentage ? 'Approve as Potential Project' : 'Approve Project'
                                     )}
                                 </button>
                             ) : (
@@ -181,7 +184,7 @@ const FinalReviewModal = ({
                                     {isSubmitting ? (
                                         <span className="loading loading-spinner loading-sm"></span>
                                     ) : (
-                                        totalScore.percentage < 50 ? 'Reject & Ban Project' : 'Reject Project'
+                                        totalScore.percentage < resubmitPercentage ? 'Reject & Ban Project' : 'Reject Project'
                                     )}
                                 </button>
                             )}
