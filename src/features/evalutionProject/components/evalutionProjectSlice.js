@@ -3,6 +3,28 @@ import axios from 'axios';
 
 const BASE_URL = 'https://quanbeo.duckdns.org/api/v1';
 
+export const getEvaluationThresholds = createAsyncThunk(
+    'evaluation/getEvaluationThresholds',
+    async (_, { rejectWithValue }) => {
+        try {
+            const [passResponse, excellentResponse, resubmitResponse] = await Promise.all([
+                axios.get(`${BASE_URL}/settings/type?type=PASS_PERCENTAGE`),
+                axios.get(`${BASE_URL}/settings/type?type=PASS_EXCELLENT_PERCENTAGE`),
+                axios.get(`${BASE_URL}/settings/type?type=RESUBMIT_PERCENTAGE`)
+            ]);
+
+            return {
+                passPercentage: passResponse.data.data.value,
+                excellentPercentage: excellentResponse.data.data.value,
+                resubmitPercentage: resubmitResponse.data.data.value
+            };
+        } catch (error) {
+            console.error('API Error fetching thresholds:', error);
+            return rejectWithValue(error.response?.data?.message || error.message || 'Failed to fetch evaluation thresholds');
+        }
+    }
+);
+
 export const getProjectEvaluations = createAsyncThunk(
     'evaluation/getProjectEvaluations',
     async (projectId, { rejectWithValue }) => {
@@ -11,7 +33,6 @@ export const getProjectEvaluations = createAsyncThunk(
             const response = await axios.get(`${BASE_URL}/evaluation/grade/${projectId}`);
             console.log('API Response:', response.data);
 
-            // Return the data directly without additional processing
             const evaluationsData = response.data.data;
             console.log('Raw evaluations data being returned to reducer:', evaluationsData);
             return evaluationsData;
@@ -66,7 +87,6 @@ export const getProjectEvaluationsAfter = createAsyncThunk(
             const response = await axios.get(`${BASE_URL}/evaluation/founder/${projectId}`);
             console.log('API Response:', response.data);
 
-            // Return the data directly without additional processing
             const evaluationsData = response.data.data;
             console.log('Raw evaluations data being returned to reducer:', evaluationsData);
             return evaluationsData;
@@ -85,7 +105,6 @@ export const getProjectEvaluationsLastest = createAsyncThunk(
             const response = await axios.get(`${BASE_URL}/evaluation/latest-graded/${projectId}`);
             console.log('API Response:', response.data);
 
-            // Return the data directly without additional processing
             const evaluationsData = response.data.data;
             console.log('Raw evaluations data being returned to reducer:', evaluationsData);
             return evaluationsData;
@@ -166,6 +185,12 @@ const initialState = {
     status: 'idle',
     error: null,
     successMessage: null,
+    thresholds: {
+        passPercentage: 0.7,
+        excellentPercentage: 0.9,
+        resubmitPercentage: 0.3
+    },
+    thresholdsLoaded: false
 };
 
 function formatComponentName(typeName) {
@@ -189,6 +214,21 @@ const evaluationProjectSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
+            .addCase(getEvaluationThresholds.pending, (state) => {
+            })
+            .addCase(getEvaluationThresholds.fulfilled, (state, action) => {
+                state.thresholds = {
+                    passPercentage: action.payload.passPercentage,
+                    excellentPercentage: action.payload.excellentPercentage,
+                    resubmitPercentage: action.payload.resubmitPercentage
+                };
+                state.thresholdsLoaded = true;
+                console.log('Evaluation thresholds loaded:', state.thresholds);
+            })
+            .addCase(getEvaluationThresholds.rejected, (state, action) => {
+                console.error('Failed to load evaluation thresholds:', action.payload);
+            })
+
             .addCase(getProjectEvaluations.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
@@ -199,11 +239,9 @@ const evaluationProjectSlice = createSlice({
 
                 state.status = 'succeeded';
 
-                // Ensure we have an array, even if payload is null or undefined
                 const evaluationsArray = Array.isArray(action.payload) ? action.payload : [];
                 console.log('Redux - Processing evaluations array:', evaluationsArray);
 
-                // Map and format component names
                 state.evaluations = evaluationsArray.map(evaluation => ({
                     ...evaluation,
                     componentName: formatComponentName(evaluation.typeName)
@@ -211,7 +249,6 @@ const evaluationProjectSlice = createSlice({
 
                 console.log('Redux - Updated state.evaluations:', state.evaluations);
 
-                // This should NOT be empty if the API returned data
                 if (state.evaluations.length === 0) {
                     console.warn('Redux WARNING: evaluations array is empty after processing!');
                 }
@@ -269,8 +306,6 @@ const evaluationProjectSlice = createSlice({
                 state.error = formatErrorMessage(action.payload) || 'Failed to update grade';
             })
 
-            // Add these cases to your extraReducers block in the evaluationProjectSlice:
-
             .addCase(getProjectEvaluationsAfter.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
@@ -280,17 +315,14 @@ const evaluationProjectSlice = createSlice({
                 console.log('Redux - getProjectEvaluationsAfter.fulfilled: Action received', action);
                 state.status = 'succeeded';
 
-                // Ensure we have an array, even if payload is null or undefined
                 const evaluationsArray = Array.isArray(action.payload) ? action.payload : [];
                 console.log('Redux - Processing founder evaluations array:', evaluationsArray);
 
-                // Map and format component names for founder evaluations
                 const founderEvaluations = evaluationsArray.map(evaluation => ({
                     ...evaluation,
                     componentName: formatComponentName(evaluation.typeName)
                 }));
 
-                // Add founder evaluations to state.evaluations
                 state.evaluations = founderEvaluations;
 
                 console.log('Redux - Updated state.evaluations with founder data:', state.evaluations);
