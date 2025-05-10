@@ -27,7 +27,7 @@ const EvaluationProjectDetailsPhase = ({
     const dispatch = useDispatch();
 
     const { phases, milestones, status, error } = useSelector(state => state.project);
-    const { evaluations, status: evaluationStatus } = useSelector(state => state.evaluation);
+    const { evaluations, phaseInvestments = [], status: evaluationStatus } = useSelector(state => state.evaluation);
 
     // States
     const [showModal, setShowModal] = useState(false);
@@ -134,14 +134,15 @@ const EvaluationProjectDetailsPhase = ({
 
     // Load phase investments when tab is changed to investments
     useEffect(() => {
-        if (expandedPhase && activePhaseTab === 'investments') {
+        if (expandedPhase && activePhaseTab === 'investments' && !evaluations?.length) {
             loadPhaseInvestments();
         }
     }, [expandedPhase, activePhaseTab]);
 
     const loadPhaseInvestments = () => {
         if (!expandedPhase) return;
-
+    
+        console.log("Loading phase investments for phase:", expandedPhase);
         setIsLoadingInvestments(true);
         dispatch(getPhaseInvesment({
             phaseId: expandedPhase,
@@ -151,7 +152,9 @@ const EvaluationProjectDetailsPhase = ({
             sortField,
             sortOrder
         }))
-            .then(() => {
+            .unwrap()
+            .then((result) => {
+                console.log("Investment loading result:", result);
                 setIsLoadingInvestments(false);
             })
             .catch(error => {
@@ -161,18 +164,21 @@ const EvaluationProjectDetailsPhase = ({
     };
 
     const handleSort = (field) => {
-        // If clicking the same field, toggle sort order, otherwise set new field with ascending order
         if (field === sortField) {
             setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
         } else {
             setSortField(field);
             setSortOrder('asc');
         }
+
+        setTimeout(() => {
+            loadPhaseInvestments();
+        }, 0);
     };
 
     const handleSearchChange = (e) => {
         setSearchQuery(e.target.value);
-        setCurrentPage(0); // Reset to first page when searching
+        setCurrentPage(0);
     };
 
     const handleSearchSubmit = (e) => {
@@ -251,7 +257,7 @@ const EvaluationProjectDetailsPhase = ({
     }
 
     // Calculate pagination information
-    const totalPages = Math.ceil((evaluations?.length || 0) / pageSize);
+    const totalPages = Math.ceil((phaseInvestments?.length || 0) / pageSize);
 
     return (
         <div className={`${getClassName?.("pills-phase")} p-4 bg-white shadow-md rounded-lg`} id="pills-phase" role="tabpanel">
@@ -656,7 +662,7 @@ const EvaluationProjectDetailsPhase = ({
                                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-2"></div>
                                                         <span className="text-gray-600">Loading investments...</span>
                                                     </div>
-                                                ) : evaluations?.length > 0 ? (
+                                                ) : phaseInvestments?.length > 0 ? (
                                                     <div className="overflow-x-auto border rounded-lg">
                                                         <table className="min-w-full divide-y divide-gray-200">
                                                             <thead className="bg-gray-50">
@@ -734,7 +740,7 @@ const EvaluationProjectDetailsPhase = ({
                                                                 </tr>
                                                             </thead>
                                                             <tbody className="bg-white divide-y divide-gray-200">
-                                                                {evaluations.map((investment) => (
+                                                                {phaseInvestments.map((investment) => (
                                                                     <tr key={investment.id} className="hover:bg-gray-50">
                                                                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                                                                             #{investment.id}
@@ -771,10 +777,10 @@ const EvaluationProjectDetailsPhase = ({
                                                 )}
 
                                                 {/* Pagination */}
-                                                {evaluations?.length > 0 && (
+                                                {phaseInvestments?.length > 0 && (
                                                     <div className="flex items-center justify-between mt-4">
                                                         <div className="text-sm text-gray-500">
-                                                            Showing {Math.min(currentPage * pageSize + 1, evaluations.length)} to {Math.min((currentPage + 1) * pageSize, evaluations.length)} of {evaluations.length} entries
+                                                            Showing {Math.min(currentPage * pageSize + 1, phaseInvestments.length)} to {Math.min((currentPage + 1) * pageSize, phaseInvestments.length)} of {phaseInvestments.length} entries
                                                         </div>
                                                         <div className="flex space-x-1">
                                                             <button

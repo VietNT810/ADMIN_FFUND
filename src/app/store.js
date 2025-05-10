@@ -16,6 +16,7 @@ import criteriaSlice from '../features/criteria/criteriaSlice'
 import systemStaticSlice from '../features/dashboard/components/SystemStaticSlice'
 import evaluationReducer from '../features/evalutionProject/components/evalutionProjectSlice'
 import globalSettingReducer from '../features/globalSetting/components/globalSettingSlice'
+import violationReducer from '../features/violation/components/violationSlice';
 
 const combinedReducer = {
   header: headerSlice,
@@ -35,6 +36,7 @@ const combinedReducer = {
   systemStaticSlice: systemStaticSlice,
   evaluation: evaluationReducer,
   globalSettings: globalSettingReducer,
+  violation: violationReducer,
 }
 
 export default configureStore({

@@ -202,7 +202,10 @@ export const suspendProject = createAsyncThunk(
 
       return response.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.error || 'Failed to suspend project.');
+      return rejectWithValue(
+        error.response?.data?.error || 
+        `Failed to suspend project: ${error.message}`
+      );
     }
   }
 );
@@ -266,7 +269,66 @@ export const getPhaseDocumentByPhaseId = createAsyncThunk(
   }
 );
 
+export const banViolationProject = createAsyncThunk(
+  'project/banViolationProject',
+  async (projectId, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `https://quanbeo.duckdns.org/api/v1/project/ban/violation/${projectId}`,
+      );
 
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to ban project for violation.');
+    }
+  }
+)
+
+export const banUnderReviewProject = createAsyncThunk(
+  'project/banUnderReviewProject',
+  async (projectId, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `https://quanbeo.duckdns.org/api/v1/project/ban/under-review/${projectId}`,
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to ban project under review.');
+    }
+  }
+)
+
+export const approveSuspendedProject = createAsyncThunk(
+  'project/approveSuspendedProject',
+  async (projectId, { rejectWithValue }) => {
+    try {
+      const response = await axios.put(
+        `https://quanbeo.duckdns.org/api/v1/project/approve/suspended/${projectId}`,
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to approve suspended project.');
+    }
+  }
+)
+
+const formatErrorMessage = (error) => {
+    if (!error) return "Unknown error";
+    
+    if (typeof error === 'string') return error;
+    
+    if (typeof error === 'object') {
+        // Handle object with error properties
+        if (error.description) return `Description: ${error.description}`;
+        
+        // Convert object to string representation
+        return Object.entries(error)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+    }
+    
+    return String(error);
+};
 
 const projectSlice = createSlice({
   name: 'project',
@@ -291,7 +353,6 @@ const projectSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Handling loading, success, and failure states for each async thunk
       .addCase(getProjects.pending, (state) => {
         state.status = 'loading';
       })
@@ -302,7 +363,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjects.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);
       })
       .addCase(getProjectOfManager.pending, (state) => {
         state.status = 'loading';
@@ -314,7 +375,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjectOfManager.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getProjectToComplete.pending, (state) => {
         state.status = 'loading';
@@ -326,7 +387,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjectToComplete.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getProjectById.pending, (state) => {
         state.status = 'loading';
@@ -337,7 +398,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjectById.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload ? `${action.payload.status}: ${action.payload.message}` : 'Unknown error';
+        state.error = formatErrorMessage(action.payload);
       })
       .addCase(getStoryByProjectId.pending, (state) => {
         state.status = 'loading';
@@ -348,7 +409,7 @@ const projectSlice = createSlice({
       })
       .addCase(getStoryByProjectId.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getDocumentByProjectId.pending, (state) => {
         state.status = 'loading';
@@ -359,7 +420,7 @@ const projectSlice = createSlice({
       })
       .addCase(getDocumentByProjectId.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getUpdatePostByProjectId.pending, (state) => {
         state.status = 'loading';
@@ -370,7 +431,7 @@ const projectSlice = createSlice({
       })
       .addCase(getUpdatePostByProjectId.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getPhaseByProjectId.pending, (state) => {
         state.status = 'loading';
@@ -381,7 +442,7 @@ const projectSlice = createSlice({
       })
       .addCase(getPhaseByProjectId.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getMilestoneByPhaseId.pending, (state) => {
         state.status = 'loading';
@@ -396,7 +457,7 @@ const projectSlice = createSlice({
       })
       .addCase(getMilestoneByPhaseId.rejected, (state, action) => {
         state.status = 'failed'; 
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(approveProject.pending, (state) => {
         state.status = 'loading';
@@ -407,7 +468,7 @@ const projectSlice = createSlice({
       })
       .addCase(approveProject.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(suspendProject.pending, (state) => {
         state.status = 'loading';
@@ -418,7 +479,7 @@ const projectSlice = createSlice({
       })
       .addCase(suspendProject.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(rejectProject.pending, (state) => {
         state.status = 'loading';
@@ -429,7 +490,7 @@ const projectSlice = createSlice({
       })
       .addCase(rejectProject.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(completeProject.pending, (state) => {
         state.status = 'loading';
@@ -444,7 +505,7 @@ const projectSlice = createSlice({
       })
       .addCase(completeProject.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       // assign manager to project
       .addCase(assignManagerToProject.pending, (state) => {
@@ -456,7 +517,7 @@ const projectSlice = createSlice({
       })
       .addCase(assignManagerToProject.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       // Handle getProjectStatistics
       .addCase(getProjectStatistics.pending, (state) => {
@@ -468,7 +529,7 @@ const projectSlice = createSlice({
       })
       .addCase(getProjectStatistics.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
       .addCase(getPhaseDocumentByPhaseId.pending, (state) => {
         state.status = 'loading';
@@ -479,8 +540,41 @@ const projectSlice = createSlice({
       })
       .addCase(getPhaseDocumentByPhaseId.rejected, (state, action) => {
         state.status = 'failed';
-        state.error = action.payload;
+        state.error = formatErrorMessage(action.payload);;
       })
+      .addCase(banViolationProject.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(banViolationProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(banViolationProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = formatErrorMessage(action.payload);;
+      })
+      .addCase(banUnderReviewProject.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(banUnderReviewProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(banUnderReviewProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = formatErrorMessage(action.payload);;
+      })
+      .addCase(approveSuspendedProject.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(approveSuspendedProject.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(approveSuspendedProject.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = formatErrorMessage(action.payload);;
+      });
   },
 });
 
