@@ -36,10 +36,37 @@ const Criteria = () => {
 
 
   useEffect(() => {
-    dispatch(getCategoriesContent());
-    dispatch(getAllCriteria({ page: page, sortField, sortOrder }));
-    dispatch(getAllCriteriaType());
-  }, [dispatch, page, sortField, sortOrder]);
+    if (selectedMainCategory !== 'All') {
+      const queryParts = [`category.name:eq:${selectedMainCategory}`];
+      const query = queryParts.join(",");
+
+      dispatch(getAllCriteria({ query, page: 0, size: 10, sortField, sortOrder }))
+        .then((response) => {
+          if (response.payload &&
+            response.payload.criteriaList &&
+            response.payload.criteriaList.length === 0) {
+            setShowNoCriteriaWarning(true);
+          } else {
+            setShowNoCriteriaWarning(false);
+          }
+        });
+
+      const searchParams = new URLSearchParams();
+      searchParams.set('category', selectedMainCategory);
+      navigate({
+        pathname: location.pathname,
+        search: searchParams.toString()
+      }, { replace: true });
+    } else {
+      setShowNoCriteriaWarning(false);
+      navigate({
+        pathname: location.pathname,
+        search: ""
+      }, { replace: true });
+
+      dispatch(getAllCriteria({ page: 0, size: 10, sortField, sortOrder }));
+    }
+  }, [selectedMainCategory, dispatch, navigate, location.pathname, sortField, sortOrder]);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -51,61 +78,68 @@ const Criteria = () => {
       const queryParts = [`category.name:eq:${categoryParam}`];
       const query = queryParts.join(",");
 
-      setTimeout(() => {
-        dispatch(getAllCriteria({ query, page: 0, size: 10, sortField, sortOrder }))
-          .then((response) => {
-            // Match the structure after transformation
-            if (selectedMainCategory !== 'All' &&
-              response.payload &&
-              response.payload.criteriaList &&
-              response.payload.criteriaList.length === 0) {
-              setShowNoCriteriaWarning(true);
-            } else {
-              setShowNoCriteriaWarning(false);
-            }
-          });
-      }, 0);
+      dispatch(getAllCriteria({ query, page: 0, size: 10, sortField, sortOrder }))
+        .then((response) => {
+          if (response.payload &&
+            response.payload.criteriaList &&
+            response.payload.criteriaList.length === 0) {
+            setShowNoCriteriaWarning(true);
+          } else {
+            setShowNoCriteriaWarning(false);
+          }
+        });
+    } else {
+      setShowNoCriteriaWarning(false);
     }
 
     dispatch(getCategoriesContent());
     dispatch(getAllCriteriaType());
   }, [dispatch, location.search]);
 
-  // Also update the handleSearch function
   const handleSearch = () => {
     const queryParts = [];
+
     if (searchTerm) queryParts.push(`categoryName:eq:${searchTerm}`);
-    if (selectedMainCategory !== "All") queryParts.push(`category.name:eq:${selectedMainCategory}`);
-    if (selectedSubCategory !== "All") queryParts.push(`subCategories.subCategory.name:eq:${selectedSubCategory}`);
-    const query = queryParts.join(",");
 
-    const searchParams = new URLSearchParams();
     if (selectedMainCategory !== "All") {
+      queryParts.push(`category.name:eq:${selectedMainCategory}`);
+
+      const searchParams = new URLSearchParams();
       searchParams.set('category', selectedMainCategory);
+
+      navigate({
+        pathname: location.pathname,
+        search: searchParams.toString()
+      }, { replace: true });
+
+      const query = queryParts.join(",");
+      dispatch(getAllCriteria({ query, page, size: 10, sortField, sortOrder }))
+        .then((response) => {
+          if (response.payload &&
+            response.payload.criteriaList &&
+            response.payload.criteriaList.length === 0) {
+            setShowNoCriteriaWarning(true);
+          } else {
+            setShowNoCriteriaWarning(false);
+          }
+        });
+    } else {
+      navigate({
+        pathname: location.pathname,
+        search: ""
+      }, { replace: true });
+
+      setShowNoCriteriaWarning(false);
+      dispatch(getAllCriteria({ page, size: 10, sortField, sortOrder }));
     }
-
-    navigate({
-      pathname: location.pathname,
-      search: searchParams.toString()
-    }, { replace: true });
-
-    dispatch(getAllCriteria({ query, page: page, size: 10, sortField, sortOrder }))
-      .then((response) => {
-        // Updated to match the actual transformed response structure
-        if (selectedMainCategory !== 'All' &&
-          response.payload &&
-          response.payload.criteriaList &&
-          response.payload.criteriaList.length === 0) {
-          setShowNoCriteriaWarning(true);
-        } else {
-          setShowNoCriteriaWarning(false);
-        }
-      });
   };
 
   useEffect(() => {
     if (selectedMainCategory !== 'All') {
       handleSearch();
+    } else {
+      dispatch(getAllCriteria({ page, size: 10, sortField, sortOrder }));
+      setShowNoCriteriaWarning(false);
     }
   }, [selectedMainCategory]);
 
@@ -244,7 +278,20 @@ const Criteria = () => {
     }
   };
 
-  const toggleModal = () => setModalOpen(!modalOpen);
+  const toggleModal = (categoryName) => {
+    if (categoryName) {
+      const selectedCategory = categories.find(cat => cat.categoryName === categoryName);
+
+      if (selectedCategory) {
+        setNewCriteria(prev => ({
+          ...prev,
+          categoryId: selectedCategory.id
+        }));
+      }
+    }
+
+    setModalOpen(!modalOpen);
+  };
 
   const handleCloseModal = () => {
     setModalOpen(false);
@@ -262,7 +309,7 @@ const Criteria = () => {
           <h1 className="text-2xl font-bold text-gray-800">Criteria Management</h1>
 
           <button
-            onClick={toggleModal}
+            onClick={() => toggleModal()}
             className="btn bg-green-500 hover:bg-green-600 text-white px-5 py-2 flex items-center gap-2 rounded-lg"
           >
             <PlusIcon className="w-5 h-5" />
@@ -319,25 +366,50 @@ const Criteria = () => {
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-4 mb-6 p-4 bg-amber-50 border border-amber-300 rounded-lg text-amber-800"
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="mb-6 bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 rounded-lg overflow-hidden shadow-sm"
           >
-            <div className="flex items-start gap-3">
-              <svg className="w-6 h-6 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <h3 className="font-medium text-amber-800">No criteria found for category "{selectedMainCategory}"</h3>
-                <p className="text-sm mt-1">
-                  This category doesn't have any criteria yet. Categories need at least one criteria to be fully active.
-                  <button
-                    onClick={toggleModal}
-                    className="ml-2 underline text-amber-700 font-medium hover:text-amber-900"
-                  >
-                    Create criteria now
-                  </button>
-                </p>
+            <div className="p-4 flex items-start">
+              <div className="flex-shrink-0 bg-amber-100 rounded-full p-2 mr-4">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <h3 className="text-lg font-medium text-amber-800">No criteria found for "{selectedMainCategory}"</h3>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                    Action Required
+                  </span>
+                </div>
+                <div className="mt-2 text-amber-700">
+                  <p className="text-sm leading-relaxed">
+                    This category doesn't have any associated criteria yet. Projects in this category cannot be properly evaluated without defined criteria.
+                  </p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <button
+                      onClick={() => toggleModal(selectedMainCategory)}
+                      className="inline-flex items-center px-3 py-2 border border-amber-300 text-sm leading-4 font-medium rounded-md text-amber-800 bg-amber-100 hover:bg-amber-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors duration-200"
+                    >
+                      <PlusIcon className="w-4 h-4 mr-1.5" />
+                      Create first criteria for this category
+                    </button>
+                    <span className="text-xs text-amber-600">or</span>
+                    <button
+                      onClick={() => {
+                        setSelectedMainCategory('All');
+                        setShowNoCriteriaWarning(false);
+                      }}
+                      className="text-xs text-amber-700 hover:text-amber-900 underline focus:outline-none"
+                    >
+                      View all categories
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
+            <div className="h-1 bg-gradient-to-r from-amber-300 to-orange-300"></div>
           </motion.div>
         )}
 
