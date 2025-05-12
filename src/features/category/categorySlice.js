@@ -120,6 +120,24 @@ export const updateSubCategory = createAsyncThunk(
     }
 );
 
+const formatErrorMessage = (error) => {
+    if (!error) return "Unknown error";
+    
+    if (typeof error === 'string') return error;
+    
+    if (typeof error === 'object') {
+        // Handle object with error properties
+        if (error.description) return `Description: ${error.description}`;
+        
+        // Convert object to string representation
+        return Object.entries(error)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+    }
+    
+    return String(error);
+};
+
 const categorySlice = createSlice({
     name: 'category',
     initialState: {
@@ -164,7 +182,7 @@ const categorySlice = createSlice({
             })
             .addCase(getCategoriesContent.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             })
             //de-active
             .addCase(deleteCategory.pending, (state) => {
@@ -178,7 +196,7 @@ const categorySlice = createSlice({
             })
             .addCase(deleteCategory.rejected, (state, action) => {
                 state.deleteStatus = 'failed';
-                state.error = `Error: ${action.payload}`;
+                state.error = formatErrorMessage(action.payload);
             })
             //enable
             .addCase(enableCategory.pending, (state) => {
@@ -192,7 +210,7 @@ const categorySlice = createSlice({
             })
             .addCase(enableCategory.rejected, (state, action) => {
                 state.enableStatus = 'failed';
-                state.error = `Error: ${action.payload}`;
+                state.error = formatErrorMessage(action.payload);
             })
             //create
             .addCase(createCategory.pending, (state) => {
@@ -203,7 +221,7 @@ const categorySlice = createSlice({
             })
             .addCase(createCategory.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             })
             // Update Category
             .addCase(updateCategory.pending, (state) => {
@@ -221,7 +239,7 @@ const categorySlice = createSlice({
             })
             .addCase(updateCategory.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             })
             // Update Subcategory
             .addCase(updateSubCategory.pending, (state) => {
@@ -242,7 +260,7 @@ const categorySlice = createSlice({
             })
             .addCase(updateSubCategory.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             })
             // Create Subcategory
             .addCase(createSubCategory.pending, (state) => {
@@ -259,7 +277,7 @@ const categorySlice = createSlice({
             })
             .addCase(createSubCategory.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             });
     },
 });
