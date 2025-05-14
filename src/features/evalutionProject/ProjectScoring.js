@@ -32,6 +32,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import FinalReviewModal from './FinalReviewModal';
 import ProjectViolationCard from '../violation/ProjectViolationCard';
 import ViolationManager from '../violation/violationManager';
+import PaymentInformationTab from './ProjectPaymentInformation';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -454,8 +455,9 @@ const ProjectScoring = () => {
                     <ProjectDetailsUpdate projectId={projectId} evaluationMode={true} /> :
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md">
                         <p className="text-yellow-700">Updates will be available after the project is approved.</p>
-                    </div>;
-            default: return <ProjectDetailsEvaluation projectId={projectId} evaluationMode={true} />;
+                    </div>;          
+            case 'payment':
+            return <PaymentInformationTab projectId={projectId} />;
             case 'violations':
                 return showViolationManager ? (
                     <ViolationManager
@@ -468,6 +470,7 @@ const ProjectScoring = () => {
                         onManageViolations={() => setShowViolationManager(true)}
                     />
                 );
+                default: return <ProjectDetailsEvaluation projectId={projectId} evaluationMode={true} />;
         }
     };
 
@@ -693,6 +696,16 @@ const ProjectScoring = () => {
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                 </svg>
                                 Violations
+                            </button>
+                            <button
+                                className={`tab tab-lifted flex items-center ${activeTab === 'payment' ? 'tab-active text-blue-600 border-blue-600' : 'text-gray-600 hover:text-blue-500'}`}
+                                onClick={() => setActiveTab('payment')}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 mr-1 ${activeTab === 'payment' ? 'text-blue-600' : 'text-gray-500'}`} viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
+                                    <path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" />
+                                </svg>
+                                Payment Info
                             </button>
                         </div>
 

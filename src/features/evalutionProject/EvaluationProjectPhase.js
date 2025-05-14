@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPhaseByProjectId, getMilestoneByPhaseId, getPhaseDocumentByPhaseId } from '../../features/projectmanager/components/projectSlice';
-import { getPhaseInvesment } from './components/evalutionProjectSlice';
+import { getPhaseInvesment, refundBannedProjectByPhaseId } from './components/evalutionProjectSlice';
 import Loading from '../../components/Loading';
 import { motion } from 'framer-motion';
 import {
@@ -15,7 +15,8 @@ import {
     ChevronDownIcon,
     ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { DownloadIcon } from 'lucide-react';
+import { DownloadIcon, RefreshCcwDotIcon } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const EvaluationProjectDetailsPhase = ({
     getClassName,
@@ -48,6 +49,8 @@ const EvaluationProjectDetailsPhase = ({
     const [sortField, setSortField] = useState('id');
     const [sortOrder, setSortOrder] = useState('asc');
     const [isLoadingInvestments, setIsLoadingInvestments] = useState(false);
+    const [isRefunding, setIsRefunding] = useState(false);
+    const { currentProject } = useSelector(state => state.project || { currentProject: null });
 
     useEffect(() => {
         if (projectId) {
@@ -141,7 +144,7 @@ const EvaluationProjectDetailsPhase = ({
 
     const loadPhaseInvestments = () => {
         if (!expandedPhase) return;
-    
+
         console.log("Loading phase investments for phase:", expandedPhase);
         setIsLoadingInvestments(true);
         dispatch(getPhaseInvesment({
@@ -161,6 +164,26 @@ const EvaluationProjectDetailsPhase = ({
                 console.error('Failed to load phase investments:', error);
                 setIsLoadingInvestments(false);
             });
+    };
+
+    const handleRefundProject = async (phaseId) => {
+        if (!phaseId) {
+            toast.error("Phase ID is required for refunding");
+            return;
+        }
+
+        try {
+            setIsRefunding(true);
+            await dispatch(refundBannedProjectByPhaseId({ phaseId })).unwrap();
+            toast.success("Refunds processed successfully");
+            // Refresh the investments data
+            loadPhaseInvestments();
+        } catch (error) {
+            toast.error(error.error || "Failed to process refunds");
+            console.error("Refund error:", error);
+        } finally {
+            setIsRefunding(false);
+        }
     };
 
     const handleSort = (field) => {
@@ -638,6 +661,26 @@ const EvaluationProjectDetailsPhase = ({
                                                         <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-600" />
                                                         Phase Investments
                                                     </h4>
+
+                                                    {currentProject && currentProject.status === 'BAN' && (
+                                                        <button
+                                                            onClick={() => handleRefundProject(expandedPhase)}
+                                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
+                                                            disabled={isRefunding}
+                                                        >
+                                                            {isRefunding ? (
+                                                                <>
+                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                                                    Processing...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <RefreshCcwDotIcon className="w-4 h-4 mr-2" />
+                                                                    Refund Investors
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    )}
 
                                                     <form onSubmit={handleSearchSubmit} className="relative">
                                                         <input
