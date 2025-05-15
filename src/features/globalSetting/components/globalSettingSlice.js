@@ -30,6 +30,38 @@ export const updateGlobalSetting = createAsyncThunk(
     }
 );
 
+export const fetchGlobalSettingsByType = createAsyncThunk(
+    'globalSettings/fetchByType',
+    async (types, { rejectWithValue }) => {
+        try {
+            // Convert array to comma-separated string if needed
+            const typeParams = Array.isArray(types) ? types.join(',') : types;
+            const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/settings/all/by-type?types=${typeParams}`);
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch global settings by type');
+        }
+    }
+);
+
+const formatErrorMessage = (error) => {
+    if (!error) return "Unknown error";
+
+    if (typeof error === 'string') return error;
+
+    if (typeof error === 'object') {
+        // Handle object with error properties
+        if (error.description) return `Description: ${error.description}`;
+
+        // Convert object to string representation
+        return Object.entries(error)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+    }
+
+    return String(error);
+};
+
 const initialState = {
     settings: [],
     status: 'idle',
@@ -57,7 +89,7 @@ const globalSettingSlice = createSlice({
             })
             .addCase(fetchGlobalSettings.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
+                state.error = formatErrorMessage(action.payload);
             })
 
             // Update setting cases
@@ -73,8 +105,27 @@ const globalSettingSlice = createSlice({
             })
             .addCase(updateGlobalSetting.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload;
-            });
+                state.error = formatErrorMessage(action.payload);
+            })
+            .addCase(fetchGlobalSettingsByType.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchGlobalSettingsByType.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                // Merge with existing settings or replace if same type exists
+                action.payload.forEach(newSetting => {
+                    const existingIndex = state.settings.findIndex(s => s.id === newSetting.id);
+                    if (existingIndex !== -1) {
+                        state.settings[existingIndex] = newSetting;
+                    } else {
+                        state.settings.push(newSetting);
+                    }
+                })
+            })
+            .addCase(fetchGlobalSettingsByType.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = formatErrorMessage(action.payload);
+            })
     }
 });
 
