@@ -1,6 +1,8 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
+import { fetchGlobalSettingsByType } from '../../globalSetting/components/globalSettingSlice';
 
 const RejectedProjectPanel = ({
     displayEvaluations,
@@ -13,6 +15,44 @@ const RejectedProjectPanel = ({
     currentProject
 }) => {
     const navigate = useNavigate();
+    const [thresholds, setThresholds] = useState({
+        pass: 70,
+        resubmit: 50,
+        excellent: 90
+    });
+
+    const globalSettings = useSelector(state => state.globalSettings.settings);
+
+    useEffect(() => {
+        // Fetch evaluation thresholds if not already loaded
+        const evaluationThresholdTypes = ['PASS_PERCENTAGE', 'RESUBMIT_PERCENTAGE', 'PASS_EXCELLENT_PERCENTAGE'];
+        dispatch(fetchGlobalSettingsByType(evaluationThresholdTypes));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (globalSettings.length > 0) {
+            const newThresholds = { ...thresholds };
+
+            globalSettings.forEach(setting => {
+                if (setting.type === 'PASS_PERCENTAGE') {
+                    newThresholds.pass = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'RESUBMIT_PERCENTAGE') {
+                    newThresholds.resubmit = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'PASS_EXCELLENT_PERCENTAGE') {
+                    newThresholds.excellent = parseFloat(setting.value) * 100;
+                }
+            });
+
+            setThresholds(newThresholds);
+        }
+    }, [globalSettings]);
+
+    const getScoreStatus = (percentage) => {
+        if (percentage >= thresholds.excellent) return { text: 'Potential Project', class: 'bg-green-100 text-green-800' };
+        if (percentage >= thresholds.pass) return { text: 'Passing Score', class: 'bg-green-100 text-green-800' };
+        if (percentage >= thresholds.resubmit) return { text: 'Below Standard', class: 'bg-yellow-100 text-yellow-800' };
+        return { text: 'Significantly Below Requirements', class: 'bg-red-100 text-red-800' };
+    };
 
     // Calculate total score
     const calculateTotalScore = useCallback(() => {
@@ -147,22 +187,37 @@ const RejectedProjectPanel = ({
 
                         <div className="relative w-full h-3 mb-2 bg-slate-100 rounded-full overflow-hidden">
                             <div
-                                className={`h-full rounded-full ${calculateTotalScore().percentage >= 70 ? 'bg-green-500' :
-                                    calculateTotalScore().percentage >= 50 ? 'bg-yellow-500' : 'bg-red-500'
+                                className={`h-full rounded-full ${calculateTotalScore().percentage >= thresholds.pass ? 'bg-green-500' :
+                                    calculateTotalScore().percentage >= thresholds.resubmit ? 'bg-yellow-500' : 'bg-red-500'
                                     }`}
                                 style={{ width: `${calculateTotalScore().percentage}%` }}
                             ></div>
                         </div>
 
                         <div className="mt-3 mb-2">
-                            <span className={`text-sm font-medium px-2 py-1 rounded ${calculateTotalScore().percentage >= 70 ? 'bg-green-100 text-green-800' :
-                                calculateTotalScore().percentage >= 50 ? 'bg-yellow-100 text-yellow-800' :
-                                    'bg-red-100 text-red-800'
-                                }`}>
-                                {calculateTotalScore().percentage >= 70 ? 'Passing Score' :
-                                    calculateTotalScore().percentage >= 50 ? 'Below Standard' :
-                                        'Significantly Below Requirements'}
+                            <span className={`text-sm font-medium px-2 py-1 rounded ${getScoreStatus(calculateTotalScore().percentage).class}`}>
+                                {getScoreStatus(calculateTotalScore().percentage).text}
                             </span>
+                        </div>
+
+                        {/* Thresholds display */}
+                        <div className="mt-4 flex flex-wrap gap-2 text-xs">
+                            <div className="px-2 py-1 rounded-full bg-green-100 text-green-800 flex items-center">
+                                <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                Excellent: ≥{Math.round(thresholds.excellent)}%
+                            </div>
+                            <div className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 flex items-center">
+                                <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                                Pass: ≥{Math.round(thresholds.pass)}%
+                            </div>
+                            <div className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                                <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
+                                Resubmit: ≥{Math.round(thresholds.resubmit)}%
+                            </div>
+                            <div className="px-2 py-1 rounded-full bg-red-100 text-red-800 flex items-center">
+                                <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                Reject: &lt;{Math.round(thresholds.resubmit)}%
+                            </div>
                         </div>
                     </div>
 
