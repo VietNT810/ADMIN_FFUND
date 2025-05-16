@@ -1,5 +1,7 @@
-import React, { useMemo, useRef, useEffect, useCallback } from 'react';
+import React, { useMemo, useRef, useEffect, useCallback, useState } from 'react';
 import PropTypes from 'prop-types';
+import { useSelector } from 'react-redux';
+import { fetchGlobalSettingsByType } from '../../globalSetting/components/globalSettingSlice';
 
 const PendingApprovalPanel = ({
     displayEvaluations,
@@ -18,12 +20,19 @@ const PendingApprovalPanel = ({
     getEvaluationItems
 }) => {
 
+    const [thresholds, setThresholds] = useState({
+        pass: 70,
+        resubmit: 30,
+        excellent: 90
+    });
+
     const scrollContainerRef = useRef(null);
     const lastClickedItemRef = useRef(null);
     const lastScrollPositionRef = useRef(0);
     const isRestoringPositionRef = useRef(false);
 
     const itemIdsRef = useRef([]);
+    const globalSettings = useSelector(state => state.globalSettings.settings);
 
     const currentItemIds = useMemo(() => {
         return evaluationItems.map(item => item.id);
@@ -32,6 +41,30 @@ const PendingApprovalPanel = ({
     useEffect(() => {
         itemIdsRef.current = currentItemIds;
     }, [currentItemIds]);
+
+    useEffect(() => {
+        const thresholdTypes = ['PASS_PERCENTAGE', 'RESUBMIT_PERCENTAGE', 'PASS_EXCELLENT_PERCENTAGE'];
+        dispatch(fetchGlobalSettingsByType(thresholdTypes));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (globalSettings && globalSettings.length > 0) {
+            const newThresholds = { ...thresholds };
+
+            globalSettings.forEach(setting => {
+                if (setting.type === 'PASS_PERCENTAGE') {
+                    newThresholds.pass = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'RESUBMIT_PERCENTAGE') {
+                    newThresholds.resubmit = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'PASS_EXCELLENT_PERCENTAGE') {
+                    newThresholds.excellent = parseFloat(setting.value) * 100;
+                }
+            });
+
+            setThresholds(newThresholds);
+        }
+    }, [globalSettings]);
+
 
     // Calculate scores for current component
     const currentEvaluationScore = useMemo(() => {
@@ -193,6 +226,18 @@ const PendingApprovalPanel = ({
         handleScoreChange(itemId, score);
     };
 
+    const getProjectStatus = (percentage) => {
+        if (percentage >= thresholds.excellent) {
+            return { label: 'Potential Project', color: 'text-green-700 bg-green-50 border-green-100' };
+        } else if (percentage >= thresholds.pass) {
+            return { label: 'Pass', color: 'text-blue-700 bg-blue-50 border-blue-100' };
+        } else if (percentage >= thresholds.resubmit) {
+            return { label: 'Resubmit', color: 'text-yellow-700 bg-yellow-50 border-yellow-100' };
+        } else {
+            return { label: 'Reject', color: 'text-red-700 bg-red-50 border-red-100' };
+        }
+    };
+
     return (
         <div className="flex flex-col h-full bg-white rounded-xl shadow-sm">
             <style jsx>{`
@@ -258,8 +303,8 @@ const PendingApprovalPanel = ({
                                                 key={item.id}
                                                 id={`item-${item.id}`}
                                                 className={`p-3 border rounded-md bg-white shadow-sm transition-all duration-200 ${lastClickedItemRef.current === item.id
-                                                        ? 'border-green-300 ring-1 ring-green-200'
-                                                        : 'border-gray-100 hover:border-green-200'
+                                                    ? 'border-green-300 ring-1 ring-green-200'
+                                                    : 'border-gray-100 hover:border-green-200'
                                                     }`}
                                             >
                                                 <div className="flex justify-between items-center mb-2 gap-2">
@@ -347,6 +392,10 @@ const PendingApprovalPanel = ({
                                                     <div className="ml-2 text-xs font-bold text-green-700">
                                                         {overallScore.totalPoints.toFixed(1)}/{overallScore.maxPoints} ({Math.round(overallScore.percentage)}%)
                                                     </div>
+
+                                                    <div className={`ml-2 px-2 py-0.5 text-xs rounded-md font-medium ${getProjectStatus(overallScore.percentage).color}`}>
+                                                        {getProjectStatus(overallScore.percentage).label}
+                                                    </div>
                                                 </div>
 
                                                 <button
@@ -369,6 +418,33 @@ const PendingApprovalPanel = ({
                                                     ></div>
                                                 </div>
                                             </div>
+                                            <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
+                                                <div className="px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-xs border border-red-100 flex items-center">
+                                                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                                    Reject: &lt;{Math.round(thresholds.resubmit)}%
+                                                </div>
+                                                <div className="px-2 py-0.5 rounded-full bg-yellow-50 text-yellow-700 text-xs border border-yellow-100 flex items-center">
+                                                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
+                                                    Resubmit: {Math.round(thresholds.resubmit)}-{Math.round(thresholds.pass) - 1}%
+                                                </div>
+                                                <div className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 text-xs border border-blue-100 flex items-center">
+                                                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                                                    Pass: {Math.round(thresholds.pass)}-{Math.round(thresholds.excellent) - 1}%
+                                                </div>
+                                                <div className="px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-xs border border-green-100 flex items-center">
+                                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                                    Potential: ≥{Math.round(thresholds.excellent)}%
+                                                </div>
+                                            </div>
+
+                                            {!areAllEvaluationsScored() && (
+                                                <div className="mt-2 text-xs text-yellow-600 flex items-center justify-center">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 mr-1">
+                                                        <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                                                    </svg>
+                                                    All components must be scored before submitting final evaluation
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </>
