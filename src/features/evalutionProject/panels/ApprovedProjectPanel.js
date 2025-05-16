@@ -1,6 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Pie } from 'react-chartjs-2';
 import PropTypes from 'prop-types';
+import { motion } from 'framer-motion';
+import { CheckCircleIcon, AlertOctagon } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { approveUnderReviewProject } from '../components/evalutionProjectSlice';
+import { banUnderReviewProject } from '../../projectmanager/components/projectSlice';
+import { useSelector } from 'react-redux';
+import { fetchGlobalSettingsByType } from '../../globalSetting/components/globalSettingSlice';
+
 
 const ApprovedProjectPanel = ({
     displayEvaluations,
@@ -9,8 +17,54 @@ const ApprovedProjectPanel = ({
     setSelectedEvaluation,
     comment,
     getEvaluationItems,
-    dispatch
+    dispatch,
+    currentProject,
+    expandedPhase,
+    hasRequiredDocuments
 }) => {
+    const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [showBanModal, setShowBanModal] = useState(false);
+    const [isApproving, setIsApproving] = useState(false);
+    const [isBanning, setIsBanning] = useState(false);
+    const userRole = localStorage.getItem('role');
+    const isUnderReview = currentProject?.status === 'UNDER_REVIEW';
+    const [thresholds, setThresholds] = useState({
+        pass: 70,
+        resubmit: 50,
+        excellent: 90
+    });
+    const globalSettings = useSelector(state => state.globalSettings.settings);
+
+    useEffect(() => {
+        const evaluationThresholdTypes = ['PASS_PERCENTAGE', 'RESUBMIT_PERCENTAGE', 'PASS_EXCELLENT_PERCENTAGE'];
+        dispatch(fetchGlobalSettingsByType(evaluationThresholdTypes));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (globalSettings.length > 0) {
+            const newThresholds = { ...thresholds };
+
+            globalSettings.forEach(setting => {
+                if (setting.type === 'PASS_PERCENTAGE') {
+                    newThresholds.pass = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'RESUBMIT_PERCENTAGE') {
+                    newThresholds.resubmit = parseFloat(setting.value) * 100;
+                } else if (setting.type === 'PASS_EXCELLENT_PERCENTAGE') {
+                    newThresholds.excellent = parseFloat(setting.value) * 100;
+                }
+            });
+
+            setThresholds(newThresholds);
+        }
+    }, [globalSettings]);
+
+    const getScoreStatus = (percentage) => {
+        if (percentage >= thresholds.excellent) return { text: 'Potential Project', color: 'text-green-600' };
+        if (percentage >= thresholds.pass) return { text: 'Approved', color: 'text-green-600' };
+        if (percentage >= thresholds.resubmit) return { text: 'Needs Improvement', color: 'text-yellow-600' };
+        return { text: 'Rejected', color: 'text-red-600' };
+    };
+
     // Calculate total score
     const calculateTotalScore = useCallback(() => {
         let totalActual = 0;
@@ -71,6 +125,48 @@ const ApprovedProjectPanel = ({
             ],
         };
     }, []);
+
+    const handleApproveProject = () => {
+        setShowApprovalModal(true);
+    };
+
+    const handleBanProject = () => {
+        setShowBanModal(true);
+    };
+
+    const confirmApproval = async () => {
+        if (!currentProject || !currentProject.id) return;
+
+        try {
+            setIsApproving(true);
+            await dispatch(approveUnderReviewProject({ projectId: currentProject.id })).unwrap();
+            toast.success('Project has been approved successfully!');
+            setShowApprovalModal(false);
+            window.location.reload(); // Reload page to update project status
+        } catch (error) {
+            console.error('Error approving project:', error);
+            toast.error(error.message || 'Failed to approve project');
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+    const confirmBan = async () => {
+        if (!currentProject || !currentProject.id) return;
+
+        try {
+            setIsBanning(true);
+            await dispatch(banUnderReviewProject(currentProject.id)).unwrap();
+            toast.success('Project has been banned successfully!');
+            setShowBanModal(false);
+            window.location.reload(); // Reload page to update project status
+        } catch (error) {
+            console.error('Error banning project:', error);
+            toast.error(error.message || 'Failed to ban project');
+        } finally {
+            setIsBanning(false);
+        }
+    };
 
     // Chart options
     const chartOptions = {
@@ -174,6 +270,32 @@ const ApprovedProjectPanel = ({
                     <div className="flex justify-between items-center mb-3 flex-shrink-0">
                         <h2 className="text-xl font-semibold">Evaluation Summary</h2>
                     </div>
+                    {userRole === 'MANAGER' && isUnderReview && !selectedEvaluation && (
+                        <div className="mb-4 flex flex-wrap gap-2 justify-end">
+                            {expandedPhase && hasRequiredDocuments && hasRequiredDocuments(expandedPhase) && (
+                                <button
+                                    onClick={handleApproveProject}
+                                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
+                                >
+                                    <CheckCircleIcon className="w-4 h-4 mr-1" />
+                                    Approve Project
+                                </button>
+                            )}
+                            <div className="relative group">
+                                <button
+                                    onClick={handleBanProject}
+                                    className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
+                                >
+                                    <AlertOctagon className="w-4 h-4 mr-1" />
+                                    Ban Project
+                                </button>
+                                <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
+                                    Ban projects with unsuitable phase documents
+                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                     <div className="flex flex-col flex-grow overflow-hidden">
                         <div className="bg-white rounded-lg p-4 mb-4 shadow-sm flex-shrink-0">
@@ -186,7 +308,6 @@ const ApprovedProjectPanel = ({
                                     </span>
                                 </span>
                             </div>
-
                             <div className="mt-4 flex justify-center">
                                 <div className="w-40 h-40 relative">
                                     <Pie data={preparePieChartData(calculateTotalScore())} options={chartOptions} />
@@ -195,14 +316,27 @@ const ApprovedProjectPanel = ({
                                     </div>
                                 </div>
                             </div>
-
                             <div className="mt-4 text-center">
-                                <div className={`text-lg font-medium 
-                                    ${calculateTotalScore().percentage >= 70 ? 'text-green-600' :
-                                        calculateTotalScore().percentage >= 50 ? 'text-yellow-600' : 'text-red-600'}`}>
-                                    {calculateTotalScore().percentage >= 90 ? 'Potential Project' :
-                                        calculateTotalScore().percentage >= 70 ? 'Approved' :
-                                            calculateTotalScore().percentage >= 50 ? 'Needs Improvement' : 'Rejected'}
+                                <div className={`text-lg font-medium ${getScoreStatus(calculateTotalScore().percentage).color}`}>
+                                    {getScoreStatus(calculateTotalScore().percentage).text}
+                                </div>
+                            </div>
+                            <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs">
+                                <div className="px-2 py-1 rounded-full bg-green-100 text-green-800 flex items-center">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-1"></span>
+                                    Excellent: ≥{Math.round(thresholds.excellent)}%
+                                </div>
+                                <div className="px-2 py-1 rounded-full bg-blue-100 text-blue-800 flex items-center">
+                                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1"></span>
+                                    Pass: ≥{Math.round(thresholds.pass)}%
+                                </div>
+                                <div className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800 flex items-center">
+                                    <span className="w-2 h-2 bg-yellow-500 rounded-full mr-1"></span>
+                                    Resubmit: ≥{Math.round(thresholds.resubmit)}%
+                                </div>
+                                <div className="px-2 py-1 rounded-full bg-red-100 text-red-800 flex items-center">
+                                    <span className="w-2 h-2 bg-red-500 rounded-full mr-1"></span>
+                                    Reject: &lt;{Math.round(thresholds.resubmit)}%
                                 </div>
                             </div>
                         </div>
@@ -260,6 +394,106 @@ const ApprovedProjectPanel = ({
                     </div>
                 </>
             )}
+
+            {/* Approval Confirmation Modal */}
+            {showApprovalModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+                    <motion.div
+                        className="bg-white rounded-lg w-full max-w-md shadow-2xl p-6"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <CheckCircleIcon className="w-6 h-6 text-green-500 mr-2" />
+                            Approve Project
+                        </h3>
+
+                        <p className="text-gray-600 mb-4">
+                            Are you sure you want to approve this project? The project will move from
+                            "Under Review" to "Approved" status.
+                        </p>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowApprovalModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmApproval}
+                                disabled={isApproving}
+                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors flex items-center"
+                            >
+                                {isApproving ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    "Confirm Approval"
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Ban Confirmation Modal */}
+            {showBanModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 p-4">
+                    <motion.div
+                        className="bg-white rounded-lg w-full max-w-md shadow-2xl p-6"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <AlertOctagon className="w-6 h-6 text-red-500 mr-2" />
+                            Ban Project
+                        </h3>
+
+                        <p className="text-gray-600 mb-4">
+                            Are you sure you want to ban this project? This action will permanently ban the project,
+                            and it will no longer be available for funding.
+                        </p>
+
+                        <p className="text-gray-700 font-medium mb-4">
+                            This action cannot be undone.
+                        </p>
+
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setShowBanModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmBan}
+                                disabled={isBanning}
+                                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md font-medium transition-colors flex items-center"
+                            >
+                                {isBanning ? (
+                                    <>
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Processing...
+                                    </>
+                                ) : (
+                                    "Ban Project"
+                                )}
+                            </button>
+                        </div>
+                    </motion.div>
+                </div>
+            )}
         </div>
     );
 };
@@ -272,6 +506,9 @@ ApprovedProjectPanel.propTypes = {
     comment: PropTypes.string,
     getEvaluationItems: PropTypes.func.isRequired,
     dispatch: PropTypes.func.isRequired,
+    currentProject: PropTypes.object,
+    expandedPhase: PropTypes.number,
+    hasRequiredDocuments: PropTypes.func
 };
 
 export default ApprovedProjectPanel;

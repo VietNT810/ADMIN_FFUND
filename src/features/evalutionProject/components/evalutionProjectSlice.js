@@ -120,7 +120,7 @@ export const getPhaseInvesment = createAsyncThunk(
     async ({ phaseId, query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
         try {
             const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-            console.log('Fetching evaluations for phase:', phaseId);
+            console.log('Fetching investments for phase:', phaseId);
 
             // Build URL with query parameters
             const response = await axios.get(`${BASE_URL}/investment/all/${phaseId}`, {
@@ -132,7 +132,8 @@ export const getPhaseInvesment = createAsyncThunk(
                 }
             });
 
-            return response.data.data;
+            console.log('Investment API response:', response.data);
+            return response.data;
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
@@ -147,10 +148,10 @@ export const approveUnderReviewProject = createAsyncThunk(
             return response.data;
         } catch (error) {
             // Properly extract the error structure
-            const errorMessage = error.response?.data?.error || 
-                                error.response?.data?.message || 
-                                'Failed to approve project';
-            
+            const errorMessage = error.response?.data?.error ||
+                error.response?.data?.message ||
+                'Failed to approve project';
+
             return rejectWithValue({
                 status: error.response?.status,
                 error: errorMessage
@@ -158,6 +159,61 @@ export const approveUnderReviewProject = createAsyncThunk(
         }
     }
 );
+
+export const refundBannedProjectByPhaseId = createAsyncThunk(
+    'evaluation/refundBannedProjectByPhaseId',
+    async ({ phaseId }, { rejectWithValue }) => {
+        try {
+            const response = await axios.patch(`${BASE_URL}/project/approve/under-review/${phaseId}`);
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.error ||
+                error.response?.data?.message ||
+                'Failed to approve project';
+            return rejectWithValue({
+                status: error.response?.status,
+                error: errorMessage
+            });
+        }
+    }
+);
+
+export const getProjectPaymentInformationByProjectId = createAsyncThunk(
+    'evaluation/getProjectPaymentInformationByProjectId',
+    async (projectId, { rejectWithValue }) => {
+        try {
+            const response = await axios.get(`${BASE_URL}/project-payment-information/by-project-id/${projectId}`);
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.error ||
+                error.response?.data?.message ||
+                'Failed to fetch project payment information';
+            return rejectWithValue({
+                status: error.response?.status,
+                error: errorMessage
+            });
+        }
+    }
+);
+
+const formatErrorMessage = (error) => {
+    if (!error) return "Unknown error";
+    
+    if (typeof error === 'string') return error;
+    
+    if (typeof error === 'object') {
+        // Handle object with error properties
+        if (error.description) return `Description: ${error.description}`;
+        
+        // Convert object to string representation
+        return Object.entries(error)
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(', ');
+    }
+    
+    return String(error);
+};
+
 
 const initialState = {
     evaluations: [],
@@ -235,7 +291,7 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(getProjectEvaluations.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to fetch evaluations';
+                state.error = formatErrorMessage(action.payload) || 'Failed to fetch evaluations';
                 console.log('Redux - getProjectEvaluations.rejected:', action.payload);
             })
 
@@ -249,7 +305,7 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(getEvaluationItems.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to fetch evaluation items';
+                state.error = formatErrorMessage(action.payload) || 'Failed to fetch evaluation items';
             })
 
             .addCase(updateEvaluationComment.pending, (state) => {
@@ -266,7 +322,7 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(updateEvaluationComment.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to update comment';
+                state.error = formatErrorMessage(action.payload) || 'Failed to update comment';
             })
 
             .addCase(updateEvaluationGrade.pending, (state) => {
@@ -283,7 +339,7 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(updateEvaluationGrade.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to update grade';
+                state.error = formatErrorMessage(action.payload) || 'Failed to update grade';
             })
 
             .addCase(getProjectEvaluationsAfter.pending, (state) => {
@@ -309,7 +365,7 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(getProjectEvaluationsAfter.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to fetch founder evaluations';
+                state.error = formatErrorMessage(action.payload) || 'Failed to fetch founder evaluations';
                 console.log('Redux - getProjectEvaluationsAfter.rejected:', action.payload);
             })
 
@@ -318,37 +374,59 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(getPhaseInvesment.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                // Store the investments data in evaluations array
-                state.evaluations = action.payload.data || [];
-                // Also store pagination info if needed
-                state.pagination = {
-                    currentPage: action.payload.currentPage,
-                    totalPages: action.payload.totalPages,
-                    pageSize: action.payload.pageSize,
-                    totalElements: action.payload.totalElements
-                };
+
+                if (action.payload?.data?.data && Array.isArray(action.payload.data.data)) {
+                    state.phaseInvestments = action.payload.data.data;
+                } else {
+                    state.phaseInvestments = action.payload || [];
+                }
+
+                if (action.payload?.currentPage !== undefined) {
+                    state.pagination = {
+                        currentPage: action.payload.currentPage,
+                        totalPages: action.payload.totalPages,
+                        pageSize: action.payload.pageSize,
+                        totalElements: action.payload.totalElements
+                    };
+                }
             })
             .addCase(getPhaseInvesment.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload || 'Failed to fetch phase investments';
+                state.error = formatErrorMessage(action.payload) || 'Failed to fetch phase investments';
             })
             .addCase(approveUnderReviewProject.pending, (state) => {
                 state.status = 'loading';
                 state.error = null;
             })
-            .addCase(approveUnderReviewProject.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                state.successMessage = 'Project has been approved successfully!';
-            })
             .addCase(approveUnderReviewProject.rejected, (state, action) => {
                 state.status = 'failed';
                 // Handle the structured error
                 if (action.payload && action.payload.error) {
-                    state.error = `${action.payload.error} (Status: ${action.payload.status || 'unknown'})`;
+                    state.error = formatErrorMessage(action.payload);
                 } else {
                     state.error = action.error.message || 'Failed to approve project';
                 }
             })
+            .addCase(approveUnderReviewProject.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.successMessage = action.payload.message || 'Project approved successfully';
+            })
+            .addCase(refundBannedProjectByPhaseId.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(refundBannedProjectByPhaseId.rejected, (state, action) => {
+                state.status = 'failed';
+                if (action.payload && action.payload.error) {
+                    state.error = formatErrorMessage(action.payload);
+                } else {
+                    state.error = action.error.message || 'Failed to approve project';
+                }
+            })
+            .addCase(refundBannedProjectByPhaseId.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.successMessage = action.payload.message || 'Project approved successfully';
+            });
     },
 });
 
