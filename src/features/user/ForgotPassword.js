@@ -78,7 +78,7 @@ function ForgotPassword() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-orange-500 to-yellow-400">
             <div className="card w-full max-w-4xl shadow-xl rounded-xl bg-white flex md:flex-row flex-col">
                 <div className="md:w-1/2 hidden md:flex items-center justify-center bg-orange-100 rounded-l-xl overflow-hidden">
-                    <img src="/logo-login.jpg" alt="Logo" className="w-full h-full object-cover" />
+                    <img src="https://r2.fivemanage.com/BZMR0nG5HMWQZlsg7rbJy/loginAdmin.gif" alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <div className="md:w-1/2 w-full py-12 px-8">
                     <div className="text-center mb-4">
