@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect, useState } from 'react';
 import { Pie } from 'react-chartjs-2';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchGlobalSettingForEvalution } from '../globalSetting/components/globalSettingSlice';
 
 const FinalReviewModal = ({
     showFinalReview,
@@ -17,11 +18,34 @@ const FinalReviewModal = ({
     isReadOnly = false,
     projectStatus = 'UNKNOWN'
 }) => {
-    const { thresholds } = useSelector(state => state.evaluation);
+    const dispatch = useDispatch();
+    const [isLoadingSettings, setIsLoadingSettings] = useState(false);
+    const { settings, status: settingsStatus } = useSelector(state => state.globalSettings || { settings: [] });
 
-    const passPercentage = thresholds.passPercentage * 100;
-    const excellentPercentage = thresholds.excellentPercentage * 100;
-    const resubmitPercentage = thresholds.resubmitPercentage * 100;
+    // Fetch global settings when the modal opens
+    useEffect(() => {
+        if (showFinalReview && settings.length === 0) {
+            setIsLoadingSettings(true);
+            dispatch(fetchGlobalSettingForEvalution())
+                .finally(() => setIsLoadingSettings(false));
+        }
+    }, [showFinalReview, dispatch, settings.length]);
+
+    // Extract thresholds from settings
+    const passPercentage = useMemo(() => {
+        const setting = settings.find(s => s.type === 'PASS_PERCENTAGE');
+        return setting ? setting.value * 100 : 70;
+    }, [settings]);
+
+    const excellentPercentage = useMemo(() => {
+        const setting = settings.find(s => s.type === 'PASS_EXCELLENT_PERCENTAGE');
+        return setting ? setting.value * 100 : 90;
+    }, [settings]);
+
+    const resubmitPercentage = useMemo(() => {
+        const setting = settings.find(s => s.type === 'RESUBMIT_PERCENTAGE');
+        return setting ? setting.value * 100 : 30;
+    }, [settings]);
 
     const getScoreMessage = useMemo(() => {
         const percentage = totalScore.percentage;
@@ -40,6 +64,41 @@ const FinalReviewModal = ({
         return 'text-red-600';
     }, [totalScore.percentage, passPercentage, resubmitPercentage]);
 
+    // Get project category based on score
+    const getProjectCategory = useMemo(() => {
+        const percentage = totalScore.percentage;
+
+        if (percentage >= excellentPercentage) {
+            return {
+                name: 'Potential Project',
+                description: 'This project exceeds quality standards and shows exceptional promise.',
+                class: 'bg-purple-100 text-purple-800 border-purple-300',
+                icon: '🌟'
+            };
+        } else if (percentage >= passPercentage) {
+            return {
+                name: 'Standard Project',
+                description: 'This project meets our quality standards and is suitable for funding.',
+                class: 'bg-green-100 text-green-800 border-green-300',
+                icon: '✅'
+            };
+        } else if (percentage >= resubmitPercentage) {
+            return {
+                name: 'Needs Improvement',
+                description: 'This project requires modifications before it can be approved.',
+                class: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+                icon: '⚠️'
+            };
+        } else {
+            return {
+                name: 'Below Standards',
+                description: 'This project does not meet minimum quality standards.',
+                class: 'bg-red-100 text-red-800 border-red-300',
+                icon: '❌'
+            };
+        }
+    }, [totalScore.percentage, excellentPercentage, passPercentage, resubmitPercentage]);
+
     if (!showFinalReview) return null;
 
     return (
@@ -52,6 +111,15 @@ const FinalReviewModal = ({
                     )}
                 </h2>
 
+                {isLoadingSettings && (
+                    <div className="alert alert-info mb-4">
+                        <div className="flex gap-2 items-center">
+                            <div className="loading loading-spinner loading-sm"></div>
+                            <span>Loading evaluation thresholds...</span>
+                        </div>
+                    </div>
+                )}
+
                 {isReadOnly && (
                     <div className="alert alert-info mb-4">
                         <div className="flex gap-2 items-center">
@@ -60,6 +128,17 @@ const FinalReviewModal = ({
                         </div>
                     </div>
                 )}
+
+                {/* Project Category Card */}
+                <div className={`p-4 rounded-lg mb-6 border ${getProjectCategory.class}`}>
+                    <div className="flex items-start gap-3">
+                        <div className="text-2xl">{getProjectCategory.icon}</div>
+                        <div>
+                            <h3 className="font-semibold">{getProjectCategory.name}</h3>
+                            <p className="text-sm mt-1">{getProjectCategory.description}</p>
+                        </div>
+                    </div>
+                </div>
 
                 <div className="mb-6">
                     <h3 className="font-semibold text-lg mb-2">Project Score</h3>
@@ -76,6 +155,26 @@ const FinalReviewModal = ({
                             </div>
                             <div className={`mt-2 text-sm font-medium ${getScoreColor}`}>
                                 {getScoreMessage}
+                            </div>
+
+                            {/* Display thresholds */}
+                            <div className="mt-3 space-y-1 text-xs text-gray-500">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                                    <span>Passing threshold: ≥ {passPercentage}%</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-purple-500"></div>
+                                    <span>Excellent threshold: ≥ {excellentPercentage}%</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                                    <span>Resubmit threshold: ≥ {resubmitPercentage}%</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                                    <span>Rejection threshold: &lt; {resubmitPercentage}%</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -107,7 +206,7 @@ const FinalReviewModal = ({
                                                     <div className="w-full bg-base-200 rounded-full h-2">
                                                         <div
                                                             className={`h-2 rounded-full ${percentage >= passPercentage ? 'bg-green-500' :
-                                                                    percentage >= resubmitPercentage ? 'bg-yellow-500' : 'bg-red-500'
+                                                                percentage >= resubmitPercentage ? 'bg-yellow-500' : 'bg-red-500'
                                                                 }`}
                                                             style={{ width: `${percentage}%` }}
                                                         ></div>

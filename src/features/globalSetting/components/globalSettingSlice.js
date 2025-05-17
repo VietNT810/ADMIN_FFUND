@@ -44,6 +44,28 @@ export const fetchGlobalSettingsByType = createAsyncThunk(
     }
 );
 
+export const fetchGlobalSettingForEvalution = createAsyncThunk(
+    'globalSettings/fetchForEvalution',
+    async (_, { rejectWithValue }) => {
+        try {
+            const evaluationTypes = [
+                'PASS_PERCENTAGE',
+                'RESUBMIT_PERCENTAGE',
+                'PASS_EXCELLENT_PERCENTAGE'
+            ];
+
+            // Tạo URL với multiple type parameters
+            const params = new URLSearchParams();
+            evaluationTypes.forEach(type => params.append('types', type));
+
+            const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/settings/all/by-type?${params.toString()}`);
+            return response.data.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch evaluation settings');
+        }
+    }
+);
+
 const formatErrorMessage = (error) => {
     if (!error) return "Unknown error";
 
@@ -123,6 +145,24 @@ const globalSettingSlice = createSlice({
                 })
             })
             .addCase(fetchGlobalSettingsByType.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = formatErrorMessage(action.payload);
+            })
+            .addCase(fetchGlobalSettingForEvalution.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(fetchGlobalSettingForEvalution.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                action.payload.forEach(newSetting => {
+                    const existingIndex = state.settings.findIndex(s => s.id === newSetting.id);
+                    if (existingIndex !== -1) {
+                        state.settings[existingIndex] = newSetting;
+                    } else {
+                        state.settings.push(newSetting);
+                    }
+                });
+            })
+            .addCase(fetchGlobalSettingForEvalution.rejected, (state, action) => {
                 state.status = 'failed';
                 state.error = formatErrorMessage(action.payload);
             })
