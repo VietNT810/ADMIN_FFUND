@@ -55,6 +55,12 @@ const ViolationManager = ({ projectId: propProjectId, onBackToSummary }) => {
         }
     }, [dispatch, projectId]);
 
+    useEffect(() => {
+        if (status === 'succeeded' && violations.length === 0) {
+            handleOpenCreateModal();
+        }
+    }, [status, violations.length]);
+
     // Handle form input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
