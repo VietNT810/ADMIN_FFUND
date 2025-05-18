@@ -7,7 +7,7 @@ export const getAllRequest = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://ffund.duckdns.org/api/v1/request/all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/founder-request/all', {
         params: { query, page, size, sort: sortOrderSymbol },
       });
       return {
@@ -25,7 +25,7 @@ export const getRequestById = createAsyncThunk(
   'request/getRequestById',
   async (requestId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://ffund.duckdns.org/api/v1/request/${requestId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/founder-request/${requestId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch request by ID.');
@@ -39,7 +39,22 @@ export const responseRequest = createAsyncThunk(
   async ({ requestId, response }, { rejectWithValue }) => {
     try {
       const responseApi = await axios.post(
-        `https://ffund.duckdns.org/api/v1/request/respond/${requestId}`,
+        `https://ffund.duckdns.org/api/v1/founder-request/respond/${requestId}`,
+        { response }
+      );
+      return responseApi.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to respond to request.');
+    }
+  }
+);
+
+export const responseTimeExtendRequest = createAsyncThunk(
+  'request/responseTimeExtendRequest',
+  async ({ requestId, response }, { rejectWithValue }) => {
+    try {
+      const responseApi = await axios.post(
+        `https://ffund.duckdns.org/api/v1/founder-request/extend/${requestId}`,
         { response }
       );
       return responseApi.data.message;
@@ -96,6 +111,17 @@ const requestSlice = createSlice({
         state.error = null;
       })
       .addCase(responseRequest.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to respond to request.';
+      })
+      .addCase(responseTimeExtendRequest.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(responseTimeExtendRequest.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(responseTimeExtendRequest.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to respond to request.';
       });
