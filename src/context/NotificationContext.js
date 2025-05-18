@@ -25,7 +25,7 @@ export const NotificationProvider = ({ children }) => {
 
     // Get userId from localStorage
     const userId = localStorage.getItem('userId');
-    
+
     // Early return if userId is not available
     if (!userId) {
       console.log('⚠️ User ID not available - cannot establish WebSocket connection');
@@ -41,12 +41,12 @@ export const NotificationProvider = ({ children }) => {
     console.log('🔄 Setting up new WebSocket connection for user:', userId);
 
     const client = new WebSocketClient({
-      serverUrl: 'https://quanbeo.duckdns.org/ws',
+      serverUrl: 'https://ffund.duckdns.org/ws',
       onMessage: handleNotification,
       onConnect: () => {
         console.log('✅ WebSocket connected');
         setConnectionStatus('connected');
-        
+
         // Create destination path with userId
         const destination = `/user/${userId}/notification`;
         client.subscribe(destination);

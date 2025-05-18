@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const API_BASE_URL = 'https://quanbeo.duckdns.org/api/v1/rule';
+const API_BASE_URL = 'https://ffund.duckdns.org/api/v1/rule';
 
 
 export const fetchAllPhaseRules = createAsyncThunk(

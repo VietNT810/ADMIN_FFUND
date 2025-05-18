@@ -7,7 +7,7 @@ export const getProjects = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/get-all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/project/get-all', {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 
@@ -27,7 +27,7 @@ export const getProjectOfManager = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/manager/get-all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/project/manager/get-all', {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 
@@ -47,7 +47,7 @@ export const getProjectToComplete = createAsyncThunk(
   async ({ title, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/completed', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/project/completed', {
         params: { title, page, size, sort: sortOrderSymbol }
       });
 
@@ -66,10 +66,10 @@ export const getProjectById = createAsyncThunk(
   'project/getProjectById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project/secured/${id}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/project/secured/${id}`);
       return response.data.data;
     } catch (error) {
-      
+
       return rejectWithValue({
         status: error.response?.status || 'Unknown',
         message: error.response?.data?.error || 'Failed to fetch project by ID.'
@@ -83,7 +83,7 @@ export const getDocumentByProjectId = createAsyncThunk(
   'project/getDocumentByProjectId',
   async (projectId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-document/get-by-project-id/${projectId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/project-document/get-by-project-id/${projectId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project documents.');
@@ -96,7 +96,7 @@ export const getUpdatePostByProjectId = createAsyncThunk(
   'project/getUpdatePostByProjectId',
   async (projectId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-update-post/by-project-id/${projectId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/project-update-post/by-project-id/${projectId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project update posts.');
@@ -109,7 +109,7 @@ export const getPhaseByProjectId = createAsyncThunk(
   'project/getPhaseByProjectId',
   async (projectId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/funding-phase/project/${projectId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/funding-phase/project/${projectId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project phases.');
@@ -122,7 +122,7 @@ export const getMilestoneByPhaseId = createAsyncThunk(
   'project/getMilestoneByPhaseId',
   async (phaseId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/milestone/phase/${phaseId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/milestone/phase/${phaseId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project milestones.');
@@ -135,7 +135,7 @@ export const getStoryByProjectId = createAsyncThunk(
   'project/getStoryByProjectId',
   async (projectId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/project-story/project/${projectId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/project-story/project/${projectId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project story.');
@@ -149,7 +149,7 @@ export const assignManagerToProject = createAsyncThunk(
   async ({ projectId, managerId }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/assign/${projectId}/manager/${managerId}`
+        `https://ffund.duckdns.org/api/v1/project/assign/${projectId}/manager/${managerId}`
       );
       return response.data.message;
     } catch (error) {
@@ -164,7 +164,7 @@ export const approveProject = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await axios.patch(
-        `https://quanbeo.duckdns.org/api/v1/project/approve/${projectId}`
+        `https://ffund.duckdns.org/api/v1/project/approve/${projectId}`
       );
       return response.data.message;
     } catch (error) {
@@ -179,7 +179,7 @@ export const rejectProject = createAsyncThunk(
   async ({ projectId, reason }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/reject/${projectId}`,
+        `https://ffund.duckdns.org/api/v1/project/reject/${projectId}`,
         { reason }
       );
 
@@ -196,14 +196,14 @@ export const suspendProject = createAsyncThunk(
   async ({ projectId, reason }, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/suspend/${projectId}`,
+        `https://ffund.duckdns.org/api/v1/project/suspend/${projectId}`,
         { reason }
       );
 
       return response.data.message;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.error || 
+        error.response?.data?.error ||
         `Failed to suspend project: ${error.message}`
       );
     }
@@ -216,7 +216,7 @@ export const completeProject = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await axios.patch(
-        `https://quanbeo.duckdns.org/api/v1/project/completed/${projectId}`
+        `https://ffund.duckdns.org/api/v1/project/completed/${projectId}`
       );
       return response.data.message;
     } catch (error) {
@@ -229,7 +229,7 @@ export const getProjectStatistics = createAsyncThunk(
   'project/getProjectStatistics',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/statistics');
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/project/statistics');
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch project statistics.');
@@ -243,7 +243,7 @@ export const getProjectsManager = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/project/manager/get-all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/project/manager/get-all', {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 
@@ -261,7 +261,7 @@ export const getPhaseDocumentByPhaseId = createAsyncThunk(
   'phase-document/getPhaseDocumentByPhaseId',
   async (phaseId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/phase-document/submitted/all/${phaseId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/phase-document/submitted/all/${phaseId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch phase documents.');
@@ -274,7 +274,7 @@ export const banViolationProject = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/ban/violation/${projectId}`,
+        `https://ffund.duckdns.org/api/v1/project/ban/violation/${projectId}`,
       );
 
       return response.data.message;
@@ -289,7 +289,7 @@ export const banUnderReviewProject = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/ban/under-review/${projectId}`,
+        `https://ffund.duckdns.org/api/v1/project/ban/under-review/${projectId}`,
       );
       return response.data.message;
     } catch (error) {
@@ -303,7 +303,7 @@ export const approveSuspendedProject = createAsyncThunk(
   async (projectId, { rejectWithValue }) => {
     try {
       const response = await axios.put(
-        `https://quanbeo.duckdns.org/api/v1/project/approve/suspended/${projectId}`,
+        `https://ffund.duckdns.org/api/v1/project/approve/suspended/${projectId}`,
       );
       return response.data.message;
     } catch (error) {
@@ -313,21 +313,21 @@ export const approveSuspendedProject = createAsyncThunk(
 )
 
 const formatErrorMessage = (error) => {
-    if (!error) return "Unknown error";
-    
-    if (typeof error === 'string') return error;
-    
-    if (typeof error === 'object') {
-        // Handle object with error properties
-        if (error.description) return `Description: ${error.description}`;
-        
-        // Convert object to string representation
-        return Object.entries(error)
-            .map(([key, value]) => `${key}: ${value}`)
-            .join(', ');
-    }
-    
-    return String(error);
+  if (!error) return "Unknown error";
+
+  if (typeof error === 'string') return error;
+
+  if (typeof error === 'object') {
+    // Handle object with error properties
+    if (error.description) return `Description: ${error.description}`;
+
+    // Convert object to string representation
+    return Object.entries(error)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+  }
+
+  return String(error);
 };
 
 const projectSlice = createSlice({
@@ -456,7 +456,7 @@ const projectSlice = createSlice({
         };
       })
       .addCase(getMilestoneByPhaseId.rejected, (state, action) => {
-        state.status = 'failed'; 
+        state.status = 'failed';
         state.error = formatErrorMessage(action.payload);;
       })
       .addCase(approveProject.pending, (state) => {

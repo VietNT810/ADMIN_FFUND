@@ -7,7 +7,7 @@ export const getTransactions = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get("https://quanbeo.duckdns.org/api/v1/transactions/all", {
+      const response = await axios.get("https://ffund.duckdns.org/api/v1/transactions/all", {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 
@@ -26,7 +26,7 @@ export const getTransactionStatistics = createAsyncThunk(
   "transaction/getTransactionStatistics",
   async (projectId, { rejectWithValue }) => {
     try {
-      const url = "https://quanbeo.duckdns.org/api/v1/transactions/statistic";
+      const url = "https://ffund.duckdns.org/api/v1/transactions/statistic";
       const params = projectId ? { projectId } : {};
 
       const response = await axios.get(url, { params });
@@ -43,7 +43,7 @@ export const getProjects = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // Extract unique projects from transactions
-      const response = await axios.get("https://quanbeo.duckdns.org/api/v1/transactions/all", {
+      const response = await axios.get("https://ffund.duckdns.org/api/v1/transactions/all", {
         params: { size: 100 } // Get a large number to extract all projects
       });
 

@@ -7,7 +7,7 @@ export const getAllReport = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/report-project/all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/report-project/all', {
         params: { query, page, size, sort: sortOrderSymbol },
       });
 
@@ -26,7 +26,7 @@ export const getReportById = createAsyncThunk(
   'report/getReportById',
   async (reportId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/report-project/${reportId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/report-project/${reportId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch report by ID.');
@@ -40,7 +40,7 @@ export const responseReport = createAsyncThunk(
   async ({ reportId, response }, { rejectWithValue }) => {
     try {
       const responseApi = await axios.post(
-        `https://quanbeo.duckdns.org/api/v1/report-project/response/${reportId}`,
+        `https://ffund.duckdns.org/api/v1/report-project/response/${reportId}`,
         { response }
       );
 

@@ -7,7 +7,7 @@ export const getUsersContent = createAsyncThunk(
   async ({ query, page = 0, size = 12, sortField = "id", sortOrder = "asc" }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get("https://quanbeo.duckdns.org/api/v1/user", {
+      const response = await axios.get("https://ffund.duckdns.org/api/v1/user", {
         params: { query, page, size, sort: sortOrderSymbol },
       });
 
@@ -33,7 +33,7 @@ export const addManager = createAsyncThunk(
         phone: newManager.phone,
       };
 
-      const response = await axios.post('https://quanbeo.duckdns.org/api/v1/user/manager', formattedManager);
+      const response = await axios.post('https://ffund.duckdns.org/api/v1/user/manager', formattedManager);
 
       return response.data.message;
     } catch (error) {
@@ -47,7 +47,7 @@ export const getUserById = createAsyncThunk(
   'user/getUserById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${id}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/user/${id}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message || 'Failed to fetch user by ID.');
@@ -60,7 +60,7 @@ export const banUser = createAsyncThunk(
   "user/banUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/ban/${userId}`);
+      const response = await axios.patch(`https://ffund.duckdns.org/api/v1/user/ban/${userId}`);
       return response.data.message;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message || "Failed to ban user.");
@@ -73,7 +73,7 @@ export const unbanUser = createAsyncThunk(
   "user/unbanUser",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/user/unban/${userId}`);
+      const response = await axios.patch(`https://ffund.duckdns.org/api/v1/user/unban/${userId}`);
       return response.data.message;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || error.message || "Failed to unban user.");

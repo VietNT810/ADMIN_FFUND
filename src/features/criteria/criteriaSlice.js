@@ -7,7 +7,7 @@ export const getAllCriteria = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://quanbeo.duckdns.org/api/v1/criteria/all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/criteria/all', {
         params: { query, page, size, sort: sortOrderSymbol }
       });
 
@@ -25,12 +25,12 @@ export const getAllCriteria = createAsyncThunk(
 export const getAllCriteriaType = createAsyncThunk(
   'criteria/getAllCriteriaType',
   async (_, { rejectWithValue }) => {
-      try {
-          const response = await axios.get('https://quanbeo.duckdns.org/api/v1/criteria-type/all');
-          return response.data.data;
-      } catch (error) {
-          return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria type.');
-      }
+    try {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/criteria-type/all');
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria type.');
+    }
   }
 );
 
@@ -39,7 +39,7 @@ export const getCriteriaById = createAsyncThunk(
   'criteria/getCriteriaById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/criteria/${id}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/criteria/${id}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria by ID.');
@@ -52,7 +52,7 @@ export const getCriteriaTypeById = createAsyncThunk(
   'criteria/getCriteriaTypeById',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/criteria-type/${id}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/criteria-type/${id}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria type by ID.');
@@ -70,7 +70,7 @@ export const createCriteriaType = createAsyncThunk(
         description: newCriteriaType.description,
       };
 
-      const response = await axios.post('https://quanbeo.duckdns.org/api/v1/criteria-type', formattedCriteriaType);
+      const response = await axios.post('https://ffund.duckdns.org/api/v1/criteria-type', formattedCriteriaType);
 
       return response.data.message;
     } catch (error) {
@@ -81,28 +81,28 @@ export const createCriteriaType = createAsyncThunk(
 
 // Get criteria all details by criteria ID
 export const getCriteriaAllDetail = createAsyncThunk(
-    'criteria/getCriteriaAllDetail',
-    async (id, { rejectWithValue }) => {
-      try {
-        const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/criteria/detail/all/${id}`);
-        return response.data.data;
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria all details.');
-      }
+  'criteria/getCriteriaAllDetail',
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/criteria/detail/all/${id}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria all details.');
     }
+  }
 );
 
 // Get detail criteria by detail ID
 export const getCriteriaDetailById = createAsyncThunk(
-    'criteria/getCriteriaDetailById',
-    async (detailId , { rejectWithValue }) => {
-      try {
-        const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/criteria/detail/${detailId}`);
-        return response.data.data;
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria details by ID.');
-      }
+  'criteria/getCriteriaDetailById',
+  async (detailId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/criteria/detail/${detailId}`);
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to fetch criteria details by ID.');
     }
+  }
 );
 
 // Post new criteria
@@ -117,7 +117,7 @@ export const createCriteria = createAsyncThunk(
         categoryId: newCriteria.categoryId,
       };
 
-      const response = await axios.post('https://quanbeo.duckdns.org/api/v1/criteria', formattedCriteria);
+      const response = await axios.post('https://ffund.duckdns.org/api/v1/criteria', formattedCriteria);
 
       return response.data.message;
     } catch (error) {
@@ -128,87 +128,87 @@ export const createCriteria = createAsyncThunk(
 
 // Post new detail criteria
 export const createDetailCriteria = createAsyncThunk(
-    'criteria/createDetailCriteria',
-    async (newDetailCriteria, { rejectWithValue }) => {
-      try {
-        const formattedCriteria = {
-            basicRequirement: newDetailCriteria.basicRequirement,
-            evaluationCriteria: newDetailCriteria.evaluationCriteria,
-            maxPoint: newDetailCriteria.maxPoint,
-        };
-  
-        const response = await axios.post(`https://quanbeo.duckdns.org/api/v1/criteria/detail/${newDetailCriteria.id}`, formattedCriteria);
-  
-        return response.data.message;
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || 'Failed to create detail criteria.');
-      }
+  'criteria/createDetailCriteria',
+  async (newDetailCriteria, { rejectWithValue }) => {
+    try {
+      const formattedCriteria = {
+        basicRequirement: newDetailCriteria.basicRequirement,
+        evaluationCriteria: newDetailCriteria.evaluationCriteria,
+        maxPoint: newDetailCriteria.maxPoint,
+      };
+
+      const response = await axios.post(`https://ffund.duckdns.org/api/v1/criteria/detail/${newDetailCriteria.id}`, formattedCriteria);
+
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to create detail criteria.');
     }
+  }
 );
 
 // Update criteria
 export const updateCriteria = createAsyncThunk(
-    'criteria/updateCriteria',
-    async (updateCriteria, { rejectWithValue }) => {
-      try {
-        const formattedCriteria = {
-          maximumPoint: updateCriteria.maximumPoint,
-          description: updateCriteria.description,
-        };
+  'criteria/updateCriteria',
+  async (updateCriteria, { rejectWithValue }) => {
+    try {
+      const formattedCriteria = {
+        maximumPoint: updateCriteria.maximumPoint,
+        description: updateCriteria.description,
+      };
 
-        const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/criteria/${updateCriteria.id}`, formattedCriteria);
-  
-        return response.data.message;
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || 'Failed to update criteria.');
-      }
+      const response = await axios.put(`https://ffund.duckdns.org/api/v1/criteria/${updateCriteria.id}`, formattedCriteria);
+
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to update criteria.');
     }
+  }
 );
 
 // Update detail criteria
 export const updateDetailCriteria = createAsyncThunk(
-    'criteria/updateDetailCriteria',
-    async (updateDetailCriteria, { rejectWithValue }) => {
-      try {
-        const formattedCriteria = {
-            basicRequirement: updateDetailCriteria.basicRequirement,
-            evaluationCriteria: updateDetailCriteria.evaluationCriteria,
-            maxPoint: updateDetailCriteria.maxPoint,
-        };
-  
-        const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/criteria/detail/update/${updateDetailCriteria.id}`, formattedCriteria);
-  
-        return response.data.message;
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || 'Failed to update detail criteria.');
-      }
+  'criteria/updateDetailCriteria',
+  async (updateDetailCriteria, { rejectWithValue }) => {
+    try {
+      const formattedCriteria = {
+        basicRequirement: updateDetailCriteria.basicRequirement,
+        evaluationCriteria: updateDetailCriteria.evaluationCriteria,
+        maxPoint: updateDetailCriteria.maxPoint,
+      };
+
+      const response = await axios.put(`https://ffund.duckdns.org/api/v1/criteria/detail/update/${updateDetailCriteria.id}`, formattedCriteria);
+
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to update detail criteria.');
     }
+  }
 );
 
 // Delete criteria
 export const deleteCriteria = createAsyncThunk(
-    'criteria/deleteCriteria',
-    async (criteriaId, { rejectWithValue }) => {
-        try {
-            const response = await axios.delete(`https://quanbeo.duckdns.org/api/v1/criteria/delete/${criteriaId}`);
-            return response.data.message;
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Failed to delete criteria.');
-        }
+  'criteria/deleteCriteria',
+  async (criteriaId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`https://ffund.duckdns.org/api/v1/criteria/delete/${criteriaId}`);
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to delete criteria.');
     }
+  }
 );
 
 // Delete detail criteria
 export const deleteDetailCriteria = createAsyncThunk(
-    'criteria/deleteDetailCriteria',
-    async (detailId, { rejectWithValue }) => {
-        try {
-            const response = await axios.delete(`https://quanbeo.duckdns.org/api/v1/criteria/detail/delete/${detailId}`);
-            return response.data.message;
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.error || 'Failed to delete criteria.');
-        }
+  'criteria/deleteDetailCriteria',
+  async (detailId, { rejectWithValue }) => {
+    try {
+      const response = await axios.delete(`https://ffund.duckdns.org/api/v1/criteria/detail/delete/${detailId}`);
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.error || 'Failed to delete criteria.');
     }
+  }
 );
 
 const criteriaSlice = createSlice({

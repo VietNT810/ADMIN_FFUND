@@ -7,7 +7,7 @@ export const getTeamContent = createAsyncThunk(
   async ({ page = 0, size = 9, sortField = "id", sortOrder = "asc" }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === "asc" ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get("https://quanbeo.duckdns.org/api/v1/team", {
+      const response = await axios.get("https://ffund.duckdns.org/api/v1/team", {
         params: { page, size, sort: sortOrderSymbol },
       });
 
@@ -26,7 +26,7 @@ export const getTeamById = createAsyncThunk(
   "team/getTeamById",
   async (teamId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/team/${teamId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/team/${teamId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch team by ID.");
@@ -39,7 +39,7 @@ export const getMemberById = createAsyncThunk(
   "team/getMemberById",
   async (memberId, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/team/member/detail/${memberId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/team/member/detail/${memberId}`);
       return response.data.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch member by ID.");
@@ -76,7 +76,7 @@ const teamSlice = createSlice({
         state.status = "failed";
         state.error = action.payload || "An error occurred while fetching the teams.";
       })
-      
+
       // Fetching a single team by ID
       .addCase(getTeamById.pending, (state) => {
         state.status = "loading";

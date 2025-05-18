@@ -80,7 +80,7 @@ const checkAuth = async () => {
       isRefreshing = true;
 
       try {
-        const response = await axios.post('https://quanbeo.duckdns.org/api/v1/auth/refresh-token', { token: refreshToken });
+        const response = await axios.post('https://ffund.duckdns.org/api/v1/auth/refresh-token', { token: refreshToken });
 
         console.log("Response Data:", response.data.data);
 
