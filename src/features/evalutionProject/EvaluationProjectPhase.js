@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { getPhaseByProjectId, getMilestoneByPhaseId, getPhaseDocumentByPhaseId } from '../../features/projectmanager/components/projectSlice';
-import { getPhaseInvesment, refundBannedProjectByPhaseId } from './components/evalutionProjectSlice';
+import { getPhaseInvesment, getProjectPaymentInformationByProjectId, payoutCompletedPhase, refundBannedProjectByPhaseId } from './components/evalutionProjectSlice';
 import Loading from '../../components/Loading';
 import { motion } from 'framer-motion';
 import {
@@ -51,6 +51,9 @@ const EvaluationProjectDetailsPhase = ({
     const [isLoadingInvestments, setIsLoadingInvestments] = useState(false);
     const [isRefunding, setIsRefunding] = useState(false);
     const { currentProject } = useSelector(state => state.project || { currentProject: null });
+
+    const [isProcessingPayout, setIsProcessingPayout] = useState({});
+    const [paymentInfo, setPaymentInfo] = useState(null);
 
     useEffect(() => {
         if (projectId) {
@@ -142,6 +145,12 @@ const EvaluationProjectDetailsPhase = ({
         }
     }, [expandedPhase, activePhaseTab]);
 
+    useEffect(() => {
+        if (projectId) {
+            loadPaymentInformation();
+        }
+    }, [projectId]);
+
     const loadPhaseInvestments = () => {
         if (!expandedPhase) return;
 
@@ -166,6 +175,15 @@ const EvaluationProjectDetailsPhase = ({
             });
     };
 
+    const loadPaymentInformation = async () => {
+        try {
+            const result = await dispatch(getProjectPaymentInformationByProjectId(projectId)).unwrap();
+            setPaymentInfo(result.data);
+        } catch (error) {
+            console.error("Error loading payment information:", error);
+        }
+    };
+
     const handleRefundProject = async (phaseId) => {
         if (!phaseId) {
             toast.error("Phase ID is required for refunding");
@@ -176,13 +194,46 @@ const EvaluationProjectDetailsPhase = ({
             setIsRefunding(true);
             await dispatch(refundBannedProjectByPhaseId({ phaseId })).unwrap();
             toast.success("Refunds processed successfully");
-            // Refresh the investments data
             loadPhaseInvestments();
         } catch (error) {
             toast.error(error.error || "Failed to process refunds");
             console.error("Refund error:", error);
         } finally {
             setIsRefunding(false);
+        }
+    };
+
+    const handlePayout = async (phaseId) => {
+        // Check conditions first
+        const phase = phases.find(p => p.id === phaseId);
+        const phaseDocsList = phaseDocuments[phaseId] || [];
+
+        if (!phase) {
+            toast.error("Phase information not found");
+            return;
+        }
+
+        if (!phaseDocsList.length) {
+            toast.warning("All required phase documents must be provided before payout");
+            return;
+        }
+
+        if (paymentInfo && paymentInfo.pendingBalance > 0) {
+            toast.warning("Cannot process payout while there's pending balance");
+            return;
+        }
+
+        try {
+            setIsProcessingPayout(prev => ({ ...prev, [phaseId]: true }));
+            await dispatch(payoutCompletedPhase({ phaseId })).unwrap();
+            toast.success("Phase payout processed successfully");
+            dispatch(getPhaseByProjectId(projectId));
+            loadPaymentInformation();
+        } catch (error) {
+            toast.error(error?.error || "Failed to process payout");
+            console.error("Payout error:", error);
+        } finally {
+            setIsProcessingPayout(prev => ({ ...prev, [phaseId]: false }));
         }
     };
 
@@ -327,41 +378,57 @@ const EvaluationProjectDetailsPhase = ({
                                 className={`p-4 cursor-pointer ${isExpanded ? 'bg-teal-50' : 'hover:bg-gray-50'}`}
                                 onClick={() => togglePhaseExpansion(phase.id)}
                             >
-                                <div className="flex justify-between items-center">
-                                    <div className="flex items-center space-x-3">
-                                        <div className={`w-8 h-8 rounded-full ${phase.status === 'PROCESS' ? 'bg-teal-100 text-teal-700' : 'bg-amber-100 text-amber-700'
-                                            } flex items-center justify-center font-bold`}>
-                                            {phaseIndex + 1}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-gray-800">Phase {phase.phaseNumber}</h3>
-                                            <p className="text-sm text-gray-600">
-                                                {new Date(phase.startDate).toLocaleDateString()} - {new Date(phase.endDate).toLocaleDateString()}
-                                            </p>
-                                        </div>
+                                <div className="flex items-center space-x-3">
+                                    <div className={`w-8 h-8 rounded-full ${phase.status === 'PROCESS' ? 'bg-teal-100 text-teal-700' :
+                                        phase.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                            'bg-amber-100 text-amber-700'} flex items-center justify-center font-bold`}>
+                                        {phaseIndex + 1}
                                     </div>
+                                    <div className="flex-grow">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="font-bold text-gray-800">Phase {phase.phaseNumber}</h3>
 
-                                    <div className="flex items-center space-x-4">
-                                        <div className="text-right hidden sm:block">
-                                            <span className="block font-semibold text-gray-800">${phase.raiseAmount.toLocaleString()} raised</span>
-                                            <span className="block text-sm text-gray-500">of ${phase.targetAmount.toLocaleString()}</span>
+                                            {/* Payout Button - Only show for COMPLETED phases */}
+                                            {phase.status === 'COMPLETED' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handlePayout(phase.id);
+                                                    }}
+                                                    disabled={isProcessingPayout[phase.id] || !phaseDocuments[phase.id]?.length || (paymentInfo && paymentInfo.pendingBalance > 0)}
+                                                    className={`px-2 py-1 text-xs rounded-md flex items-center gap-1 ml-2 ${isProcessingPayout[phase.id] ?
+                                                        'bg-gray-200 text-gray-500 cursor-not-allowed' :
+                                                        (!phaseDocuments[phase.id]?.length || (paymentInfo && paymentInfo.pendingBalance > 0)) ?
+                                                            'bg-yellow-100 text-yellow-700 cursor-not-allowed' :
+                                                            'bg-green-100 text-green-700 hover:bg-green-200'
+                                                        }`}
+                                                    title={
+                                                        !phaseDocuments[phase.id]?.length ?
+                                                            "All required phase documents must be provided before payout" :
+                                                            (paymentInfo && paymentInfo.pendingBalance > 0) ?
+                                                                "Cannot process payout while there's pending balance" :
+                                                                "Process payout for this completed phase"
+                                                    }
+                                                >
+                                                    {isProcessingPayout[phase.id] ? (
+                                                        <>
+                                                            <div className="w-3 h-3 border-t-2 border-green-700 rounded-full animate-spin mr-1"></div>
+                                                            Processing...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                                            </svg>
+                                                            Payout
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
-
-                                        <div
-                                            className={`px-3 py-1 text-xs rounded-full ${phase.status === 'PROCESS' ? 'bg-teal-100 text-teal-800' : 'bg-amber-100 text-amber-800'
-                                                } font-medium whitespace-nowrap`}
-                                        >
-                                            {phase.status}
-                                        </div>
-
-                                        <svg
-                                            className={`w-5 h-5 text-gray-500 transform transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
+                                        <p className="text-sm text-gray-600">
+                                            {new Date(phase.startDate).toLocaleDateString()} - {new Date(phase.endDate).toLocaleDateString()}
+                                        </p>
                                     </div>
                                 </div>
 

@@ -3,13 +3,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { getProjects, suspendProject, completeProject, getProjectStatistics, getProjectsManager, approveSuspendedProject } from './components/projectSlice';
 import { getCategoriesContent } from '../category/categorySlice';
 import { MagnifyingGlassIcon, EyeIcon, PauseIcon, CheckCircleIcon, FunnelIcon } from '@heroicons/react/24/outline';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loading from '../../components/Loading';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getViolationsByManager } from '../violation/components/violationSlice';
 
 const ProjectList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { projects, status, error, totalPages, statistics } = useSelector(state => state.project || { projects: [], error: null, status: 'idle', statistics: null });
   const { categories } = useSelector(state => state.category || { categories: [] });
 
@@ -137,9 +139,31 @@ const ProjectList = () => {
     if (newPage >= 0 && newPage < totalPages) setPage(newPage);
   };
 
-  const handleSuspend = (projectId) => {
-    setSelectedProjectId(projectId);
-    setIsModalOpen(true);
+  const handleSuspend = async (projectId) => {
+    try {
+      setIsLoading(true);
+      const violationsResult = await dispatch(getViolationsByManager(projectId)).unwrap();
+      setIsLoading(false);
+
+      if (!violationsResult || !violationsResult.length || violationsResult.length === 0) {
+        const confirm = window.confirm(
+          "No violations have been recorded for this project. You need to add at least one violation before suspending a project. Would you like to navigate to the Violations tab to add a violation now?"
+        );
+
+        if (confirm) {
+          navigate(`/app/project-scoring/${projectId}?tab=violations`);
+        }
+        return;
+      }
+
+      setSelectedProjectId(projectId);
+      setIsModalOpen(true);
+
+    } catch (error) {
+      setIsLoading(false);
+      toast.error("Error checking violations: " + (error.message || "Please try again"));
+      console.error("Error checking violations:", error);
+    }
   };
 
   const confirmSuspend = async () => {

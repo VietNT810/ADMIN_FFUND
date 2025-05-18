@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 // Project detail components
@@ -41,6 +41,7 @@ const ProjectScoring = () => {
     const { projectId } = useParams();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const evaluationState = useSelector(state => state.evaluation);
 
@@ -70,6 +71,41 @@ const ProjectScoring = () => {
     const { currentProject } = useSelector(state => state.project || { currentProject: null });
     const displayEvaluations = evaluations.length > 0 ? evaluations : manuallyPopulatedEvaluations;
     const [showViolationManager, setShowViolationManager] = useState(false);
+
+    useEffect(() => {
+        const searchParams = new URLSearchParams(location.search);
+        const tabParam = searchParams.get('tab');
+        
+        // Set active tab if specified in URL
+        if (tabParam) {
+            switch(tabParam) {
+                case 'violations':
+                    setActiveTab('violations');
+                    break;
+                case 'payment':
+                    setActiveTab('payment');
+                    break;
+                case 'updates':
+                    setActiveTab('updates');
+                    break;
+                case 'documents':
+                    setActiveTab('documents');
+                    break;
+                case 'phases':
+                    setActiveTab('phases');
+                    break;
+                case 'story':
+                    setActiveTab('story');
+                    break;
+                case 'basic':
+                    setActiveTab('basic');
+                    break;
+                default:
+                    // Keep default tab
+                    break;
+            }
+        }
+    }, [location]);
 
     const areAllEvaluationsScored = useCallback(() => {
         if (!displayEvaluations.length) return false;

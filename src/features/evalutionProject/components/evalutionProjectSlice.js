@@ -164,7 +164,7 @@ export const refundBannedProjectByPhaseId = createAsyncThunk(
     'evaluation/refundBannedProjectByPhaseId',
     async ({ phaseId }, { rejectWithValue }) => {
         try {
-            const response = await axios.patch(`${BASE_URL}/project/approve/under-review/${phaseId}`);
+            const response = await axios.patch(`${BASE_URL}/investment/refund/${phaseId}`);
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.error ||
@@ -188,6 +188,24 @@ export const getProjectPaymentInformationByProjectId = createAsyncThunk(
             const errorMessage = error.response?.data?.error ||
                 error.response?.data?.message ||
                 'Failed to fetch project payment information';
+            return rejectWithValue({
+                status: error.response?.status,
+                error: errorMessage
+            });
+        }
+    }
+);
+
+export const payoutCompletedPhase = createAsyncThunk(
+    'evaluation/payoutCompletedPhase',
+    async ({ phaseId }, { rejectWithValue }) => {
+        try {
+            const response = await axios.patch(`${BASE_URL}/payout/phase/${phaseId}`);
+            return response.data;
+        } catch (error) {
+            const errorMessage = error.response?.data?.error ||
+                error.response?.data?.message ||
+                'Failed to approve project';
             return rejectWithValue({
                 status: error.response?.status,
                 error: errorMessage
@@ -400,7 +418,6 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(approveUnderReviewProject.rejected, (state, action) => {
                 state.status = 'failed';
-                // Handle the structured error
                 if (action.payload && action.payload.error) {
                     state.error = formatErrorMessage(action.payload);
                 } else {
@@ -426,7 +443,23 @@ const evaluationProjectSlice = createSlice({
             .addCase(refundBannedProjectByPhaseId.fulfilled, (state, action) => {
                 state.status = 'succeeded';
                 state.successMessage = action.payload.message || 'Project approved successfully';
-            });
+            })
+            .addCase(getProjectPaymentInformationByProjectId.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
+            })
+            .addCase(getProjectPaymentInformationByProjectId.rejected, (state, action) => {
+                state.status = 'failed';
+                if (action.payload && action.payload.error) {
+                    state.error = formatErrorMessage(action.payload);
+                } else {
+                    state.error = action.error.message || 'Failed to approve project';
+                }
+            })
+            .addCase(getProjectPaymentInformationByProjectId.fulfilled, (state, action) => {
+                state.status = 'succeeded';
+                state.successMessage = action.payload.message || 'Project approved successfully';
+            })
     },
 });
 

@@ -4,6 +4,7 @@ import { getViolationsByManager } from './components/violationSlice';
 import { AlertTriangle, FileText, Eye, BarChart, Shield, FilePlus, AlertOctagon } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { banViolationProject, getProjectById } from '../projectmanager/components/projectSlice';
+import { fetchGlobalSettingsByType } from '../globalSetting/components/globalSettingSlice';
 
 const violationTypeIcons = {
     COPYRIGHT_INFRINGEMENT: <Shield className="w-6 h-6 text-red-500" />,
@@ -35,6 +36,7 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
     console.log("Entire Redux State:", entireState);
 
     const currentProject = useSelector(state => state.project.currentProject);
+    const globalSettings = useSelector(state => state.globalSettings.settings);
 
     const violationState = useSelector(state => state.violation || {});
     const { violations = [], status = 'idle', error = null } = violationState;
@@ -44,6 +46,7 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showBanConfirmModal, setShowBanConfirmModal] = useState(false);
     const [banStatus, setBanStatus] = useState({ loading: false, error: null, success: false });
+    const [maxViolationThreshold, setMaxViolationThreshold] = useState(5);
     const userRole = localStorage.getItem('role');
     const totalViolations = violations.length;
     const isProjectBanned = currentProject?.status === 'BAN';
@@ -54,6 +57,21 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
             dispatch(getViolationsByManager(projectId));
         }
     }, [dispatch, projectId]);
+
+    useEffect(() => {
+        dispatch(fetchGlobalSettingsByType(['MAX_SUSPENDED_TIME']));
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (globalSettings && globalSettings.length > 0) {
+            const maxViolationSetting = globalSettings.find(setting => setting.type === 'MAX_SUSPENDED_TIME');
+            if (maxViolationSetting) {
+                const thresholdValue = parseInt(maxViolationSetting.value, 10);
+                setMaxViolationThreshold(thresholdValue > 0 ? thresholdValue : 5);
+                console.log("Updated violation threshold to:", thresholdValue);
+            }
+        }
+    }, [globalSettings]);
 
     const handleViewDetails = (violation) => {
         setSelectedViolation(violation);
@@ -143,10 +161,17 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
             </div>
 
             {/* Violation count alert */}
-            {totalViolations >= 5 && !isProjectBanned && (
+            {totalViolations >= maxViolationThreshold && !isProjectBanned && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
                     <AlertTriangle className="w-5 h-5 mr-2" />
-                    <p>This project has accumulated <span className="font-bold">{totalViolations} violations</span>, which exceeds the threshold for banning.</p>
+                    <p>This project has accumulated <span className="font-bold">{totalViolations} violations</span>, which exceeds the threshold for banning ({maxViolationThreshold}).</p>
+                </div>
+            )}
+
+            {totalViolations >= (maxViolationThreshold - 2) && totalViolations < maxViolationThreshold && !isProjectBanned && (
+                <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4 flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2" />
+                    <p>Warning: This project has <span className="font-bold">{totalViolations} violations</span> and is approaching the ban threshold of {maxViolationThreshold}.</p>
                 </div>
             )}
 
@@ -304,6 +329,7 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
                         <div className="mb-6">
                             <p className="text-gray-700 mb-4">
                                 You are about to ban this project due to excessive violations ({totalViolations} total violations).
+                                The system threshold for banning is {maxViolationThreshold} violations.
                                 This action will permanently suspend the project and notify all stakeholders.
                             </p>
                             <p className="text-gray-700 font-medium">

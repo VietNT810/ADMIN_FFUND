@@ -16,7 +16,8 @@ const settingDescriptions = {
     'PASS_PERCENTAGE': 'The minimum score percentage required for a project to pass evaluation.',
     'PASS_EXCELLENT_PERCENTAGE': 'The minimum score percentage required for a project to achieve excellent rating.',
     'PLATFORM_CHARGE_PERCENTAGE': 'Fee percentage charged by the platform on each successful transaction.',
-    'RESUBMIT_PERCENTAGE': 'The minimum score percentage for project resubmission eligibility.'
+    'RESUBMIT_PERCENTAGE': 'The minimum score percentage for project resubmission eligibility.',
+    'MAX_SUSPENDED_TIME': 'Maximum number of violations a project can have before being completely suspended.'
 };
 
 const settingIcons = {
@@ -24,7 +25,8 @@ const settingIcons = {
     'PASS_PERCENTAGE': '✅',
     'PLATFORM_CHARGE_PERCENTAGE': '💰',
     'PASS_EXCELLENT_PERCENTAGE': '🌟',
-    'RESUBMIT_PERCENTAGE': '🔄'
+    'RESUBMIT_PERCENTAGE': '🔄',
+    'MAX_SUSPENDED_TIME': '⚠️'
 };
 
 // Định nghĩa thứ tự hiển thị mong muốn
@@ -33,8 +35,14 @@ const settingOrder = [
     'PASS_PERCENTAGE',
     'PASS_EXCELLENT_PERCENTAGE',
     'MILESTONE_VALUE_PERCENTAGE',
-    'PLATFORM_CHARGE_PERCENTAGE'
+    'PLATFORM_CHARGE_PERCENTAGE',
+    'MAX_SUSPENDED_TIME'
 ];
+
+// Hàm kiểm tra nếu setting là loại phần trăm
+const isPercentageSetting = (type) => {
+    return type !== 'MAX_SUSPENDED_TIME';
+};
 
 function GlobalSettingsManager() {
     const dispatch = useDispatch();
@@ -50,23 +58,19 @@ function GlobalSettingsManager() {
 
     useEffect(() => {
         if (settings.length > 0) {
-            // Tạo đối tượng map để dễ dàng truy cập các settings theo type
             const settingsMap = {};
             settings.forEach(setting => {
                 settingsMap[setting.type] = setting;
             });
 
-            // Sắp xếp settings theo thứ tự đã định nghĩa
             const ordered = [];
 
-            // Thêm các settings theo thứ tự đã định nghĩa
             settingOrder.forEach(type => {
                 if (settingsMap[type]) {
                     ordered.push(settingsMap[type]);
                 }
             });
 
-            // Thêm các settings còn lại nếu có (phòng trường hợp có setting mới)
             settings.forEach(setting => {
                 if (!settingOrder.includes(setting.type)) {
                     ordered.push(setting);
@@ -75,7 +79,6 @@ function GlobalSettingsManager() {
 
             setSortedSettings(ordered);
 
-            // Khởi tạo giá trị chỉnh sửa
             const initialEditValues = {};
             settings.forEach(setting => {
                 initialEditValues[setting.id] = setting.value;
@@ -90,12 +93,17 @@ function GlobalSettingsManager() {
         ).join(' ');
     };
 
-    const handleValueChange = (id, value) => {
+    const handleValueChange = (id, value, type) => {
         let numValue = parseFloat(value);
-        // Ensure value is between 0 and 1
-        if (numValue > 1) numValue = 1;
-        if (numValue < 0) numValue = 0;
-        if (isNaN(numValue)) numValue = 0;
+
+        if (isPercentageSetting(type)) {
+            if (numValue > 1) numValue = 1;
+            if (numValue < 0) numValue = 0;
+        } else {
+            numValue = Math.max(1, Math.round(numValue));
+        }
+
+        if (isNaN(numValue)) numValue = type === 'MAX_SUSPENDED_TIME' ? 1 : 0;
 
         setEditValues(prev => ({
             ...prev,
@@ -229,7 +237,9 @@ function GlobalSettingsManager() {
                                         <div className="text-right">
                                             <div className="text-sm text-gray-500">Current Value</div>
                                             <div className="font-semibold text-lg text-gray-900">
-                                                {(setting.value * 100)}%
+                                                {isPercentageSetting(setting.type)
+                                                    ? `${(setting.value * 100)}%`
+                                                    : setting.value}
                                             </div>
                                         </div>
 
@@ -239,11 +249,11 @@ function GlobalSettingsManager() {
                                                     <div className="relative">
                                                         <input
                                                             type="number"
-                                                            min="0"
-                                                            max="1"
-                                                            step="0.0001"
+                                                            min={isPercentageSetting(setting.type) ? "0" : "1"}
+                                                            max={isPercentageSetting(setting.type) ? "1" : "100"}
+                                                            step={isPercentageSetting(setting.type) ? "0.0001" : "1"}
                                                             value={editValues[setting.id] || 0}
-                                                            onChange={(e) => handleValueChange(setting.id, e.target.value)}
+                                                            onChange={(e) => handleValueChange(setting.id, e.target.value, setting.type)}
                                                             className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                                         />
                                                     </div>
