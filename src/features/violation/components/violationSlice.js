@@ -114,7 +114,7 @@ export const deleteViolation = createAsyncThunk(
 
 export const postEvidence = createAsyncThunk(
     "violation/postEvidence",
-    async ({ violationId, evidence }, { rejectWithValue }) => {
+    async ({ violationId, evidence }, { rejectWithValue, dispatch }) => {
         try {
             const formData = new FormData();
             formData.append("file", evidence.file);
@@ -124,13 +124,33 @@ export const postEvidence = createAsyncThunk(
                     "Content-Type": "multipart/form-data",
                 },
             });
-            return response.data.data || null;
+
+            if (response.data.status === 200) {
+                try {
+
+                    const violationResponse = await axios.get(
+                        `https://ffund.duckdns.org/api/v1/violations/${violationId}`
+                    );
+                    return violationResponse.data.data || null;
+                } catch (fetchError) {
+                    console.error("Error fetching updated violation:", fetchError);
+                    return {
+                        id: violationId,
+                        message: response.data.message || "Evidence uploaded successfully"
+                    };
+                }
+            }
+
+            // If we didn't get a success status, return with the violationId
+            return {
+                id: violationId,
+                message: response.data.message || "Evidence upload status unknown"
+            };
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || "Failed to upload evidence.");
         }
     }
 );
-
 const formatErrorMessage = (error) => {
     if (!error) return "Unknown error";
 
@@ -245,9 +265,22 @@ const violationSlice = createSlice({
             })
             .addCase(postEvidence.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                const index = state.violations.findIndex(violation => violation.id === action.payload.id);
-                if (index !== -1) {
-                    state.violations[index] = action.payload;
+
+                if (action.payload && action.payload.id) {
+                    const index = state.violations.findIndex(violation => violation.id === action.payload.id);
+                    if (index !== -1) {
+
+                        if (action.payload.description !== undefined) {
+                            state.violations[index] = action.payload;
+                        }
+                        else {
+                            state.violations[index] = {
+                                ...state.violations[index],
+                                evidenceUpdated: true,
+                                lastEvidenceMessage: action.payload.message
+                            };
+                        }
+                    }
                 }
             })
             .addCase(postEvidence.rejected, (state, action) => {

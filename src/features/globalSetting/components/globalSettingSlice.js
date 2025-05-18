@@ -58,7 +58,7 @@ export const fetchGlobalSettingForEvalution = createAsyncThunk(
             const params = new URLSearchParams();
             evaluationTypes.forEach(type => params.append('types', type));
 
-            const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/settings/all/by-type?${params.toString()}`);
+            const response = await axios.get(`https://ffund.duckdns.org/api/v1/settings/all/by-type?${params.toString()}`);
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch evaluation settings');

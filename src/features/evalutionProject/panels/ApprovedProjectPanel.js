@@ -291,7 +291,6 @@ const ApprovedProjectPanel = ({
                                 </button>
                                 <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                                     Ban projects with unsuitable phase documents
-                                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                                 </div>
                             </div>
                         </div>
