@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { getAllRequest, responseRequest } from './requestSlice';
+import { getAllRequest, responseRequest, responseTimeExtendRequest } from './requestSlice';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loading from '../../components/Loading';
-import { PaperClipIcon, EyeIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { PaperClipIcon, EyeIcon, MagnifyingGlassIcon, UserCircleIcon } from '@heroicons/react/24/outline';
 
 const Request = () => {
   const dispatch = useDispatch();
   const { requests, status, error } = useSelector(state => state.request || { requests: [], error: null, status: 'idle' });
 
   const [selectedRequestId, setSelectedRequestId] = useState(null);
+  const [selectedRequestType, setSelectedRequestType] = useState(null);
   const [responseMessage, setResponseMessage] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -25,26 +26,48 @@ const Request = () => {
     dispatch(getAllRequest({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder }));
   }, [dispatch, searchTerm, selectedStatus, sortOrder]);
 
-  const handleResponse = (requestId) => {
+  const handleResponse = (requestId, requestType) => {
     setSelectedRequestId(requestId);
+    setSelectedRequestType(requestType);
     setIsModalOpen(true);
   };
 
   const confirmResponse = () => {
-    if (responseMessage) {
-      dispatch(responseRequest({ requestId: selectedRequestId, response: responseMessage }))
-        .then(() => {
-          toast.success('Response sent successfully!');
-          setIsModalOpen(false);
-          setResponseMessage('');
-          dispatch(getAllRequest({ query: `status:eq:${selectedStatus}`, page: 0, size: 10, sortField: 'createdAt', sortOrder }));
-        })
-        .catch(() => {
-          toast.error('Failed to send response.');
-        });
-    } else {
-      alert("Please enter a response message.");
+    if (!responseMessage.trim()) {
+      toast.error("Please enter a response message.");
+      return;
     }
+
+    const payload = { 
+      requestId: selectedRequestId, 
+      response: responseMessage 
+    };
+
+    // Use different API function based on request type
+    const actionToDispatch = selectedRequestType === 'EXTEND_TIME' 
+      ? responseTimeExtendRequest(payload)
+      : responseRequest(payload);
+
+    dispatch(actionToDispatch)
+      .unwrap()
+      .then(() => {
+        toast.success('Response sent successfully!');
+        setIsModalOpen(false);
+        setResponseMessage('');
+        
+        // Refresh the request list
+        dispatch(getAllRequest({ 
+          query: selectedStatus !== 'ALL' ? `status:eq:${selectedStatus}` : '', 
+          page: 0, 
+          size: 10, 
+          sortField: 'createdAt', 
+          sortOrder 
+        }));
+      })
+      .catch((err) => {
+        console.error('Response error:', err);
+        toast.error('Failed to send response.');
+      });
   };
 
   const getStatusColor = (status) => {
@@ -54,6 +77,19 @@ const Request = () => {
       case 'EXTEND_TIME': return 'badge-info';
       default: return 'badge-secondary';
     }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const handleSearch = () => {
@@ -117,18 +153,31 @@ const Request = () => {
                   {/* User Avatar and Info */}
                   <div className="flex flex-col">
                     <div className="flex items-center space-x-2">
-                      <img
-                        src={request.user.userAvatar || 'https://via.placeholder.com/40'}
-                        alt={request.user.fullName}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
+                      {request.user ? (
+                        <img
+                          src={request.user.userAvatar || 'https://via.placeholder.com/40'}
+                          alt={request.user.fullName}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <UserCircleIcon className="w-6 h-6 text-gray-500" />
+                        </div>
+                      )}
                       <div>
-                        <h3 className="text-lg font-semibold">{request.user.fullName}</h3>
-                        <p className="text-sm text-gray-500">{request.user.roles}</p>
+                        <h3 className="text-lg font-semibold">
+                          {request.user ? request.user.fullName : 'Unknown User'}
+                        </h3>
+                        <p className="text-sm text-gray-500">
+                          {request.user ? request.user.roles : 'N/A'}
+                        </p>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-500">{new Date(request.createdAt).toLocaleString()}</p>
-                    <p className="text-sm text-gray-700">{request.description}</p>
+                    <p className="text-sm text-gray-500">{formatDate(request.createdAt)}</p>
+                    <div className="mt-2">
+                      <h4 className="font-medium">{request.title || 'Untitled Request'}</h4>
+                      <p className="text-sm text-gray-700">{request.description || 'No description provided'}</p>
+                    </div>
                   </div>
 
                   {/* Status and Attachment */}
@@ -141,7 +190,12 @@ const Request = () => {
                         </a>
                       </div>
                     )}
-                    <span className={`badge ${getStatusColor(request.status)}`}>{request.status}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`badge ${getStatusColor(request.status)}`}>{request.status}</span>
+                      {request.type && (
+                        <span className="badge badge-outline">{request.type.replace('_', ' ')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -158,7 +212,7 @@ const Request = () => {
                   </Link>
                   {request.status === 'PENDING' && (
                     <button
-                      onClick={() => handleResponse(request.id)}
+                      onClick={() => handleResponse(request.id, request.type)}
                       className="btn btn-sm bg-green-500 hover:bg-green-600 dark:text-base-200"
                     >
                       Respond
@@ -182,7 +236,11 @@ const Request = () => {
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
           <div className="bg-base-100 p-6 rounded-lg shadow-lg w-96">
-            <h3 className="text-lg font-semibold mb-4">Respond to Request</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {selectedRequestType === 'EXTEND_TIME' 
+                ? 'Respond to Time Extension Request' 
+                : 'Respond to Request'}
+            </h3>
             <textarea
               value={responseMessage}
               onChange={(e) => setResponseMessage(e.target.value)}

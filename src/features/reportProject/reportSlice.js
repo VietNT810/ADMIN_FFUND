@@ -7,7 +7,7 @@ export const getAllReport = createAsyncThunk(
   async ({ query, page = 0, size = 10, sortField = 'id', sortOrder = 'asc' }, { rejectWithValue }) => {
     try {
       const sortOrderSymbol = sortOrder === 'asc' ? `+${sortField}` : `-${sortField}`;
-      const response = await axios.get('https://ffund.duckdns.org/api/v1/report-project/all', {
+      const response = await axios.get('https://ffund.duckdns.org/api/v1/report-project/manager/all', {
         params: { query, page, size, sort: sortOrderSymbol },
       });
 
@@ -34,19 +34,34 @@ export const getReportById = createAsyncThunk(
   }
 );
 
+export const approveReportForUnderReview = createAsyncThunk(
+  'report/approveReportForUnderReview',
+  async ({ reportId, data }, { rejectWithValue }) => {
+    try {
+      const response = await axios.patch(
+        `https://ffund.duckdns.org/api/v1/report-project/review/${reportId}`,
+        data
+      );
+      return response.data.message;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || 'Failed to approve report.');
+    }
+  }
+);
+
 // Response report
 export const responseReport = createAsyncThunk(
   'report/responseReport',
-  async ({ reportId, response }, { rejectWithValue }) => {
+  async ({ reportId, data }, { rejectWithValue }) => {
     try {
       const responseApi = await axios.post(
         `https://ffund.duckdns.org/api/v1/report-project/response/${reportId}`,
-        { response }
+        data
       );
 
       return responseApi.data.message;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to respond to report.');
+      return rejectWithValue(error.response?.data || 'Failed to respond to report.');
     }
   }
 );
@@ -105,6 +120,18 @@ const reportSlice = createSlice({
       .addCase(responseReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to respond to report.';
+      })
+      // Handle approveReportForUnderReview async thunk
+      .addCase(approveReportForUnderReview.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(approveReportForUnderReview.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(approveReportForUnderReview.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to approve report.';
       });
   },
 });
