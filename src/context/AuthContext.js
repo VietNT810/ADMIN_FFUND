@@ -35,12 +35,12 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await fetch("https://quanbeo.duckdns.org/api/v1/auth/login", {
+      const response = await fetch("https://ffund.duckdns.org/api/v1/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
       });
-      
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
             .join('\n');
           return { success: false, error: errorMessages };
         }
-        
+
         throw new Error("Login failed");
       }
 

@@ -6,7 +6,7 @@ export const getCategoriesContent = createAsyncThunk(
     'category/getCategoriesContent',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get('https://quanbeo.duckdns.org/api/v1/category/all');
+            const response = await axios.get('https://ffund.duckdns.org/api/v1/category/all');
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || 'Failed to fetch categories and subcategories.');
@@ -16,14 +16,14 @@ export const getCategoriesContent = createAsyncThunk(
 
 // Enabled Category
 export const enableCategory = createAsyncThunk(
-    'category/enableCategory', 
+    'category/enableCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/category/enable/${categoryId}`);
+            const response = await axios.patch(`https://ffund.duckdns.org/api/v1/category/enable/${categoryId}`);
             return response.data.message;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || error.message || 'Failed to enable category.');
-        } 
+        }
     }
 );
 
@@ -32,7 +32,7 @@ export const deleteCategory = createAsyncThunk(
     'category/deleteCategory',
     async (categoryId, { rejectWithValue }) => {
         try {
-            const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/category/delete/${categoryId}`);
+            const response = await axios.patch(`https://ffund.duckdns.org/api/v1/category/delete/${categoryId}`);
             return response.data.message;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || error.message || 'Failed to delete category.');
@@ -54,7 +54,7 @@ export const createCategory = createAsyncThunk(
                 }))
             };
 
-            const response = await axios.post('https://quanbeo.duckdns.org/api/v1/category/create', formattedCategory);
+            const response = await axios.post('https://ffund.duckdns.org/api/v1/category/create', formattedCategory);
 
             return response.data.data;
         } catch (error) {
@@ -73,7 +73,7 @@ export const updateCategory = createAsyncThunk(
                 categoryDescription: updatedCategory.categoryDescription,
             };
 
-            const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/category/update/${updatedCategory.id}`, formattedCategory);
+            const response = await axios.put(`https://ffund.duckdns.org/api/v1/category/update/${updatedCategory.id}`, formattedCategory);
 
             return response.data.message;
         } catch (error) {
@@ -92,7 +92,7 @@ export const createSubCategory = createAsyncThunk(
                 subCategoryDescription: newSubCategory.subCategoryDescription || ''
             };
 
-            const response = await axios.post(`https://quanbeo.duckdns.org/api/v1/category/sub/${newSubCategory.categoryId}`, formattedSubCategory);
+            const response = await axios.post(`https://ffund.duckdns.org/api/v1/category/sub/${newSubCategory.categoryId}`, formattedSubCategory);
 
             return response.data.message;
         } catch (error) {
@@ -111,7 +111,7 @@ export const updateSubCategory = createAsyncThunk(
                 subCategoryDescription: updateSubCategory.subCategoryDescription,
             };
 
-            const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/category/sub/${updateSubCategory.id}`, formattedCategory);
+            const response = await axios.put(`https://ffund.duckdns.org/api/v1/category/sub/${updateSubCategory.id}`, formattedCategory);
 
             return response.data.message;
         } catch (error) {
@@ -122,19 +122,19 @@ export const updateSubCategory = createAsyncThunk(
 
 const formatErrorMessage = (error) => {
     if (!error) return "Unknown error";
-    
+
     if (typeof error === 'string') return error;
-    
+
     if (typeof error === 'object') {
         // Handle object with error properties
         if (error.description) return `Description: ${error.description}`;
-        
+
         // Convert object to string representation
         return Object.entries(error)
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
     }
-    
+
     return String(error);
 };
 
@@ -153,7 +153,7 @@ const categorySlice = createSlice({
             state.deleteStatus = "";
         },
         setCategories: (state, action) => {
-            state.categories = action.payload; 
+            state.categories = action.payload;
         },
         resetState: (state) => {
             state.categories = [];
@@ -190,7 +190,7 @@ const categorySlice = createSlice({
             })
             .addCase(deleteCategory.fulfilled, (state, action) => {
                 state.deleteStatus = action.payload;
-                state.categories = state.categories.map((category) => 
+                state.categories = state.categories.map((category) =>
                     category.id === action.payload.id ? { ...category, active: false } : category
                 );
             })

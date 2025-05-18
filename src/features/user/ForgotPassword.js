@@ -27,7 +27,7 @@ function ForgotPassword() {
 
         try {
             // Gửi yêu cầu API để gửi liên kết reset mật khẩu
-            const response = await fetch('https://quanbeo.duckdns.org/api/v1/auth/forgot-password', {
+            const response = await fetch('https://ffund.duckdns.org/api/v1/auth/forgot-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -82,9 +82,9 @@ function ForgotPassword() {
                 </div>
                 <div className="md:w-1/2 w-full py-12 px-8">
                     <div className="text-center mb-4">
-                        <img 
-                            src="/forgotpasswnedSend.gif" 
-                            alt="Forgot password Animation" 
+                        <img
+                            src="/forgotpasswnedSend.gif"
+                            alt="Forgot password Animation"
                             className="mx-auto mb-4 w-24 border-4 border-white rounded-full shadow-lg"
                         />
                         <p className="text-center text-gray-600 mb-6">Enter your email to reset your password</p>
@@ -110,8 +110,8 @@ function ForgotPassword() {
                                     )}
                                 </p>
                                 <p className="mt-2">
-                                    <a 
-                                        href="https://mail.google.com/" 
+                                    <a
+                                        href="https://mail.google.com/"
                                         className="text-orange-500 hover:underline"
                                     >
                                         Click here if you don't want to wait.

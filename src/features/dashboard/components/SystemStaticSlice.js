@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 // API Endpoints
-const BASE_URL = 'https://quanbeo.duckdns.org/api/v1/admin/dashboard';
+const BASE_URL = 'https://ffund.duckdns.org/api/v1/admin/dashboard';
 
 // Fetch system statistics
 export const fetchSystemStatistics = createAsyncThunk(
@@ -149,7 +149,7 @@ const systemStaticSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload;
             });
-        
+
         // Category Project Trend
         builder
             .addCase(fetchCategoryProjectTrend.pending, (state) => {

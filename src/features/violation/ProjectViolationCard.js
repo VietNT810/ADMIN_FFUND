@@ -90,11 +90,19 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
             console.error("Ban project error:", error);
             let errorMessage = "Failed to ban project";
 
-            if (error && typeof error === 'object') {
-                if (error.message) {
-                    errorMessage = error.message;
-                } else if (error.error) {
-                    errorMessage = error.error;
+            // Better error handling to extract the actual error message
+            if (error) {
+                if (typeof error === 'string') {
+                    errorMessage = error;
+                } else if (typeof error === 'object') {
+                    // Check for various error message formats
+                    if (error.error) {
+                        errorMessage = error.error;
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    } else if (error.data?.error) {
+                        errorMessage = error.data.error;
+                    }
                 }
             }
 
@@ -139,7 +147,6 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
                         )}
                         <div className="absolute top-full mt-2 left-1/2 transform -translate-x-1/2 w-48 p-2 bg-gray-800 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50">
                             Ban projects for exceeding violation limits.
-                            <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
                         </div>
                     </div>
                     {isProjectBanned && (
@@ -330,7 +337,7 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
                             <p className="text-gray-700 mb-4">
                                 You are about to ban this project due to excessive violations ({totalViolations} total violations).
                                 The system threshold for banning is {maxViolationThreshold} violations.
-                                This action will permanently suspend the project and notify all stakeholders.
+                                This action will permanently ban the project and notify all stakeholders.
                             </p>
                             <p className="text-gray-700 font-medium">
                                 Are you sure you want to proceed?

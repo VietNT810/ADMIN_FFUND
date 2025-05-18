@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
 export const getAdminProfile = createAsyncThunk(
-  'profile/getAdminProfile', 
+  'profile/getAdminProfile',
   async (_, { rejectWithValue }) => {
     const userId = localStorage.getItem('userId');
 
@@ -11,7 +11,7 @@ export const getAdminProfile = createAsyncThunk(
     }
 
     try {
-      const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/user/${userId}`);
+      const response = await axios.get(`https://ffund.duckdns.org/api/v1/user/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch Admin Account.');

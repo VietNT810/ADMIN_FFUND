@@ -4,24 +4,24 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 export const getViolationsByManager = createAsyncThunk(
     "violation/getViolationsByManager",
     async (projectId, { rejectWithValue }) => {
-      try {
-        const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/violations/project/${projectId}/manager`);
-        console.log("API Response:", response.data); 
-        return response.data.data || [];
-      } catch (error) {
-        return rejectWithValue(error.response?.data?.error || "Failed to fetch violations.");
-      }
+        try {
+            const response = await axios.get(`https://ffund.duckdns.org/api/v1/violations/project/${projectId}/manager`);
+            console.log("API Response:", response.data);
+            return response.data.data || [];
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.error || "Failed to fetch violations.");
+        }
     }
-  );
+);
 
 export const getViolationById = createAsyncThunk(
     "violation/getViolationById",
     async (violationId, { rejectWithValue }) => {
         try {
-        const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/violations/${violationId}`);
-        return response.data.data || null;
+            const response = await axios.get(`https://ffund.duckdns.org/api/v1/violations/${violationId}`);
+            return response.data.data || null;
         } catch (error) {
-        return rejectWithValue(error.response?.data?.error || "Failed to fetch violation.");
+            return rejectWithValue(error.response?.data?.error || "Failed to fetch violation.");
         }
     }
 );
@@ -31,10 +31,10 @@ export const createViolation = createAsyncThunk(
     async ({ projectId, violationData, evidenceFile }, { rejectWithValue, dispatch }) => {
         try {
             const response = await axios.post(
-                `https://quanbeo.duckdns.org/api/v1/violations/project/${projectId}`, 
+                `https://ffund.duckdns.org/api/v1/violations/project/${projectId}`,
                 violationData
             );
-            
+
             const violationId = response.data.data;
 
             if (evidenceFile) {
@@ -48,9 +48,9 @@ export const createViolation = createAsyncThunk(
                 }
             }
             const violationResponse = await axios.get(
-                `https://quanbeo.duckdns.org/api/v1/violations/${violationId}`
+                `https://ffund.duckdns.org/api/v1/violations/${violationId}`
             );
-            
+
             return violationResponse.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || "Failed to create violation.");
@@ -70,16 +70,16 @@ export const updateViolation = createAsyncThunk(
             if (!payload.description) {
                 return rejectWithValue("Description cannot be empty");
             }
-            
+
             const response = await axios.put(
-                `https://quanbeo.duckdns.org/api/v1/violations/${violationId}`, 
+                `https://ffund.duckdns.org/api/v1/violations/${violationId}`,
                 payload
             );
 
             const updatedResponse = await axios.get(
-                `https://quanbeo.duckdns.org/api/v1/violations/${violationId}`
+                `https://ffund.duckdns.org/api/v1/violations/${violationId}`
             );
-            
+
             return updatedResponse.data.data || null;
         } catch (error) {
             console.error("Update violation error:", error);
@@ -90,10 +90,10 @@ export const updateViolation = createAsyncThunk(
                         errorMessages.push(`${key}: ${error.response.data.error[key]}`);
                     }
                     return rejectWithValue(errorMessages.join(", "));
-                } 
+                }
                 return rejectWithValue(error.response.data.error);
             }
-            
+
             return rejectWithValue(error.message || "Failed to update violation");
         }
     }
@@ -104,8 +104,8 @@ export const deleteViolation = createAsyncThunk(
     "violation/deleteViolation",
     async (violationId, { rejectWithValue }) => {
         try {
-            const response = await axios.delete(`https://quanbeo.duckdns.org/api/v1/violations/${violationId}`);
-            return violationId; 
+            const response = await axios.delete(`https://ffund.duckdns.org/api/v1/violations/${violationId}`);
+            return violationId;
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || "Failed to delete violation.");
         }
@@ -114,38 +114,58 @@ export const deleteViolation = createAsyncThunk(
 
 export const postEvidence = createAsyncThunk(
     "violation/postEvidence",
-    async ({ violationId, evidence }, { rejectWithValue }) => {
+    async ({ violationId, evidence }, { rejectWithValue, dispatch }) => {
         try {
             const formData = new FormData();
-            formData.append("file", evidence.file); 
+            formData.append("file", evidence.file);
 
-            const response = await axios.patch(`https://quanbeo.duckdns.org/api/v1/violations/${violationId}/evidence`, formData, {
+            const response = await axios.patch(`https://ffund.duckdns.org/api/v1/violations/${violationId}/evidence`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            return response.data.data || null;
+
+            if (response.data.status === 200) {
+                try {
+
+                    const violationResponse = await axios.get(
+                        `https://ffund.duckdns.org/api/v1/violations/${violationId}`
+                    );
+                    return violationResponse.data.data || null;
+                } catch (fetchError) {
+                    console.error("Error fetching updated violation:", fetchError);
+                    return {
+                        id: violationId,
+                        message: response.data.message || "Evidence uploaded successfully"
+                    };
+                }
+            }
+
+            // If we didn't get a success status, return with the violationId
+            return {
+                id: violationId,
+                message: response.data.message || "Evidence upload status unknown"
+            };
         } catch (error) {
             return rejectWithValue(error.response?.data?.error || "Failed to upload evidence.");
         }
     }
 );
-
 const formatErrorMessage = (error) => {
     if (!error) return "Unknown error";
-    
+
     if (typeof error === 'string') return error;
-    
+
     if (typeof error === 'object') {
         // Handle object with error properties
         if (error.description) return `Description: ${error.description}`;
-        
+
         // Convert object to string representation
         return Object.entries(error)
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
     }
-    
+
     return String(error);
 };
 
@@ -172,17 +192,17 @@ const violationSlice = createSlice({
             .addCase(getViolationsByManager.fulfilled, (state, action) => {
                 state.status = "succeeded";
                 console.log("Action payload in reducer:", action.payload);
-                
+
                 if (Array.isArray(action.payload)) {
                     state.violations = action.payload;
                 } else if (action.payload && typeof action.payload === 'object') {
                     if (Array.isArray(action.payload.data)) {
                         state.violations = action.payload.data;
                     } else {
-                        state.violations = [action.payload]; 
+                        state.violations = [action.payload];
                     }
                 } else {
-                    state.violations = []; 
+                    state.violations = [];
                 }
                 console.log("Violations set in state:", state.violations);
             })
@@ -239,15 +259,28 @@ const violationSlice = createSlice({
             .addCase(deleteViolation.rejected, (state, action) => {
                 state.status = "failed";
                 state.error = formatErrorMessage(action.payload);
-            })  
+            })
             .addCase(postEvidence.pending, (state) => {
                 state.status = "loading";
             })
             .addCase(postEvidence.fulfilled, (state, action) => {
                 state.status = "succeeded";
-                const index = state.violations.findIndex(violation => violation.id === action.payload.id);
-                if (index !== -1) {
-                    state.violations[index] = action.payload;
+
+                if (action.payload && action.payload.id) {
+                    const index = state.violations.findIndex(violation => violation.id === action.payload.id);
+                    if (index !== -1) {
+
+                        if (action.payload.description !== undefined) {
+                            state.violations[index] = action.payload;
+                        }
+                        else {
+                            state.violations[index] = {
+                                ...state.violations[index],
+                                evidenceUpdated: true,
+                                lastEvidenceMessage: action.payload.message
+                            };
+                        }
+                    }
                 }
             })
             .addCase(postEvidence.rejected, (state, action) => {

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const BASE_URL = 'https://quanbeo.duckdns.org/api/v1';
+const BASE_URL = 'https://ffund.duckdns.org/api/v1';
 
 export const getEvaluationThresholds = createAsyncThunk(
     'evaluation/getEvaluationThresholds',
@@ -216,19 +216,19 @@ export const payoutCompletedPhase = createAsyncThunk(
 
 const formatErrorMessage = (error) => {
     if (!error) return "Unknown error";
-    
+
     if (typeof error === 'string') return error;
-    
+
     if (typeof error === 'object') {
         // Handle object with error properties
         if (error.description) return `Description: ${error.description}`;
-        
+
         // Convert object to string representation
         return Object.entries(error)
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
     }
-    
+
     return String(error);
 };
 

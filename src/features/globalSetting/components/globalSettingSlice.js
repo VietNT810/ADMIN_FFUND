@@ -6,7 +6,7 @@ export const fetchGlobalSettings = createAsyncThunk(
     'globalSettings/fetchAll',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await axios.get('https://quanbeo.duckdns.org/api/v1/settings');
+            const response = await axios.get('https://ffund.duckdns.org/api/v1/settings');
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch global settings');
@@ -19,7 +19,7 @@ export const updateGlobalSetting = createAsyncThunk(
     'globalSettings/update',
     async ({ id, value }, { rejectWithValue }) => {
         try {
-            const response = await axios.put(`https://quanbeo.duckdns.org/api/v1/settings/${id}`, {
+            const response = await axios.put(`https://ffund.duckdns.org/api/v1/settings/${id}`, {
                 value
             });
 
@@ -36,7 +36,7 @@ export const fetchGlobalSettingsByType = createAsyncThunk(
         try {
             // Convert array to comma-separated string if needed
             const typeParams = Array.isArray(types) ? types.join(',') : types;
-            const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/settings/all/by-type?types=${typeParams}`);
+            const response = await axios.get(`https://ffund.duckdns.org/api/v1/settings/all/by-type?types=${typeParams}`);
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch global settings by type');
@@ -58,7 +58,7 @@ export const fetchGlobalSettingForEvalution = createAsyncThunk(
             const params = new URLSearchParams();
             evaluationTypes.forEach(type => params.append('types', type));
 
-            const response = await axios.get(`https://quanbeo.duckdns.org/api/v1/settings/all/by-type?${params.toString()}`);
+            const response = await axios.get(`https://ffund.duckdns.org/api/v1/settings/all/by-type?${params.toString()}`);
             return response.data.data;
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch evaluation settings');
