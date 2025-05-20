@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Pie } from 'react-chartjs-2';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
@@ -34,6 +34,9 @@ const ApprovedProjectPanel = ({
         excellent: 90
     });
     const globalSettings = useSelector(state => state.globalSettings.settings);
+    const [shouldShowApproveButton, setShouldShowApproveButton] = useState(true);
+    const initialMountRef = useRef(true);
+    const documentCheckRef = useRef({});
 
     useEffect(() => {
         const evaluationThresholdTypes = ['PASS_PERCENTAGE', 'RESUBMIT_PERCENTAGE', 'PASS_EXCELLENT_PERCENTAGE'];
@@ -57,6 +60,38 @@ const ApprovedProjectPanel = ({
             setThresholds(newThresholds);
         }
     }, [globalSettings]);
+
+    useEffect(() => {
+        if (initialMountRef.current) {
+            setShouldShowApproveButton(true);
+            initialMountRef.current = false;
+            return;
+        }
+
+        if (!expandedPhase) {
+            setShouldShowApproveButton(true);
+            return;
+        }
+
+        if (hasRequiredDocuments && typeof hasRequiredDocuments === 'function') {
+            if (documentCheckRef.current[expandedPhase] !== undefined) {
+                setShouldShowApproveButton(documentCheckRef.current[expandedPhase]);
+            } else {
+                const hasDocuments = hasRequiredDocuments(expandedPhase);
+                documentCheckRef.current[expandedPhase] = hasDocuments;
+                setShouldShowApproveButton(hasDocuments);
+            }
+        } else {
+            setShouldShowApproveButton(true);
+        }
+    }, [expandedPhase, hasRequiredDocuments]);
+
+    useEffect(() => {
+        if (currentProject?.id) {
+            documentCheckRef.current = {};
+            initialMountRef.current = true;
+        }
+    }, [currentProject?.id]);
 
     const getScoreStatus = (percentage) => {
         if (percentage >= thresholds.excellent) return { text: 'Potential Project', color: 'text-green-600' };
@@ -272,7 +307,7 @@ const ApprovedProjectPanel = ({
                     </div>
                     {userRole === 'MANAGER' && isUnderReview && !selectedEvaluation && (
                         <div className="mb-4 flex flex-wrap gap-2 justify-end">
-                            {expandedPhase && hasRequiredDocuments && hasRequiredDocuments(expandedPhase) && (
+                            {shouldShowApproveButton && (
                                 <button
                                     onClick={handleApproveProject}
                                     className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
