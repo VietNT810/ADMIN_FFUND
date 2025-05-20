@@ -291,7 +291,7 @@ const EvaluationProjectDetailsPhase = ({
     const getDocumentTypeLabel = (type) => {
         switch (type) {
             case 'PROGRESS_REPORT': return 'Progress Report';
-            case 'FUND_USAGE_REPORT': return 'Fund Usage Report';
+            case 'FUND_USAGE_PLAN': return 'Fund Usage Plan';
             default: return type;
         }
     };

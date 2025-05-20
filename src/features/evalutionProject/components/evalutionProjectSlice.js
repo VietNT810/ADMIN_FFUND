@@ -200,7 +200,7 @@ export const payoutCompletedPhase = createAsyncThunk(
     'evaluation/payoutCompletedPhase',
     async ({ phaseId }, { rejectWithValue }) => {
         try {
-            const response = await axios.patch(`${BASE_URL}/payout/phase/${phaseId}`);
+            const response = await axios.post(`${BASE_URL}/payout/phase/${phaseId}`);
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.error ||
@@ -458,7 +458,6 @@ const evaluationProjectSlice = createSlice({
             })
             .addCase(getProjectPaymentInformationByProjectId.fulfilled, (state, action) => {
                 state.status = 'succeeded';
-                state.successMessage = action.payload.message || 'Project approved successfully';
             })
     },
 });
