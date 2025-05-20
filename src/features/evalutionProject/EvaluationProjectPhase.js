@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { DownloadIcon, RefreshCcwDotIcon } from 'lucide-react';
 import { toast } from 'react-toastify';
+import PayoutCard from '../payout/PayoutCard';
 
 const EvaluationProjectDetailsPhase = ({
     getClassName,
@@ -498,6 +499,18 @@ const EvaluationProjectDetailsPhase = ({
                                                 <CurrencyDollarIcon className="w-4 h-4 mr-1" />
                                                 Investments
                                             </button>
+                                            <button
+                                                className={`px-4 py-3 text-sm font-medium border-b-2 flex items-center ${activePhaseTab === 'financials'
+                                                    ? 'border-teal-500 text-teal-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                                    }`}
+                                                onClick={() => setActivePhaseTab('financials')}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                </svg>
+                                                Financials
+                                            </button>
                                         </nav>
                                     </div>
 
@@ -886,6 +899,9 @@ const EvaluationProjectDetailsPhase = ({
                                                     </div>
                                                 )}
 
+                                                {/* Financials Tab */}
+
+
                                                 {/* Pagination */}
                                                 {phaseInvestments?.length > 0 && (
                                                     <div className="flex items-center justify-between mt-4">
@@ -928,6 +944,50 @@ const EvaluationProjectDetailsPhase = ({
                                                         </div>
                                                     </div>
                                                 )}
+                                            </div>
+                                        )}
+                                        {activePhaseTab === 'financials' && (
+                                            <div>
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <h4 className="font-medium text-lg flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z" />
+                                                        </svg>
+                                                        Financial Information
+                                                    </h4>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                    <PayoutCard
+                                                        phaseId={expandedPhase}
+                                                        phaseName={`Phase ${phases.find(p => p.id === expandedPhase)?.phaseNumber || ''}`}
+                                                        activeTab={activePhaseTab}
+                                                    />
+
+                                                    <div className="border rounded-lg p-4 bg-white shadow-sm">
+                                                        <h3 className="font-medium text-lg mb-4">Payment Summary</h3>
+                                                        <div className="p-4 bg-gray-50 rounded-lg">
+                                                            <div className="flex justify-between mb-2">
+                                                                <span className="text-gray-600">Total Raised</span>
+                                                                <span className="font-medium">${phases.find(p => p.id === expandedPhase)?.raiseAmount.toLocaleString() || '0'}</span>
+                                                            </div>
+                                                            <div className="flex justify-between mb-2">
+                                                                <span className="text-gray-600">Target Amount</span>
+                                                                <span className="font-medium">${phases.find(p => p.id === expandedPhase)?.targetAmount.toLocaleString() || '0'}</span>
+                                                            </div>
+                                                            <div className="flex justify-between mb-2">
+                                                                <span className="text-gray-600">Total Investors</span>
+                                                                <span className="font-medium">{phases.find(p => p.id === expandedPhase)?.totalInvestors || '0'}</span>
+                                                            </div>
+                                                            {paymentInfo && (
+                                                                <div className="flex justify-between mt-4 pt-4 border-t border-gray-200">
+                                                                    <span className="text-gray-600">Pending Balance</span>
+                                                                    <span className="font-medium">${paymentInfo.pendingBalance?.toLocaleString() || '0'}</span>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
