@@ -38,7 +38,7 @@ export const responseRequest = createAsyncThunk(
   'request/responseRequest',
   async ({ requestId, response }, { rejectWithValue }) => {
     try {
-      const responseApi = await axios.post(
+      const responseApi = await axios.put(
         `https://ffund.duckdns.org/api/v1/founder-request/respond/${requestId}`,
         { response }
       );
@@ -53,8 +53,8 @@ export const responseTimeExtendRequest = createAsyncThunk(
   'request/responseTimeExtendRequest',
   async ({ requestId, response }, { rejectWithValue }) => {
     try {
-      const responseApi = await axios.post(
-        `https://ffund.duckdns.org/api/v1/founder-request/extend/${requestId}`,
+      const responseApi = await axios.put(
+        `https://ffund.duckdns.org/api/v1/founder-request/respond/extend-time/${requestId}`,
         { response }
       );
       return responseApi.data.message;

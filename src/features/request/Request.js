@@ -4,7 +4,15 @@ import { getAllRequest, responseRequest, responseTimeExtendRequest } from './req
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loading from '../../components/Loading';
-import { PaperClipIcon, EyeIcon, MagnifyingGlassIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { 
+  PaperClipIcon, 
+  EyeIcon, 
+  MagnifyingGlassIcon, 
+  FolderIcon, 
+  ClockIcon,
+  ExclamationCircleIcon,
+  CreditCardIcon
+} from '@heroicons/react/24/outline';
 
 const Request = () => {
   const dispatch = useDispatch();
@@ -16,12 +24,12 @@ const Request = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('PENDING');
-  const [sortOrder, setSortOrder] = useState('asc');
+  const [sortOrder, setSortOrder] = useState('desc');
 
   useEffect(() => {
     const queryParts = [];
     if (searchTerm) queryParts.push(`title:eq:${searchTerm}`);
-    if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
+    if (selectedStatus && selectedStatus !== 'ALL') queryParts.push(`status:eq:${selectedStatus}`);
     const query = queryParts.join(",");
     dispatch(getAllRequest({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder }));
   }, [dispatch, searchTerm, selectedStatus, sortOrder]);
@@ -56,13 +64,11 @@ const Request = () => {
         setResponseMessage('');
         
         // Refresh the request list
-        dispatch(getAllRequest({ 
-          query: selectedStatus !== 'ALL' ? `status:eq:${selectedStatus}` : '', 
-          page: 0, 
-          size: 10, 
-          sortField: 'createdAt', 
-          sortOrder 
-        }));
+        const queryParts = [];
+        if (searchTerm) queryParts.push(`title:eq:${searchTerm}`);
+        if (selectedStatus && selectedStatus !== 'ALL') queryParts.push(`status:eq:${selectedStatus}`);
+        const query = queryParts.join(",");
+        dispatch(getAllRequest({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder }));
       })
       .catch((err) => {
         console.error('Response error:', err);
@@ -72,10 +78,32 @@ const Request = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return 'badge-warning';
-      case 'RESOLVED': return 'badge-success';
-      case 'EXTEND_TIME': return 'badge-info';
-      default: return 'badge-secondary';
+      case 'PENDING': return 'bg-yellow-100 text-yellow-800';
+      case 'RESOLVED': return 'bg-green-100 text-green-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getRequestTypeIcon = (type) => {
+    switch (type) {
+      case 'EXTEND_TIME':
+        return <ClockIcon className="w-5 h-5 text-blue-500" />;
+      case 'PROJECT_SUSPEND':
+        return <ExclamationCircleIcon className="w-5 h-5 text-red-500" />;
+      case 'STRIPE_ACCOUNT':
+        return <CreditCardIcon className="w-5 h-5 text-purple-500" />;
+      default:
+        return <FolderIcon className="w-5 h-5 text-gray-500" />;
+    }
+  };
+
+  const getRequestTypeLabel = (type) => {
+    switch (type) {
+      case 'EXTEND_TIME': return 'Time Extension';
+      case 'PROJECT_SUSPEND': return 'Project Suspension';
+      case 'STRIPE_ACCOUNT': return 'Stripe Account';
+      default: return type?.replace('_', ' ') || 'Unknown';
     }
   };
 
@@ -95,7 +123,7 @@ const Request = () => {
   const handleSearch = () => {
     const queryParts = [];
     if (searchTerm) queryParts.push(`title:eq:${searchTerm}`);
-    if (selectedStatus) queryParts.push(`status:eq:${selectedStatus}`);
+    if (selectedStatus && selectedStatus !== 'ALL') queryParts.push(`status:eq:${selectedStatus}`);
     const query = queryParts.join(",");
     dispatch(getAllRequest({ query, page: 0, size: 10, sortField: 'createdAt', sortOrder }));
   };
@@ -104,159 +132,163 @@ const Request = () => {
   if (status === 'failed') return <div className="alert alert-error">{error}</div>;
 
   return (
-    <div className="min-h-screen bg-base-200 py-6 px-4 text-base-content">
-      <div className="max-w-7xl mx-auto bg-base-100 shadow-xl rounded-xl p-8">
+    <div className="min-h-screen bg-gray-50 py-6 px-4">
+      <div className="max-w-7xl mx-auto bg-white shadow-xl rounded-xl p-8">
+        <h2 className="text-2xl font-bold mb-6">Request Management</h2>
+        
         {/* Search and Sort Section */}
-        <div className="mb-6 flex items-center space-x-4">
-          <input
-            type="text"
-            placeholder="Search requests by title"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyPress={(e) => { if (e.key === 'Enter') handleSearch(); }}
-            className="input input-bordered w-64"
-          />
+        <div className="mb-6 flex flex-wrap items-center gap-4">
+          <div className="relative flex-grow max-w-md">
+            <input
+              type="text"
+              placeholder="Search requests by title"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => { if (e.key === 'Enter') handleSearch(); }}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <MagnifyingGlassIcon className="w-5 h-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+          </div>
+          
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="select select-bordered"
+            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
+            <option value="ALL">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="RESOLVED">Resolved</option>
-            <option value="EXTEND_TIME">Extend Time</option>
+            <option value="REJECTED">Rejected</option>
           </select>
+          
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className="select select-bordered"
+            className="border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="asc">Newest to Oldest</option>
-            <option value="desc">Oldest to Newest</option>
+            <option value="desc">Newest First</option>
+            <option value="asc">Oldest First</option>
           </select>
+          
           <button
             onClick={handleSearch}
-            className="btn bg-orange-500 hover:bg-orange-600 dark:text-base-200 relative group"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition"
           >
-            <MagnifyingGlassIcon className="w-5 h-5 inline-block" />
-            <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-base-content opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              Search
-            </span>
+            Search
           </button>
         </div>
 
         {/* Request List */}
         <div className="space-y-4">
-          {requests.length > 0 ? (
+          {Array.isArray(requests) && requests.length > 0 ? (
             requests.map((request) => (
-              <div key={request.id} className="bg-base-200 shadow-md rounded-lg p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  {/* User Avatar and Info */}
-                  <div className="flex flex-col">
-                    <div className="flex items-center space-x-2">
-                      {request.user ? (
-                        <img
-                          src={request.user.userAvatar || 'https://via.placeholder.com/40'}
-                          alt={request.user.fullName}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                          <UserCircleIcon className="w-6 h-6 text-gray-500" />
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-lg font-semibold">
-                          {request.user ? request.user.fullName : 'Unknown User'}
-                        </h3>
-                        <p className="text-sm text-gray-500">
-                          {request.user ? request.user.roles : 'N/A'}
-                        </p>
+              <div key={request.id} className="bg-white border border-gray-200 rounded-lg p-5 hover:shadow-md transition">
+                <div className="flex justify-between items-start">
+                  {/* Request Info */}
+                  <div className="flex-grow">
+                    <div className="flex items-center gap-3 mb-3">
+                      {getRequestTypeIcon(request.type)}
+                      <h3 className="text-lg font-semibold">{request.title}</h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {request.status}
+                      </span>
+                      <span className="px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-800 text-xs font-medium">
+                        {getRequestTypeLabel(request.type)}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-500 mb-2">
+                      <FolderIcon className="w-4 h-4 mr-1" />
+                      <span className="font-medium mr-1">Project:</span>
+                      <span>{request.projectTitle || 'N/A'}</span>
+                    </div>
+                    
+                    <div className="text-sm text-gray-500 mb-4">
+                      <span className="font-medium">Created:</span> {formatDate(request.createdAt)}
+                    </div>
+                    
+                    <p className="text-gray-700 mb-3">{request.description}</p>
+                    
+                    {request.type === 'EXTEND_TIME' && request.extendDay > 0 && (
+                      <div className="mb-3 inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 rounded-md">
+                        <ClockIcon className="w-4 h-4 mr-1" />
+                        Requesting {request.extendDay} days extension
                       </div>
-                    </div>
-                    <p className="text-sm text-gray-500">{formatDate(request.createdAt)}</p>
-                    <div className="mt-2">
-                      <h4 className="font-medium">{request.title || 'Untitled Request'}</h4>
-                      <p className="text-sm text-gray-700">{request.description || 'No description provided'}</p>
-                    </div>
-                  </div>
-
-                  {/* Status and Attachment */}
-                  <div className="flex flex-col items-end space-y-2">
+                    )}
+                    
                     {request.attachmentUrl && (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 mb-3">
                         <PaperClipIcon className="w-5 h-5 text-gray-500" />
-                        <a href={request.attachmentUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+                        <a 
+                          href={request.attachmentUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:underline"
+                        >
                           View Attachment
                         </a>
                       </div>
                     )}
-                    <div className="flex items-center space-x-2">
-                      <span className={`badge ${getStatusColor(request.status)}`}>{request.status}</span>
-                      {request.type && (
-                        <span className="badge badge-outline">{request.type.replace('_', ' ')}</span>
-                      )}
-                    </div>
                   </div>
-                </div>
 
-                {/* Action Buttons */}
-                <div className="flex space-x-4">
-                  <Link
-                    to={`/app/request/${request.id}`}
-                    className="text-blue-600 hover:text-blue-800 relative group"
-                  >
-                    <EyeIcon className="w-5 h-5 inline-block" />
-                    <span className="absolute left-1/2 transform -translate-x-1/2 top-12 text-sm text-base-content opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      View Details
-                    </span>
-                  </Link>
-                  {request.status === 'PENDING' && (
-                    <button
-                      onClick={() => handleResponse(request.id, request.type)}
-                      className="btn btn-sm bg-green-500 hover:bg-green-600 dark:text-base-200"
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2">
+                    <Link
+                      to={`/app/request/${request.id}`}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      Respond
-                    </button>
-                  )}
+                      <EyeIcon className="w-4 h-4 mr-1" />
+                      Details
+                    </Link>
+                    
+                    {request.status === 'PENDING' && (
+                      <button
+                        onClick={() => handleResponse(request.id, request.type)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-green-600 hover:bg-green-700"
+                      >
+                        Respond
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
           ) : (
-            <div className="text-center text-gray-600">No requests available</div>
+            <div className="text-center py-10 bg-gray-50 rounded-lg">
+              <FolderIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-500">No requests found</p>
+            </div>
           )}
-        </div>
-
-        {/* Pagination */}
-        <div className="mt-4 flex justify-center">
-          {/* Pagination buttons here */}
         </div>
       </div>
 
       {/* Modal for Responding to Request */}
       {isModalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="bg-base-100 p-6 rounded-lg shadow-lg w-96">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold mb-4">
               {selectedRequestType === 'EXTEND_TIME' 
                 ? 'Respond to Time Extension Request' 
+                : selectedRequestType === 'PROJECT_SUSPEND'
+                ? 'Respond to Project Suspension Request'
                 : 'Respond to Request'}
             </h3>
             <textarea
               value={responseMessage}
               onChange={(e) => setResponseMessage(e.target.value)}
-              className="textarea textarea-bordered w-full mb-4"
+              className="w-full border border-gray-300 rounded-md p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent min-h-[120px]"
               placeholder="Enter your response..."
             />
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end space-x-4 mt-4">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="btn btn-ghost"
+                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmResponse}
-                className="btn btn-success"
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
               >
                 Send Response
               </button>

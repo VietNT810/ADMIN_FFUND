@@ -50,7 +50,7 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
     const userRole = localStorage.getItem('role');
     const totalViolations = violations.length;
     const isProjectBanned = currentProject?.status === 'BAN';
-    const canBanProject = totalViolations >= 5 && !isProjectBanned;
+    const canBanProject = totalViolations > maxViolationThreshold && !isProjectBanned;
 
     useEffect(() => {
         if (projectId) {
@@ -168,14 +168,14 @@ const ProjectViolationCard = ({ projectId, onManageViolations }) => {
             </div>
 
             {/* Violation count alert */}
-            {totalViolations >= maxViolationThreshold && !isProjectBanned && (
+            {totalViolations > maxViolationThreshold && !isProjectBanned && (
                 <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 flex items-center">
                     <AlertTriangle className="w-5 h-5 mr-2" />
                     <p>This project has accumulated <span className="font-bold">{totalViolations} violations</span>, which exceeds the threshold for banning ({maxViolationThreshold}).</p>
                 </div>
             )}
 
-            {totalViolations >= (maxViolationThreshold - 2) && totalViolations < maxViolationThreshold && !isProjectBanned && (
+            {totalViolations >= (maxViolationThreshold - 2) && totalViolations <= maxViolationThreshold && !isProjectBanned && (
                 <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded mb-4 flex items-center">
                     <AlertTriangle className="w-5 h-5 mr-2" />
                     <p>Warning: This project has <span className="font-bold">{totalViolations} violations</span> and is approaching the ban threshold of {maxViolationThreshold}.</p>
