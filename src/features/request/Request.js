@@ -11,7 +11,9 @@ import {
   FolderIcon, 
   ClockIcon,
   ExclamationCircleIcon,
-  CreditCardIcon
+  CreditCardIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Request = () => {
@@ -21,6 +23,7 @@ const Request = () => {
   const [selectedRequestId, setSelectedRequestId] = useState(null);
   const [selectedRequestType, setSelectedRequestType] = useState(null);
   const [responseMessage, setResponseMessage] = useState('');
+  const [responseStatus, setResponseStatus] = useState('RESOLVED');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('PENDING');
@@ -37,6 +40,8 @@ const Request = () => {
   const handleResponse = (requestId, requestType) => {
     setSelectedRequestId(requestId);
     setSelectedRequestType(requestType);
+    setResponseStatus('RESOLVED'); // Default to RESOLVED
+    setResponseMessage('');
     setIsModalOpen(true);
   };
 
@@ -48,7 +53,8 @@ const Request = () => {
 
     const payload = { 
       requestId: selectedRequestId, 
-      response: responseMessage 
+      response: responseMessage,
+      status: responseStatus
     };
 
     // Use different API function based on request type
@@ -59,9 +65,10 @@ const Request = () => {
     dispatch(actionToDispatch)
       .unwrap()
       .then(() => {
-        toast.success('Response sent successfully!');
+        toast.success(`Request ${responseStatus.toLowerCase()} successfully!`);
         setIsModalOpen(false);
         setResponseMessage('');
+        setResponseStatus('RESOLVED');
         
         // Refresh the request list
         const queryParts = [];
@@ -80,7 +87,7 @@ const Request = () => {
     switch (status) {
       case 'PENDING': return 'bg-yellow-100 text-yellow-800';
       case 'RESOLVED': return 'bg-green-100 text-green-800';
-      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'DECLINE': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -158,7 +165,7 @@ const Request = () => {
             <option value="ALL">All Status</option>
             <option value="PENDING">Pending</option>
             <option value="RESOLVED">Resolved</option>
-            <option value="REJECTED">Rejected</option>
+            <option value="DECLINE">Declined</option>
           </select>
           
           <select
@@ -262,7 +269,7 @@ const Request = () => {
         </div>
       </div>
 
-      {/* Modal for Responding to Request */}
+      {/* Modal for Responding to Request with Status Selection */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mx-4">
@@ -273,6 +280,38 @@ const Request = () => {
                 ? 'Respond to Project Suspension Request'
                 : 'Respond to Request'}
             </h3>
+            
+            {/* Status Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Select Response Status</label>
+              <div className="flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setResponseStatus('RESOLVED')}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                    responseStatus === 'RESOLVED' 
+                      ? 'bg-green-100 text-green-800 border-2 border-green-500' 
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <CheckCircleIcon className="w-5 h-5 mr-2" />
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setResponseStatus('DECLINE')}
+                  className={`flex items-center px-3 py-2 rounded-md text-sm ${
+                    responseStatus === 'DECLINE' 
+                      ? 'bg-red-100 text-red-800 border-2 border-red-500' 
+                      : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <XCircleIcon className="w-5 h-5 mr-2" />
+                  Decline
+                </button>
+              </div>
+            </div>
+            
             <textarea
               value={responseMessage}
               onChange={(e) => setResponseMessage(e.target.value)}
@@ -288,9 +327,9 @@ const Request = () => {
               </button>
               <button
                 onClick={confirmResponse}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+                className={`px-4 py-2 ${responseStatus === 'RESOLVED' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'} text-white rounded-md`}
               >
-                Send Response
+                {responseStatus === 'RESOLVED' ? 'Approve Request' : 'Decline Request'}
               </button>
             </div>
           </div>
