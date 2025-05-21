@@ -36,11 +36,11 @@ export const getRequestById = createAsyncThunk(
 // Response request
 export const responseRequest = createAsyncThunk(
   'request/responseRequest',
-  async ({ requestId, response }, { rejectWithValue }) => {
+  async ({ requestId, response, status }, { rejectWithValue }) => {
     try {
       const responseApi = await axios.put(
         `https://ffund.duckdns.org/api/v1/founder-request/respond/${requestId}`,
-        { response }
+        { response, status }
       );
       return responseApi.data.message;
     } catch (error) {
@@ -51,11 +51,11 @@ export const responseRequest = createAsyncThunk(
 
 export const responseTimeExtendRequest = createAsyncThunk(
   'request/responseTimeExtendRequest',
-  async ({ requestId, response }, { rejectWithValue }) => {
+  async ({ requestId, response, status }, { rejectWithValue }) => {
     try {
       const responseApi = await axios.put(
         `https://ffund.duckdns.org/api/v1/founder-request/respond/extend-time/${requestId}`,
-        { response }
+        { response, status }
       );
       return responseApi.data.message;
     } catch (error) {

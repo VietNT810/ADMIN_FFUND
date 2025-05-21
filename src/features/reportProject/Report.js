@@ -4,15 +4,16 @@ import { getAllReport, responseReport, approveReportForUnderReview } from './rep
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Loading from '../../components/Loading';
-import { 
-  PaperClipIcon, 
-  EyeIcon, 
+import {
+  PaperClipIcon,
+  EyeIcon,
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   ClockIcon,
   CheckCircleIcon,
-  DocumentMagnifyingGlassIcon
+  DocumentMagnifyingGlassIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
 
 const Report = () => {
@@ -21,6 +22,7 @@ const Report = () => {
 
   const [selectedReportId, setSelectedReportId] = useState(null);
   const [responseMessage, setResponseMessage] = useState('');
+  const [responseStatus, setResponseStatus] = useState('RESOLVED');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('PENDING');
@@ -28,6 +30,7 @@ const Report = () => {
   const [responseError, setResponseError] = useState('');
   const [isProcessingApproval, setIsProcessingApproval] = useState({});
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [avatarErrors, setAvatarErrors] = useState({});
 
   useEffect(() => {
     const queryParts = [];
@@ -39,8 +42,14 @@ const Report = () => {
 
   const handleResponse = (reportId) => {
     setSelectedReportId(reportId);
+    setResponseStatus('RESOLVED'); // Default to RESOLVED
     setResponseError('');
+    setResponseMessage('');
     setIsModalOpen(true);
+  };
+
+  const handleAvatarError = (userId) => {
+    setAvatarErrors(prev => ({ ...prev, [userId]: true }));
   };
 
   const handleApproveForReview = (reportId) => {
@@ -57,7 +66,7 @@ const Report = () => {
       .unwrap()
       .then(() => {
         toast.success('Report marked for review successfully');
-        
+
         dispatch(getAllReport({
           query: selectedStatus !== 'ALL' ? `status:eq:${selectedStatus}` : '',
           page: 0,
@@ -86,7 +95,7 @@ const Report = () => {
     const payload = {
       reportId: selectedReportId,
       data: {
-        status: "RESOLVED",
+        status: responseStatus,
         reason: responseMessage
       }
     };
@@ -94,9 +103,10 @@ const Report = () => {
     dispatch(responseReport(payload))
       .unwrap()
       .then(() => {
-        toast.success('Response sent successfully!');
+        toast.success(`Report ${responseStatus.toLowerCase()} successfully!`);
         setIsModalOpen(false);
         setResponseMessage('');
+        setResponseStatus('RESOLVED');
         dispatch(getAllReport({
           query: selectedStatus !== 'ALL' ? `status:eq:${selectedStatus}` : '',
           page: 0,
@@ -127,19 +137,22 @@ const Report = () => {
       case 'PENDING': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'UNDER_REVIEW': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
       case 'RESOLVED': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'REJECTED': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'PENDING': 
+      case 'PENDING':
         return <ClockIcon className="w-4 h-4 mr-1" />;
-      case 'UNDER_REVIEW': 
+      case 'UNDER_REVIEW':
         return <DocumentMagnifyingGlassIcon className="w-4 h-4 mr-1" />;
-      case 'RESOLVED': 
+      case 'RESOLVED':
         return <CheckCircleIcon className="w-4 h-4 mr-1" />;
-      default: 
+      case 'REJECTED':
+        return <XCircleIcon className="w-4 h-4 mr-1" />;
+      default:
         return null;
     }
   };
@@ -161,6 +174,26 @@ const Report = () => {
       hour: '2-digit',
       minute: '2-digit'
     }).format(date);
+  };
+
+  const renderUserAvatar = (user) => {
+    if (avatarErrors[user.id] || !user.userAvatar) {
+      return (
+        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-yellow-200 border-2 border-base-300 dark:border-base-700">
+          <span className="text-yellow-600 text-lg font-bold">
+            {user.fullName?.charAt(0) || 'U'}
+          </span>
+        </div>
+      );
+    }
+    return (
+      <img
+        src={user.userAvatar}
+        alt={user.fullName}
+        className="w-10 h-10 rounded-full object-cover border-2 border-base-300 dark:border-base-700"
+        onError={() => handleAvatarError(user.id)}
+      />
+    );
   };
 
   if (status === 'loading') return <Loading />;
@@ -198,7 +231,7 @@ const Report = () => {
                   className="input input-bordered w-full pl-10 bg-base-200 focus:ring-2 focus:ring-primary"
                 />
               </div>
-              
+
               <button
                 onClick={() => setIsFilterOpen(!isFilterOpen)}
                 className="btn btn-outline btn-primary"
@@ -206,7 +239,7 @@ const Report = () => {
                 <AdjustmentsHorizontalIcon className="w-5 h-5 mr-2" />
                 Filters
               </button>
-              
+
               <button
                 onClick={handleSearch}
                 className="btn btn-primary"
@@ -215,7 +248,7 @@ const Report = () => {
                 Search
               </button>
             </div>
-            
+
             {isFilterOpen && (
               <div className="mt-4 p-4 bg-base-200 rounded-lg flex flex-wrap gap-4 items-center">
                 <div className="form-control">
@@ -231,9 +264,10 @@ const Report = () => {
                     <option value="PENDING">Pending</option>
                     <option value="UNDER_REVIEW">Under Review</option>
                     <option value="RESOLVED">Resolved</option>
+                    <option value="REJECTED">Rejected</option>
                   </select>
                 </div>
-                
+
                 <div className="form-control">
                   <label className="label">
                     <span className="label-text font-medium">Sort By</span>
@@ -247,7 +281,7 @@ const Report = () => {
                     <option value="desc">Oldest to Newest</option>
                   </select>
                 </div>
-                
+
                 <button
                   onClick={() => setIsFilterOpen(false)}
                   className="btn btn-ghost self-end"
@@ -264,8 +298,8 @@ const Report = () => {
             <div className="space-y-4">
               {reports.length > 0 ? (
                 reports.map((report) => (
-                  <div 
-                    key={report.id} 
+                  <div
+                    key={report.id}
                     className="bg-base-200 hover:bg-base-300 dark:hover:bg-base-700 transition-colors duration-200 shadow-md rounded-lg overflow-hidden"
                   >
                     <div className="p-4 md:p-6">
@@ -273,11 +307,7 @@ const Report = () => {
                         {/* User Info & Report Content */}
                         <div className="flex-grow">
                           <div className="flex items-center space-x-3 mb-3">
-                            <img
-                              src={report.user.userAvatar || 'https://via.placeholder.com/40'}
-                              alt={report.user.fullName}
-                              className="w-10 h-10 rounded-full object-cover border-2 border-base-300 dark:border-base-700"
-                            />
+                            {renderUserAvatar(report.user)}
                             <div>
                               <h3 className="font-semibold">{report.user.fullName}</h3>
                               <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
@@ -287,19 +317,19 @@ const Report = () => {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="mb-4">
                             <h4 className="text-lg font-medium mb-2">{report.title || "Untitled Report"}</h4>
                             <p className="text-gray-700 dark:text-gray-300">{report.description}</p>
                           </div>
-                          
+
                           {report.attachmentUrl && (
                             <div className="flex items-center space-x-2 mb-4 text-primary hover:text-primary-focus">
                               <PaperClipIcon className="w-5 h-5" />
-                              <a 
-                                href={report.attachmentUrl} 
-                                target="_blank" 
-                                rel="noopener noreferrer" 
+                              <a
+                                href={report.attachmentUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
                                 className="text-sm hover:underline"
                               >
                                 View Attachment
@@ -307,14 +337,14 @@ const Report = () => {
                             </div>
                           )}
                         </div>
-                        
+
                         {/* Status & Actions */}
                         <div className="flex flex-col md:items-end space-y-3 md:min-w-[200px]">
                           <div className={`px-3 py-1.5 rounded-full flex items-center justify-center ${getStatusColor(report.status)}`}>
                             {getStatusIcon(report.status)}
                             <span className="font-medium">{report.status}</span>
                           </div>
-                          
+
                           <div className="flex flex-wrap gap-2">
                             <Link
                               to={`/app/report-project/${report.id}`}
@@ -323,7 +353,7 @@ const Report = () => {
                               <EyeIcon className="w-4 h-4 mr-1" />
                               View Details
                             </Link>
-                            
+
                             {report.status === 'PENDING' && (
                               <button
                                 onClick={() => handleApproveForReview(report.id)}
@@ -340,7 +370,7 @@ const Report = () => {
                                 )}
                               </button>
                             )}
-                            
+
                             {report.status === 'UNDER_REVIEW' && (
                               <button
                                 onClick={() => handleResponse(report.id)}
@@ -363,7 +393,7 @@ const Report = () => {
                   </div>
                   <h3 className="text-lg font-medium mb-2">No reports available</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    {searchTerm || selectedStatus !== 'ALL' 
+                    {searchTerm || selectedStatus !== 'ALL'
                       ? "Try adjusting your search filters"
                       : "No reports have been submitted yet"}
                   </p>
@@ -391,11 +421,42 @@ const Report = () => {
             <div className="p-6 border-b border-base-300 dark:border-base-700">
               <h3 className="text-xl font-bold">Respond to Report</h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Your response will mark this report as resolved
+                Select a response status and provide details
               </p>
             </div>
-            
+
             <div className="p-6">
+              {/* Status Selection */}
+              <div className="mb-4">
+                <label className="label">
+                  <span className="label-text font-medium">Select Response Status</span>
+                </label>
+                <div className="flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setResponseStatus('RESOLVED')}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm ${responseStatus === 'RESOLVED'
+                      ? 'bg-green-100 text-green-800 border-2 border-green-500 dark:bg-green-900 dark:text-green-200 dark:border-green-500'
+                      : 'bg-base-200 border border-base-300 text-base-content hover:bg-base-300 dark:bg-base-700 dark:border-base-600 dark:hover:bg-base-600'
+                      }`}
+                  >
+                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    Resolve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setResponseStatus('REJECTED')}
+                    className={`flex items-center px-3 py-2 rounded-md text-sm ${responseStatus === 'REJECTED'
+                      ? 'bg-red-100 text-red-800 border-2 border-red-500 dark:bg-red-900 dark:text-red-200 dark:border-red-500'
+                      : 'bg-base-200 border border-base-300 text-base-content hover:bg-base-300 dark:bg-base-700 dark:border-base-600 dark:hover:bg-base-600'
+                      }`}
+                  >
+                    <XCircleIcon className="w-5 h-5 mr-2" />
+                    Reject
+                  </button>
+                </div>
+              </div>
+
               <div className="form-control">
                 <label className="label">
                   <span className="label-text font-medium">Response Message</span>
@@ -413,7 +474,7 @@ const Report = () => {
                 )}
               </div>
             </div>
-            
+
             <div className="p-6 border-t border-base-300 dark:border-base-700 flex justify-end space-x-3">
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -423,9 +484,9 @@ const Report = () => {
               </button>
               <button
                 onClick={confirmResponse}
-                className="btn btn-primary"
+                className={`btn ${responseStatus === 'RESOLVED' ? 'btn-success' : 'btn-error'}`}
               >
-                Send Response
+                {responseStatus === 'RESOLVED' ? 'Resolve Report' : 'Reject Report'}
               </button>
             </div>
           </div>
