@@ -164,7 +164,7 @@ export const refundBannedProjectByPhaseId = createAsyncThunk(
     'evaluation/refundBannedProjectByPhaseId',
     async ({ phaseId }, { rejectWithValue }) => {
         try {
-            const response = await axios.patch(`${BASE_URL}/investment/refund/${phaseId}`);
+            const response = await axios.put(`${BASE_URL}/investment/refund/${phaseId}`);
             return response.data;
         } catch (error) {
             const errorMessage = error.response?.data?.error ||

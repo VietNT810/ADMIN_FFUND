@@ -389,7 +389,7 @@ const EvaluationProjectDetailsPhase = ({
                                         <div className="flex items-center justify-between">
                                             <h3 className="font-bold text-gray-800">Phase {phase.phaseNumber}</h3>
 
-                                            {/* Payout Button - Only show for COMPLETED phases */}
+                                            {/* Payout Button - Show only if phase status is COMPLETED */}
                                             {phase.status === 'COMPLETED' && (
                                                 <button
                                                     onClick={(e) => {
@@ -422,6 +422,34 @@ const EvaluationProjectDetailsPhase = ({
                                                                 <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                                                             </svg>
                                                             Payout
+                                                        </>
+                                                    )}
+                                                </button>
+                                            )}
+
+                                            {/* Refund Button - Show only if project status is BAN */}
+                                            {currentProject && currentProject.status === 'BAN' && phase.status !== 'PLAN' && (
+                                                <button
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRefundProject(phase.id);
+                                                    }}
+                                                    disabled={isRefunding}
+                                                    className={`px-2 py-1 text-xs rounded-md flex items-center gap-1 ml-2 ${isRefunding ?
+                                                            'bg-gray-200 text-gray-500 cursor-not-allowed' :
+                                                            'bg-red-100 text-red-700 hover:bg-red-200'
+                                                        }`}
+                                                    title="Refund investors for this phase due to banned project"
+                                                >
+                                                    {isRefunding ? (
+                                                        <>
+                                                            <div className="w-3 h-3 border-t-2 border-red-700 rounded-full animate-spin mr-1"></div>
+                                                            Processing...
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <RefreshCcwDotIcon className="w-3 h-3 mr-1" />
+                                                            Refund
                                                         </>
                                                     )}
                                                 </button>
@@ -741,26 +769,6 @@ const EvaluationProjectDetailsPhase = ({
                                                         <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-600" />
                                                         Phase Investments
                                                     </h4>
-
-                                                    {currentProject && currentProject.status === 'BAN' && (
-                                                        <button
-                                                            onClick={() => handleRefundProject(expandedPhase)}
-                                                            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors flex items-center"
-                                                            disabled={isRefunding}
-                                                        >
-                                                            {isRefunding ? (
-                                                                <>
-                                                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                                                    Processing...
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <RefreshCcwDotIcon className="w-4 h-4 mr-2" />
-                                                                    Refund Investors
-                                                                </>
-                                                            )}
-                                                        </button>
-                                                    )}
 
                                                     <form onSubmit={handleSearchSubmit} className="relative">
                                                         <input
