@@ -156,81 +156,94 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
                 <h2 className="text-xl font-semibold text-orange-600 dark:text-orange-400 mb-4">Project Story</h2>
                 <div className="space-y-6">
                     {story?.blocks?.length > 0 ? (
-                        story.blocks.reduce((sections, block) => {
+                        (() => {
+                            // Create initial section for content before any headings
+                            const sections = [{
+                                heading: {
+                                    storyBlockId: 'overview',
+                                    content: 'Project Overview',
+                                    type: 'HEADING'
+                                },
+                                content: []
+                            }];
+
                             // Group blocks by heading
-                            if (block.type === 'HEADING') {
-                                sections.push({
-                                    heading: block,
-                                    content: [],
-                                });
-                            } else if (sections.length > 0) {
-                                sections[sections.length - 1].content.push(block);
-                            }
-                            return sections;
-                        }, []).map((section, index) => (
-                            <div key={section.heading.storyBlockId} id={section.heading.storyBlockId} className="scroll-mt-16">
-                                {/* Heading */}
-                                <div className="mb-3">
-                                    <h3
-                                        className={`text-lg font-semibold ${selectedBlock === section.heading.storyBlockId
-                                            ? 'text-orange-600 dark:text-orange-400'
-                                            : 'text-gray-800 dark:text-gray-200'
-                                            }`}
-                                    >
-                                        {section.heading.content}
-                                    </h3>
+                            story.blocks.forEach(block => {
+                                if (block.type === 'HEADING') {
+                                    sections.push({
+                                        heading: block,
+                                        content: [],
+                                    });
+                                } else {
+                                    sections[sections.length - 1].content.push(block);
+                                }
+                            });
+
+                            return sections.filter(section => section.content.length > 0).map((section, index) => (
+                                <div key={section.heading.storyBlockId} id={section.heading.storyBlockId} className="scroll-mt-16">
+                                    {/* Heading */}
+                                    <div className="mb-3">
+                                        <h3
+                                            className={`text-lg font-semibold ${selectedBlock === section.heading.storyBlockId
+                                                    ? 'text-orange-600 dark:text-orange-400'
+                                                    : 'text-gray-800 dark:text-gray-200'
+                                                }`}
+                                        >
+                                            {section.heading.content}
+                                        </h3>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="space-y-3">
+                                        {section.content.map((block) => {
+                                            if (block.type === 'TEXT') {
+                                                return (
+                                                    <p
+                                                        key={block.storyBlockId}
+                                                        className="text-gray-700 dark:text-gray-100 text-sm leading-relaxed"
+                                                        dangerouslySetInnerHTML={{ __html: block.content }}
+                                                    ></p>
+                                                );
+                                            }
+
+                                            if (block.type === 'IMAGE') {
+                                                return (
+                                                    <img
+                                                        key={block.storyBlockId}
+                                                        src={block.content}
+                                                        alt="Story Image"
+                                                        className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                    />
+                                                );
+                                            }
+
+                                            if (block.type === 'VIDEO') {
+                                                const metadata = block.metadata ? JSON.parse(block.metadata) : {};
+                                                const videoWidth = metadata.additionalProp1?.width || '560px';
+                                                const videoHeight = metadata.additionalProp1?.height || '315px';
+
+                                                return (
+                                                    <iframe
+                                                        key={block.storyBlockId}
+                                                        src={block.content}
+                                                        width={videoWidth}
+                                                        height={videoHeight}
+                                                        className="w-full h-64 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                        title="Project Story Video"
+                                                        allow="autoplay; encrypted-media"
+                                                    ></iframe>
+                                                );
+                                            }
+
+                                            return null;
+                                        })}
+                                    </div>
+
+                                    {/* Divider */}
+                                    {index < sections.length - 1 && <hr className="my-4 border-gray-200 dark:border-gray-700" />}
                                 </div>
-
-                                {/* Content */}
-                                <div className="space-y-3">
-                                    {section.content.map((block) => {
-                                        if (block.type === 'TEXT') {
-                                            return (
-                                                <p
-                                                    key={block.storyBlockId}
-                                                    className="text-gray-700 dark:text-gray-100 text-sm leading-relaxed"
-                                                    dangerouslySetInnerHTML={{ __html: block.content }}
-                                                ></p>
-                                            );
-                                        }
-
-                                        if (block.type === 'IMAGE') {
-                                            return (
-                                                <img
-                                                    key={block.storyBlockId}
-                                                    src={block.content}
-                                                    alt="Story Image"
-                                                    className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                                                />
-                                            );
-                                        }
-
-                                        if (block.type === 'VIDEO') {
-                                            const metadata = block.metadata ? JSON.parse(block.metadata) : {};
-                                            const videoWidth = metadata.additionalProp1?.width || '560px';
-                                            const videoHeight = metadata.additionalProp1?.height || '315px';
-
-                                            return (
-                                                <iframe
-                                                    key={block.storyBlockId}
-                                                    src={block.content}
-                                                    width={videoWidth}
-                                                    height={videoHeight}
-                                                    className="w-full h-64 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                                                    title="Project Story Video"
-                                                    allow="autoplay; encrypted-media"
-                                                ></iframe>
-                                            );
-                                        }
-
-                                        return null;
-                                    })}
-                                </div>
-
-                                {/* Divider */}
-                                {index < story.blocks.length - 1 && <hr className="my-4 border-gray-200 dark:border-gray-700" />}
-                            </div>
-                        ))
+                            ))
+                        })()
                     ) : (
                         <p className="text-center text-gray-600 dark:text-gray-300">No story available for this project.</p>
                     )}
