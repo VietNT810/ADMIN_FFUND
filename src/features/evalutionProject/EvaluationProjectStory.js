@@ -208,14 +208,12 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
 
                                             if (block.type === 'IMAGE') {
                                                 return (
-                                                    <div key={block.storyBlockId} className="flex justify-center my-4">
-                                                        <img
-                                                            src={block.content}
-                                                            alt="Story Image"
-                                                            loading="lazy"
-                                                            className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                                                        />
-                                                    </div>
+                                                    <img
+                                                        key={block.storyBlockId}
+                                                        src={block.content}
+                                                        alt="Story Image"
+                                                        className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                    />
                                                 );
                                             }
 
@@ -225,19 +223,15 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
                                                 const videoHeight = metadata.additionalProp1?.height || '315px';
 
                                                 return (
-                                                    <div key={block.storyBlockId} className="flex justify-center my-4">
-                                                        <div className="w-full max-w-2xl">
-                                                            <iframe
-                                                                src={block.content}
-                                                                width={videoWidth}
-                                                                height={videoHeight}
-                                                                className="w-full aspect-video rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-                                                                title="Project Story Video"
-                                                                allow="autoplay; encrypted-media"
-                                                                allowFullScreen
-                                                            ></iframe>
-                                                        </div>
-                                                    </div>
+                                                    <iframe
+                                                        key={block.storyBlockId}
+                                                        src={block.content}
+                                                        width={videoWidth}
+                                                        height={videoHeight}
+                                                        className="w-full h-64 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                        title="Project Story Video"
+                                                        allow="autoplay; encrypted-media"
+                                                    ></iframe>
                                                 );
                                             }
 
