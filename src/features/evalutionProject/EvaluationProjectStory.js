@@ -84,8 +84,8 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
             <button
                 onClick={toggleTOC}
                 className={`absolute top-4 left-4 z-20 p-2 rounded-md ${tocVisible
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-orange-100 text-orange-600 hover:bg-orange-200'
                     } transition-colors shadow-md`}
                 aria-label="Toggle Table of Contents"
             >
@@ -185,8 +185,8 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
                                     <div className="mb-3">
                                         <h3
                                             className={`text-lg font-semibold ${selectedBlock === section.heading.storyBlockId
-                                                ? 'text-orange-600 dark:text-orange-400'
-                                                : 'text-gray-800 dark:text-gray-200'
+                                                    ? 'text-orange-600 dark:text-orange-400'
+                                                    : 'text-gray-800 dark:text-gray-200'
                                                 }`}
                                         >
                                             {section.heading.content}
@@ -208,12 +208,12 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
 
                                             if (block.type === 'IMAGE') {
                                                 return (
-                                                    <div key={block.storyBlockId} className="story-image-container flex justify-center my-4">
+                                                    <div key={block.storyBlockId} className="flex justify-center my-4">
                                                         <img
                                                             src={block.content}
                                                             alt="Story Image"
                                                             loading="lazy"
-                                                            className="story-image max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                            className="max-w-full h-auto rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
                                                         />
                                                     </div>
                                                 );
@@ -225,13 +225,13 @@ const ProjectDetailsStoryEvaluation = ({ getClassName }) => {
                                                 const videoHeight = metadata.additionalProp1?.height || '315px';
 
                                                 return (
-                                                    <div key={block.storyBlockId} className="story-video-container flex justify-center my-4">
-                                                        <div className="story-video-wrapper w-full max-w-2xl">
+                                                    <div key={block.storyBlockId} className="flex justify-center my-4">
+                                                        <div className="w-full max-w-2xl">
                                                             <iframe
                                                                 src={block.content}
                                                                 width={videoWidth}
                                                                 height={videoHeight}
-                                                                className="story-video w-full aspect-video rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+                                                                className="w-full aspect-video rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
                                                                 title="Project Story Video"
                                                                 allow="autoplay; encrypted-media"
                                                                 allowFullScreen
