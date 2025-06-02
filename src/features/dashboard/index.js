@@ -36,18 +36,16 @@ function Dashboard() {
 
     return (
         <>
-
-            {/** ---------------------- Different stats content 1 ------------------------- */}
             {/** ---------------------- Different stats content 1 ------------------------- */}
             <div className="mb-6">
                 <DashboardStats />
             </div>
-            <DashboardTopBar updateDashboardPeriod={updateDashboardPeriod}/>
+            <DashboardTopBar updateDashboardPeriod={updateDashboardPeriod} />
 
             {/** ---------------------- Different charts ------------------------- */}
             <div className="grid lg:grid-cols-2 mt-4 grid-cols-1 gap-6">
                 <LineChart start={dateRange.start} end={dateRange.end} />
-                <BarChart start={dateRange.start} end={dateRange.end}  />
+                <BarChart start={dateRange.start} end={dateRange.end} />
             </div>
 
             {/** ---------------------- Area Chart ------------------------- */}
@@ -55,7 +53,7 @@ function Dashboard() {
                 <AreaChart start={dateRange.start} end={dateRange.end} />
             </div>
 
-            {/** ---------------------- User source channels table  ------------------------- */}
+            {/** ---------------------- User source channels table and chart ------------------------- */}
             <div className="grid lg:grid-cols-2 mt-4 grid-cols-1 gap-6">
                 <UserChannels />
                 <DoughnutChart />
