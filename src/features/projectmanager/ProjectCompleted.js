@@ -18,6 +18,8 @@ const ProjectCompleted = () => {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const userRole = localStorage.getItem('role');
+
   // Debounced search term for better performance
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
@@ -155,9 +157,15 @@ const ProjectCompleted = () => {
                   <td className="px-4 py-2 text-sm">{new Date(project.createdAt).toLocaleDateString()}</td>
                   <td className="px-4 py-2 text-center">
                     <div className="flex justify-center gap-3">
-                      <Link to={`/app/project-details/${project.id}`} className="tooltip" data-tip="View">
-                        <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
-                      </Link>
+                      {userRole === 'MANAGER' ? (
+                        <Link to={`/app/project-scoring/${project.id}`} className="tooltip" data-tip="Score">
+                          <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+                        </Link>
+                      ) : (
+                        <Link to={`/app/project-details/${project.id}`} className="tooltip" data-tip="View">
+                          <EyeIcon className="w-5 h-5 text-blue-600 hover:text-blue-800" />
+                        </Link>
+                      )}
                       {project.status === 'APPROVED' && (
                         <button className="tooltip" data-tip="Complete" onClick={() => handleComplete(project.id)}>
                           <CheckCircleIcon className="w-5 h-5 text-green-600 hover:text-green-800" />

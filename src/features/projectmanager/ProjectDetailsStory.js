@@ -52,6 +52,20 @@ const ProjectDetailsStory = ({ getClassName }) => {
   if (status === 'loading') return <Loading />;
   if (status === 'failed') return <div className="alert alert-error">{error}</div>;
 
+  // Create a default heading for TOC
+  const defaultHeading = {
+    storyBlockId: 'overview',
+    content: 'Project Overview',
+    type: 'HEADING',
+  };
+
+  // Add the default heading to TOC if there are blocks but no headings
+  const tocHeadings = story?.blocks?.filter(block => block.type === 'HEADING') || [];
+  const hasHeadings = tocHeadings.length > 0;
+  const headingsForToc = hasHeadings ?
+    tocHeadings :
+    (story?.blocks?.length > 0 ? [defaultHeading] : []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 py-8 px-4 text-base-content">
       <div className="container mx-auto flex gap-6 relative">
@@ -66,40 +80,38 @@ const ProjectDetailsStory = ({ getClassName }) => {
                 Table of Contents
               </h3>
               <nav className="space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto pr-2 custom-scrollbar">
-                {story?.blocks
-                  ?.filter((block) => block.type === 'HEADING')
-                  .map((heading) => {
-                    const metadata = heading.metadata ? JSON.parse(heading.metadata) : {};
-                    const level = metadata?.additionalProp1?.level || 2;
+                {headingsForToc.map((heading) => {
+                  const metadata = heading.metadata ? JSON.parse(heading.metadata) : {};
+                  const level = metadata?.additionalProp1?.level || 2;
 
-                    return (
-                      <button
-                        key={heading.storyBlockId}
-                        onClick={() => {
-                          const element = document.getElementById(heading.storyBlockId);
-                          if (element) {
-                            const offset = 96;
-                            const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-                            const offsetPosition = elementPosition - offset;
+                  return (
+                    <button
+                      key={heading.storyBlockId}
+                      onClick={() => {
+                        const element = document.getElementById(heading.storyBlockId);
+                        if (element) {
+                          const offset = 96;
+                          const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                          const offsetPosition = elementPosition - offset;
 
-                            window.scrollTo({
-                              top: offsetPosition,
-                              behavior: 'smooth',
-                            });
-                          }
-                        }}
-                        className={`block text-left w-full px-3 py-2 rounded-md transition-all duration-200 ${selectedBlock === heading.storyBlockId
-                          ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-medium shadow-sm'
-                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                          } ${level === 2 ? 'text-base font-semibold' : 'text-sm pl-6 border-l border-gray-300 dark:border-gray-600'}`}
-                      >
-                        {level > 2 && (
-                          <span className="inline-block w-2 h-2 bg-orange-400 rounded-full mr-2 opacity-70"></span>
-                        )}
-                        {heading.content}
-                      </button>
-                    );
-                  })}
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth',
+                          });
+                        }
+                      }}
+                      className={`block text-left w-full px-3 py-2 rounded-md transition-all duration-200 ${selectedBlock === heading.storyBlockId
+                        ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 font-medium shadow-sm'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        } ${level === 2 ? 'text-base font-semibold' : 'text-sm pl-6 border-l border-gray-300 dark:border-gray-600'}`}
+                    >
+                      {level > 2 && (
+                        <span className="inline-block w-2 h-2 bg-orange-400 rounded-full mr-2 opacity-70"></span>
+                      )}
+                      {heading.content}
+                    </button>
+                  );
+                })}
               </nav>
             </div>
           </div>
@@ -111,81 +123,101 @@ const ProjectDetailsStory = ({ getClassName }) => {
             <h2 className="text-2xl font-semibold text-orange-600 dark:text-orange-400 mb-6">Project Story</h2>
             <div className="space-y-8">
               {story?.blocks?.length > 0 ? (
-                story.blocks.reduce((sections, block) => {
-                  // Group blocks by heading
-                  if (block.type === 'HEADING') {
-                    sections.push({
-                      heading: block,
-                      content: [],
-                    });
-                  } else if (sections.length > 0) {
-                    sections[sections.length - 1].content.push(block);
+                (() => {
+                  // Create sections from blocks
+                  const sections = [];
+                  let currentSection = {
+                    heading: defaultHeading,
+                    content: [],
+                  };
+
+                  story.blocks.forEach(block => {
+                    if (block.type === 'HEADING') {
+                      // Save the previous section if it has content
+                      if (currentSection.content.length > 0) {
+                        sections.push(currentSection);
+                      }
+                      // Create a new section
+                      currentSection = {
+                        heading: block,
+                        content: [],
+                      };
+                    } else {
+                      // Add block to current section
+                      currentSection.content.push(block);
+                    }
+                  });
+
+                  // Add the last section if it has content
+                  if (currentSection.content.length > 0) {
+                    sections.push(currentSection);
                   }
-                  return sections;
-                }, []).map((section, index) => (
-                  <div key={section.heading.storyBlockId} id={section.heading.storyBlockId}>
-                    {/* Heading */}
-                    <div className="mb-6">
-                      <h3
-                        className={`text-2xl font-semibold ${selectedBlock === section.heading.storyBlockId
-                          ? 'text-orange-600 dark:text-orange-400'
-                          : 'text-gray-800 dark:text-gray-200'
-                          }`}
-                      >
-                        {section.heading.content}
-                      </h3>
+
+                  return sections.map((section, index) => (
+                    <div key={section.heading.storyBlockId} id={section.heading.storyBlockId}>
+                      {/* Heading */}
+                      <div className="mb-6">
+                        <h3
+                          className={`text-2xl font-semibold ${selectedBlock === section.heading.storyBlockId
+                            ? 'text-orange-600 dark:text-orange-400'
+                            : 'text-gray-800 dark:text-gray-200'
+                            }`}
+                        >
+                          {section.heading.content}
+                        </h3>
+                      </div>
+
+                      {/* Content */}
+                      <div className="space-y-4">
+                        {section.content.map((block) => {
+                          if (block.type === 'TEXT') {
+                            return (
+                              <p
+                                key={block.storyBlockId}
+                                className="text-gray-700 dark:text-gray-100 leading-relaxed"
+                                dangerouslySetInnerHTML={{ __html: block.content }}
+                              ></p>
+                            );
+                          }
+
+                          if (block.type === 'IMAGE') {
+                            return (
+                              <img
+                                key={block.storyBlockId}
+                                src={block.content}
+                                alt="Story Image"
+                                className="max-w-full h-auto rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
+                              />
+                            );
+                          }
+
+                          if (block.type === 'VIDEO') {
+                            const metadata = block.metadata ? JSON.parse(block.metadata) : {};
+                            const videoWidth = metadata.additionalProp1?.width || '560px';
+                            const videoHeight = metadata.additionalProp1?.height || '315px';
+
+                            return (
+                              <iframe
+                                key={block.storyBlockId}
+                                src={block.content}
+                                width={videoWidth}
+                                height={videoHeight}
+                                className="w-full h-80 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
+                                title="Project Story Video"
+                                allow="autoplay; encrypted-media"
+                              ></iframe>
+                            );
+                          }
+
+                          return null;
+                        })}
+                      </div>
+
+                      {/* Divider */}
+                      {index < sections.length - 1 && <hr className="my-8 border-gray-300 dark:border-gray-600" />}
                     </div>
-
-                    {/* Content */}
-                    <div className="space-y-4">
-                      {section.content.map((block) => {
-                        if (block.type === 'TEXT') {
-                          return (
-                            <p
-                              key={block.storyBlockId}
-                              className="text-gray-700 dark:text-gray-100 leading-relaxed"
-                              dangerouslySetInnerHTML={{ __html: block.content }}
-                            ></p>
-                          );
-                        }
-
-                        if (block.type === 'IMAGE') {
-                          return (
-                            <img
-                              key={block.storyBlockId}
-                              src={block.content}
-                              alt="Story Image"
-                              className="max-w-full h-auto rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
-                            />
-                          );
-                        }
-
-                        if (block.type === 'VIDEO') {
-                          const metadata = block.metadata ? JSON.parse(block.metadata) : {};
-                          const videoWidth = metadata.additionalProp1?.width || '560px';
-                          const videoHeight = metadata.additionalProp1?.height || '315px';
-
-                          return (
-                            <iframe
-                              key={block.storyBlockId}
-                              src={block.content}
-                              width={videoWidth}
-                              height={videoHeight}
-                              className="w-full h-80 rounded-lg shadow-lg hover:shadow-2xl transition-shadow duration-300"
-                              title="Project Story Video"
-                              allow="autoplay; encrypted-media"
-                            ></iframe>
-                          );
-                        }
-
-                        return null;
-                      })}
-                    </div>
-
-                    {/* Divider */}
-                    {index < story.blocks.length - 1 && <hr className="my-8 border-gray-300 dark:border-gray-600" />}
-                  </div>
-                ))
+                  ));
+                })()
               ) : (
                 <p className="text-center text-gray-600 dark:text-gray-300">No story available for this project.</p>
               )}
