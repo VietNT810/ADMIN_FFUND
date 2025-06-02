@@ -9,12 +9,14 @@ import { motion } from 'framer-motion';
 
 const ProjectCompleted = () => {
   const dispatch = useDispatch();
-  const { projects, status, error, totalPages } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
+  const { projects, status, error } = useSelector(state => state.project || { projects: [], error: null, status: 'idle' });
+  const totalPages = useSelector(state => state.project?.totalPages || 1);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
   const [completeModalOpen, setCompleteModalOpen] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const userRole = localStorage.getItem('role');
 
@@ -47,13 +49,36 @@ const ProjectCompleted = () => {
   };
 
   const confirmComplete = () => {
+    setIsProcessing(true);
     dispatch(completeProject(selectedProjectId))
+      .unwrap()
       .then(() => {
         setCompleteModalOpen(false);
-        toast.success('Project completed!');
+        toast.success('Project completed successfully!');
+        // Refresh project list
+        dispatch(getProjectToComplete({ title: debouncedSearchTerm, page, size: 10 }));
       })
-      .catch(() => {
-        toast.error('Failed to complete project.');
+      .catch((rejectedValueOrSerializedError) => {
+        console.log('Error response:', rejectedValueOrSerializedError);
+
+        let errorMessage;
+
+        if (typeof rejectedValueOrSerializedError === 'string') {
+          errorMessage = rejectedValueOrSerializedError;
+        } else if (rejectedValueOrSerializedError && typeof rejectedValueOrSerializedError === 'object') {
+          errorMessage = rejectedValueOrSerializedError.error || 
+            (rejectedValueOrSerializedError.data && rejectedValueOrSerializedError.data.error) || 
+            rejectedValueOrSerializedError.message || 
+            JSON.stringify(rejectedValueOrSerializedError); 
+        } else {
+          return null;
+        }
+
+        toast.error(errorMessage);
+        setCompleteModalOpen(false);
+      })
+      .finally(() => {
+        setIsProcessing(false);
       });
   };
 
@@ -70,8 +95,8 @@ const ProjectCompleted = () => {
     (project) => project.status === 'APPROVED' || project.status === 'FUNDRAISING_COMPLETED'
   );
 
-  if (status === 'loading') return <Loading />;
-  if (status === 'failed') {
+  if (status === 'loading' && !isProcessing) return <Loading />;
+  if (status === 'failed' && !isProcessing) {
     return <div className="alert alert-error">{error}</div>;
   }
 
@@ -102,7 +127,7 @@ const ProjectCompleted = () => {
           <table className="table w-full bg-base-100 shadow-md rounded-lg border">
             <thead className="bg-base-200 text-sm font-semibold text-base-content border-b">
               <tr>
-                <th className="px-4 py-3">#</th>
+                <th className="px-4 py-3">ID</th>
                 <th className="px-4 py-3">Title</th>
                 <th className="px-4 py-3">Team</th>
                 <th className="px-4 py-3">Status</th>
@@ -112,7 +137,7 @@ const ProjectCompleted = () => {
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(filteredProjects) && filteredProjects.length > 0 ? filteredProjects.map((project, index) => (
+              {Array.isArray(filteredProjects) && filteredProjects.length > 0 ? filteredProjects.map((project) => (
                 <motion.tr
                   key={project.id}
                   className="hover:bg-base-100 transition"
@@ -120,7 +145,7 @@ const ProjectCompleted = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                 >
-                  <td className="px-4 py-2 text-sm">{index + 1}</td>
+                  <td className="px-4 py-2 text-sm">{project.id}</td>
                   <td className="px-4 py-2 text-sm font-medium">{project.title}</td>
                   <td className="px-4 py-2 text-sm">{project.team?.teamName || "No Team"}</td>
                   <td className="px-4 py-2">
@@ -186,10 +211,24 @@ const ProjectCompleted = () => {
               <CheckCircleIcon className="w-6 h-6" />
               Complete Project
             </h3>
-            <p>Are you sure you want to mark this project as completed?</p>
-            <div className="flex justify-end gap-3 mt-4">
-              <button className="btn btn-ghost" onClick={() => setCompleteModalOpen(false)}>Cancel</button>
-              <button className="btn btn-success" onClick={confirmComplete}>Confirm</button>
+            <p className="mb-2">Are you sure you want to mark this project as completed?</p>
+            <p className="text-sm text-gray-500">Please ensure that all shipping duties have been completed before proceeding.</p>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                className="btn btn-ghost"
+                onClick={() => setCompleteModalOpen(false)}
+                disabled={isProcessing}
+              >
+                Cancel
+              </button>
+              <button
+                className={`btn btn-success ${isProcessing ? 'loading' : ''}`}
+                onClick={confirmComplete}
+                disabled={isProcessing}
+              >
+                {isProcessing ? 'Processing...' : 'Confirm'}
+              </button>
             </div>
           </div>
         </div>
