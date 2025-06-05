@@ -225,6 +225,10 @@ const ProjectList = () => {
         return 'bg-orange-100 text-orange-800 border border-orange-200';
       case 'REJECTED':
         return 'bg-rose-100 text-rose-800 border border-rose-200';
+      case 'BAN':
+        return 'bg-black bg-opacity-80 text-white border border-gray-800';
+      case 'UNDER_REVIEW':
+        return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
       default:
         return 'bg-gray-100 text-gray-800 border border-gray-200';
     }
@@ -356,6 +360,7 @@ const ProjectList = () => {
                 <option value="FUNDRAISING_COMPLETED">Fundraising Completed</option>
                 <option value="DRAFT">Draft</option>
                 <option value="UNDER_REVIEW">Under Review</option>
+                <option value="BAN">Banned</option>
               </select>
             </div>
 
@@ -478,8 +483,8 @@ const ProjectList = () => {
                               </Link>
                             )}
 
-                            {/* Action buttons that change based on project status */}
-                            {project.status === 'APPROVED' && (
+                            {/* Action buttons that change based on project status AND user role */}
+                            {project.status === 'APPROVED' && userRole === 'MANAGER' && (
                               <button className="tooltip" data-tip="Suspend" onClick={() => handleSuspend(project.id)}>
                                 <PauseIcon className="w-5 h-5 text-red-600 hover:text-red-800" />
                               </button>
@@ -491,10 +496,11 @@ const ProjectList = () => {
                               </button>
                             )}
 
-                            {/* Placeholder for consistent spacing when neither button is present */}
-                            {project.status !== 'APPROVED' && project.status !== 'SUSPENDED' && (
-                              <div className="w-5"></div>
-                            )}
+                            {/* Placeholder for consistent spacing when buttons aren't shown */}
+                            {(project.status !== 'APPROVED' || userRole !== 'MANAGER') &&
+                              project.status !== 'SUSPENDED' && (
+                                <div className="w-5"></div>
+                              )}
                           </div>
                         </td>
                       </motion.tr>
